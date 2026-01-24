@@ -1,6 +1,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import type { Student } from '../types/student'
+import LevelBadge from './LevelBadge'
 
 interface StudentCardProps {
   student: Student
@@ -111,9 +112,9 @@ export const StudentCard: React.FC<StudentCardProps> = ({
               </p>
               
               {showLevel && (
-                <span className={`level-badge level-${student.level} mt-2 inline-block`}>
-                  {levelLabels[student.level]}
-                </span>
+                <div className="mt-2">
+                  <LevelBadge level={student.level} size={compact ? 'sm' : 'md'} />
+                </div>
               )}
             </div>
 

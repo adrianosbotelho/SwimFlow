@@ -47,8 +47,25 @@ model Student {
   classStudents        ClassStudent[]
   trainingParticipants TrainingParticipant[]
   evaluations          Evaluation[]
+  levelHistory         LevelHistory[]
 
   @@map("students")
+}
+
+// Level history table
+model LevelHistory {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  studentId String   @map("student_id") @db.Uuid
+  fromLevel Level?   @map("from_level")
+  toLevel   Level    @map("to_level")
+  changedAt DateTime @default(now()) @map("changed_at")
+  changedBy String?  @map("changed_by") @db.Uuid
+  reason    String?  @db.Text
+
+  // Relations
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@map("level_history")
 }
 
 // Pools table

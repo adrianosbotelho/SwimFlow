@@ -3,7 +3,8 @@ import { StudentService } from '../studentService'
 import { 
   createStudentSchema, 
   updateStudentSchema, 
-  studentFiltersSchema 
+  studentFiltersSchema,
+  changeLevelSchema
 } from '../studentService'
 
 describe('StudentService Validation', () => {
@@ -147,6 +148,59 @@ describe('StudentService Validation', () => {
       const { error } = studentFiltersSchema.validate(invalidFilters)
       expect(error).toBeDefined()
       expect(error?.details[0].message).toContain('must be less than or equal to 100')
+    })
+  })
+
+  describe('changeLevelSchema', () => {
+    it('should validate level change data', () => {
+      const validData = {
+        newLevel: 'avancado',
+        reason: 'Demonstrou excelente progresso técnico',
+        changedBy: '123e4567-e89b-12d3-a456-426614174000'
+      }
+
+      const { error } = changeLevelSchema.validate(validData)
+      expect(error).toBeUndefined()
+    })
+
+    it('should require newLevel', () => {
+      const invalidData = {
+        reason: 'Some reason'
+      }
+
+      const { error } = changeLevelSchema.validate(invalidData)
+      expect(error).toBeDefined()
+      expect(error?.details[0].message).toContain('required')
+    })
+
+    it('should reject invalid level', () => {
+      const invalidData = {
+        newLevel: 'expert' // Invalid level
+      }
+
+      const { error } = changeLevelSchema.validate(invalidData)
+      expect(error).toBeDefined()
+      expect(error?.details[0].message).toContain('must be one of')
+    })
+
+    it('should accept optional fields', () => {
+      const validData = {
+        newLevel: 'intermediario'
+      }
+
+      const { error } = changeLevelSchema.validate(validData)
+      expect(error).toBeUndefined()
+    })
+
+    it('should reject invalid UUID for changedBy', () => {
+      const invalidData = {
+        newLevel: 'avancado',
+        changedBy: 'invalid-uuid'
+      }
+
+      const { error } = changeLevelSchema.validate(invalidData)
+      expect(error).toBeDefined()
+      expect(error?.details[0].message).toContain('must be a valid GUID')
     })
   })
 })

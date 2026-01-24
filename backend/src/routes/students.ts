@@ -72,6 +72,46 @@ router.get('/:id', async (req, res) => {
   }
 })
 
+// GET /api/students/:id/with-history - Get student with level history
+router.get('/:id/with-history', async (req, res) => {
+  try {
+    const { id } = req.params
+    const student = await StudentService.getStudentWithLevelHistory(id)
+    
+    res.json({
+      success: true,
+      data: student
+    })
+  } catch (error: any) {
+    console.error('Error getting student with history:', error)
+    const status = error.message.includes('not found') ? 404 : 500
+    res.status(status).json({
+      success: false,
+      error: error.message
+    })
+  }
+})
+
+// GET /api/students/:id/level-history - Get student level history
+router.get('/:id/level-history', async (req, res) => {
+  try {
+    const { id } = req.params
+    const levelHistory = await StudentService.getStudentLevelHistory(id)
+    
+    res.json({
+      success: true,
+      data: levelHistory
+    })
+  } catch (error: any) {
+    console.error('Error getting level history:', error)
+    const status = error.message.includes('not found') ? 404 : 500
+    res.status(status).json({
+      success: false,
+      error: error.message
+    })
+  }
+})
+
 // POST /api/students - Create new student
 router.post('/', async (req, res) => {
   try {
@@ -80,7 +120,10 @@ router.post('/', async (req, res) => {
       birthDate: new Date(req.body.birthDate)
     }
 
-    const student = await StudentService.createStudent(studentData)
+    // Get user ID from token for level history tracking
+    const userId = (req as any).user?.id
+
+    const student = await StudentService.createStudent(studentData, userId)
     
     res.status(201).json({
       success: true,
@@ -106,7 +149,10 @@ router.put('/:id', async (req, res) => {
       ...(req.body.birthDate && { birthDate: new Date(req.body.birthDate) })
     }
 
-    const student = await StudentService.updateStudent(id, updateData)
+    // Get user ID from token for level change tracking
+    const userId = (req as any).user?.id
+
+    const student = await StudentService.updateStudent(id, updateData, userId)
     
     res.json({
       success: true,
@@ -115,6 +161,39 @@ router.put('/:id', async (req, res) => {
     })
   } catch (error: any) {
     console.error('Error updating student:', error)
+    let status = 500
+    if (error.message.includes('not found')) status = 404
+    if (error.message.includes('Validation error')) status = 400
+    
+    res.status(status).json({
+      success: false,
+      error: error.message
+    })
+  }
+})
+
+// PUT /api/students/:id/change-level - Change student level
+router.put('/:id/change-level', async (req, res) => {
+  try {
+    const { id } = req.params
+    const { newLevel, reason } = req.body
+    
+    // Get user ID from token for tracking who made the change
+    const userId = (req as any).user?.id
+
+    const student = await StudentService.changeStudentLevel(id, {
+      newLevel,
+      reason,
+      changedBy: userId
+    })
+    
+    res.json({
+      success: true,
+      data: student,
+      message: 'Student level changed successfully'
+    })
+  } catch (error: any) {
+    console.error('Error changing student level:', error)
     let status = 500
     if (error.message.includes('not found')) status = 404
     if (error.message.includes('Validation error')) status = 400

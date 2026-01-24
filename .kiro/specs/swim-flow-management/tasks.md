@@ -104,14 +104,14 @@ Este plano implementa o SwimFlow como um sistema web moderno usando React com Ty
     - Testar interações de formulário
     - _Requirements: 2.3, 3.3_
 
-- [ ] 6. Sistema de níveis e classificação
-  - [ ] 6.1 Implementar sistema de níveis
+- [x] 6. Sistema de níveis e classificação
+  - [x] 6.1 Implementar sistema de níveis
     - Adicionar enum de níveis no schema
     - Implementar validação de mudanças de nível
     - Criar histórico de progressão de níveis
     - _Requirements: 7.1, 7.3_
 
-  - [ ] 6.2 Implementar componentes visuais de nível
+  - [x] 6.2 Implementar componentes visuais de nível
     - Criar LevelBadge component com cores do design system
     - Implementar LevelSelector para mudanças
     - Adicionar indicadores visuais nas listas
