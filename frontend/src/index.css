@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
+    background: linear-gradient(135deg, rgb(240 249 255) 0%, rgb(240 253 250) 100%);
+  }
+  
+  .card:hover {
+    @apply shadow-md;
+    transform: translateY(-2px);
+    transition: all 0.2s ease;
+  }
+  
+  .level-badge {
+    @apply px-3 py-1 rounded-full text-sm font-medium;
+  }
+  
+  .level-iniciante {
+    @apply bg-amber-100 text-amber-800;
+  }
+  
+  .level-intermediario {
+    @apply bg-ocean-100 text-ocean-800;
+  }
+  
+  .level-avancado {
+    @apply bg-teal-100 text-teal-800;
+  }
+  
+  .btn-primary {
+    @apply bg-ocean-600 hover:bg-ocean-700 text-white font-medium py-2 px-4 rounded-lg transition-colors;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors;
+  }
+}

@@ -1,0 +1,205 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Users table (professors and admins)
+model User {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email        String   @unique @db.VarChar(255)
+  passwordHash String   @map("password_hash") @db.VarChar(255)
+  name         String   @db.VarChar(255)
+  role         UserRole
+  profileImage String?  @map("profile_image") @db.VarChar(500)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  classes     Class[]
+  evaluations Evaluation[]
+
+  @@map("users")
+}
+
+// Students table
+model Student {
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                 String    @db.VarChar(255)
+  email                String?   @db.VarChar(255)
+  phone                String?   @db.VarChar(20)
+  birthDate            DateTime  @map("birth_date") @db.Date
+  level                Level
+  objectives           String    @db.Text
+  medicalNotes         String?   @map("medical_notes") @db.Text
+  profileImage         String?   @map("profile_image") @db.VarChar(500)
+  lastEvaluationDate   DateTime? @map("last_evaluation_date") @db.Date
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  classStudents        ClassStudent[]
+  trainingParticipants TrainingParticipant[]
+  evaluations          Evaluation[]
+
+  @@map("students")
+}
+
+// Pools table
+model Pool {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @db.VarChar(255)
+  capacity    Int
+  length      Decimal? @db.Decimal(5, 2)
+  lanes       Int?
+  temperature Decimal? @db.Decimal(4, 1)
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  classes Class[]
+
+  @@map("pools")
+}
+
+// Classes table
+model Class {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @db.VarChar(255)
+  professorId String   @map("professor_id") @db.Uuid
+  poolId      String   @map("pool_id") @db.Uuid
+  maxCapacity Int      @map("max_capacity")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  professor    User              @relation(fields: [professorId], references: [id])
+  pool         Pool              @relation(fields: [poolId], references: [id])
+  schedules    ClassSchedule[]
+  students     ClassStudent[]
+  trainings    Training[]
+
+  @@map("classes")
+}
+
+// Class schedules table
+model ClassSchedule {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  classId   String   @map("class_id") @db.Uuid
+  dayOfWeek Int      @map("day_of_week") // 0 = Sunday, 1 = Monday, etc.
+  startTime DateTime @map("start_time") @db.Time
+  endTime   DateTime @map("end_time") @db.Time
+
+  // Relations
+  class Class @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@map("class_schedules")
+}
+
+// Class students (many-to-many)
+model ClassStudent {
+  classId    String   @map("class_id") @db.Uuid
+  studentId  String   @map("student_id") @db.Uuid
+  enrolledAt DateTime @default(now()) @map("enrolled_at")
+
+  // Relations
+  class   Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@id([classId, studentId])
+  @@map("class_students")
+}
+
+// Trainings table
+model Training {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  classId    String   @map("class_id") @db.Uuid
+  date       DateTime @db.Date
+  duration   Int      // minutes
+  activities String[] @db.Text
+  notes      String?  @db.Text
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // Relations
+  class        Class                 @relation(fields: [classId], references: [id])
+  participants TrainingParticipant[]
+
+  @@map("trainings")
+}
+
+// Training participants (many-to-many)
+model TrainingParticipant {
+  trainingId String @map("training_id") @db.Uuid
+  studentId  String @map("student_id") @db.Uuid
+
+  // Relations
+  training Training @relation(fields: [trainingId], references: [id], onDelete: Cascade)
+  student  Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@id([trainingId, studentId])
+  @@map("training_participants")
+}
+
+// Evaluations table
+model Evaluation {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  studentId    String   @map("student_id") @db.Uuid
+  professorId  String   @map("professor_id") @db.Uuid
+  date         DateTime @db.Date
+  generalNotes String?  @map("general_notes") @db.Text
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  // Relations
+  student           Student            @relation(fields: [studentId], references: [id])
+  professor         User               @relation(fields: [professorId], references: [id])
+  strokeEvaluations StrokeEvaluation[]
+
+  @@map("evaluations")
+}
+
+// Stroke evaluations table
+model StrokeEvaluation {
+  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  evaluationId String     @map("evaluation_id") @db.Uuid
+  strokeType   StrokeType @map("stroke_type")
+  technique    Int        // 1-10 scale
+  timeSeconds  Decimal?   @map("time_seconds") @db.Decimal(6, 2)
+  resistance   Int        // 1-10 scale
+  notes        String?    @db.Text
+
+  // Relations
+  evaluation Evaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+
+  @@map("stroke_evaluations")
+}
+
+// Enums
+enum UserRole {
+  admin
+  professor
+
+  @@map("user_role")
+}
+
+enum Level {
+  iniciante
+  intermediario
+  avancado
+
+  @@map("level")
+}
+
+enum StrokeType {
+  crawl
+  costas
+  peito
+  borboleta
+
+  @@map("stroke_type")
+}
