@@ -12,12 +12,6 @@ interface StudentCardProps {
   compact?: boolean
 }
 
-const levelLabels = {
-  iniciante: 'Iniciante',
-  intermediario: 'Intermediário',
-  avancado: 'Avançado'
-}
-
 const cardVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { 

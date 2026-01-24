@@ -122,14 +122,14 @@ Este plano implementa o SwimFlow como um sistema web moderno usando React com Ty
     - **Property 11: Visual Level Display**
     - **Validates: Requirements 7.1, 7.2, 7.3**
 
-- [ ] 7. Módulo de treinos
-  - [ ] 7.1 Implementar modelo e API de treinos
+- [x] 7. Módulo de treinos
+  - [x] 7.1 Implementar modelo e API de treinos
     - Criar schema Prisma para Training
     - Implementar relacionamento many-to-many com alunos
     - Criar endpoints CRUD para treinos
     - _Requirements: 4.1, 4.2_
 
-  - [ ] 7.2 Implementar componentes React para treinos
+  - [x] 7.2 Implementar componentes React para treinos
     - Criar TrainingForm com seleção de alunos
     - Implementar TrainingList com ordenação cronológica
     - Criar TrainingCard com informações essenciais
