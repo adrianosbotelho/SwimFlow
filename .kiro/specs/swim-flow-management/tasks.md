@@ -71,7 +71,7 @@ Este plano implementa o SwimFlow como um sistema web moderno usando React com Ty
     - **Property 3: List Display Completeness**
     - **Validates: Requirements 1.3, 1.4**
 
-- [ ] 4. Checkpoint - Módulo de alunos funcional
+- [x] 4. Checkpoint - Módulo de alunos funcional
   - Verificar se todos os testes passam
   - Testar fluxo completo de cadastro de aluno
   - Perguntar ao usuário se há dúvidas
