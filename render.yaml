@@ -1,0 +1,49 @@
+services:
+  # Backend API
+  - type: web
+    name: swimflow-backend
+    runtime: node
+    buildCommand: cd backend && npm install && npm run build && npx prisma generate
+    startCommand: cd backend && npx prisma migrate deploy && npm start
+    plan: free
+    env: node
+    region: oregon
+    buildFilter:
+      paths:
+      - backend/**
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: swimflow-db
+          property: connectionString
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        value: https://swimflow-frontend.onrender.com
+
+  # Frontend (React)
+  - type: web
+    name: swimflow-frontend
+    runtime: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    plan: free
+    buildFilter:
+      paths:
+      - frontend/**
+    envVars:
+      - key: VITE_API_URL
+        value: https://swimflow-backend.onrender.com
+
+# Database
+databases:
+  - name: swimflow-db
+    databaseName: swimflow
+    user: swimflow_user
+    plan: free

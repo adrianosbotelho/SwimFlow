@@ -3,24 +3,29 @@ import cors from 'cors'
 import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
 import dotenv from 'dotenv'
+import { productionConfig } from './config/production'
 
 // Load environment variables
 dotenv.config()
 
 const app = express()
 const PORT = process.env.PORT || 3001
+const isProduction = process.env.NODE_ENV === 'production'
 
 // Security middleware
 app.use(helmet())
-app.use(cors({
+
+// CORS configuration
+const corsOptions = isProduction ? productionConfig.cors : {
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true,
-}))
+}
+app.use(cors(corsOptions))
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  windowMs: isProduction ? productionConfig.security.rateLimitWindowMs : 15 * 60 * 1000,
+  max: isProduction ? productionConfig.security.rateLimitMax : 100,
   message: 'Too many requests from this IP, please try again later.',
 })
 app.use('/api', limiter)
@@ -30,8 +35,30 @@ app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true }))
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() })
+app.get('/health', async (req, res) => {
+  try {
+    // Check database connection
+    const { PrismaClient } = await import('@prisma/client')
+    const prisma = new PrismaClient()
+    await prisma.$queryRaw`SELECT 1`
+    await prisma.$disconnect()
+
+    res.json({ 
+      status: 'OK', 
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development',
+      database: 'connected',
+      version: '1.0.0'
+    })
+  } catch (error) {
+    console.error('Health check failed:', error)
+    res.status(503).json({ 
+      status: 'ERROR', 
+      timestamp: new Date().toISOString(),
+      database: 'disconnected',
+      error: process.env.NODE_ENV === 'development' ? error : 'Database connection failed'
+    })
+  }
 })
 
 // Import routes
@@ -64,8 +91,9 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' })
 })
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🏊‍♂️ SwimFlow API running on port ${PORT}`)
   console.log(`📊 Health check: http://localhost:${PORT}/health`)
   console.log(`🔗 API endpoint: http://localhost:${PORT}/api`)
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`)
 })
