@@ -26,6 +26,15 @@ export const endpoints = {
     delete: (id: string) => `/api/users/${id}`,
     stats: (id: string) => `/api/users/${id}/stats`,
   },
+  students: {
+    list: '/api/students',
+    create: '/api/students',
+    get: (id: string) => `/api/students/${id}`,
+    update: (id: string) => `/api/students/${id}`,
+    delete: (id: string) => `/api/students/${id}`,
+    stats: '/api/students/stats',
+    uploadImage: (id: string) => `/api/students/${id}/upload-image`,
+  },
 }
 
 export default apiConfig

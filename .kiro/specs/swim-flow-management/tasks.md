@@ -42,14 +42,14 @@ Este plano implementa o SwimFlow como um sistema web moderno usando React com Ty
     - **Property 12: Operation Feedback**
     - **Validates: Requirements 9.2**
 
-- [ ] 3. Módulo de gestão de alunos
-  - [ ] 3.1 Implementar modelo e API de alunos
+- [x] 3. Módulo de gestão de alunos
+  - [x] 3.1 Implementar modelo e API de alunos
     - Criar schema Prisma para Student
     - Implementar endpoints CRUD para alunos
     - Adicionar validação de dados com Joi
     - _Requirements: 1.1, 1.2_
 
-  - [ ] 3.2 Implementar upload de imagens
+  - [x] 3.2 Implementar upload de imagens
     - Configurar Multer para upload de arquivos
     - Implementar validação de tipos e tamanhos de arquivo
     - Criar sistema de armazenamento de imagens
@@ -60,7 +60,7 @@ Este plano implementa o SwimFlow como um sistema web moderno usando React com Ty
     - **Property 4: Image Upload and Update**
     - **Validates: Requirements 1.2, 1.5**
 
-  - [ ] 3.4 Implementar componentes React para alunos
+  - [x] 3.4 Implementar componentes React para alunos
     - Criar StudentCard component com design system
     - Implementar StudentList com busca e filtros
     - Criar StudentForm para cadastro/edição

@@ -34,6 +34,9 @@ app.use('/api', limiter)
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true }))
 
+// Static file serving for uploaded images
+app.use('/uploads', express.static('uploads'))
+
 // Health check endpoint
 app.get('/health', async (req, res) => {
   try {
@@ -64,10 +67,12 @@ app.get('/health', async (req, res) => {
 // Import routes
 import authRoutes from './routes/auth'
 import userRoutes from './routes/users'
+import studentRoutes from './routes/students'
 
 // API routes
 app.use('/api/auth', authRoutes)
 app.use('/api/users', userRoutes)
+app.use('/api/students', studentRoutes)
 
 app.get('/api', (req, res) => {
   res.json({ 
@@ -91,7 +96,7 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' })
 })
 
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(Number(PORT), '0.0.0.0', () => {
   console.log(`🏊‍♂️ SwimFlow API running on port ${PORT}`)
   console.log(`📊 Health check: http://localhost:${PORT}/health`)
   console.log(`🔗 API endpoint: http://localhost:${PORT}/api`)
