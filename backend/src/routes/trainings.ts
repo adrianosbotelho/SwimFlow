@@ -1,11 +1,14 @@
 import express from 'express';
 import trainingService, { CreateTrainingData, UpdateTrainingData, TrainingFilters } from '../services/trainingService';
 import { authenticateToken } from '../middleware/auth';
+import { devAuthenticateToken } from '../middleware/devAuth';
 
 const router = express.Router();
 
 // Apply authentication middleware to all routes
-router.use(authenticateToken);
+// Use dev auth in development, real auth in production
+const authMiddleware = process.env.NODE_ENV === 'development' ? devAuthenticateToken : authenticateToken;
+router.use(authMiddleware);
 
 // Create a new training
 router.post('/', async (req, res) => {

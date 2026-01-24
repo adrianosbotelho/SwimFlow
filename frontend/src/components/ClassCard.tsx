@@ -31,10 +31,20 @@ export const ClassCard: React.FC<ClassCardProps> = ({
   compact = false
 }) => {
   const formatTime = (timeString: string) => {
-    return new Date(`1970-01-01T${timeString}`).toLocaleTimeString('pt-BR', {
-      hour: '2-digit',
-      minute: '2-digit'
-    })
+    // Handle both ISO timestamp and time string formats
+    let date: Date;
+    
+    if (timeString.includes('T')) {
+      // It's an ISO timestamp, extract the time part directly from UTC
+      date = new Date(timeString);
+      // Get UTC hours and minutes to avoid timezone conversion
+      const hours = date.getUTCHours().toString().padStart(2, '0');
+      const minutes = date.getUTCMinutes().toString().padStart(2, '0');
+      return `${hours}:${minutes}`;
+    } else {
+      // It's a time string like "07:00", format it directly
+      return timeString;
+    }
   }
 
   const getProfileImageUrl = (profileImage: string | null): string | undefined => {

@@ -20,6 +20,20 @@ interface ClassFormProps {
 
 const dayNames = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
 
+// Helper function to extract time from timestamp or time string
+const extractTimeFromTimestamp = (timeString: string): string => {
+  if (timeString.includes('T')) {
+    // It's an ISO timestamp, extract UTC time
+    const date = new Date(timeString);
+    const hours = date.getUTCHours().toString().padStart(2, '0');
+    const minutes = date.getUTCMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  } else {
+    // It's already a time string, return as is (or slice if it has seconds)
+    return timeString.includes(':') ? timeString.slice(0, 5) : timeString;
+  }
+}
+
 const formVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { 
@@ -64,8 +78,8 @@ export const ClassForm: React.FC<ClassFormProps> = ({
       if (classData.schedules) {
         setSchedules(classData.schedules.map(schedule => ({
           dayOfWeek: schedule.dayOfWeek,
-          startTime: schedule.startTime.slice(0, 5), // Remove seconds
-          endTime: schedule.endTime.slice(0, 5) // Remove seconds
+          startTime: extractTimeFromTimestamp(schedule.startTime),
+          endTime: extractTimeFromTimestamp(schedule.endTime)
         })))
       }
     }

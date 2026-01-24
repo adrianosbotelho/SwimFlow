@@ -1,10 +1,149 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PoolCard } from '../components/PoolCard';
 import { PoolForm } from '../components/PoolForm';
+import type { Pool, CreatePoolData, UpdatePoolData } from '../types/pool';
 
 export const PoolsPage: React.FC = () => {
+  const [pools, setPools] = useState<Pool[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [editingPool, setEditingPool] = useState<Pool | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [formLoading, setFormLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadPools();
+  }, []);
+
+  const loadPools = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await fetch('/api/pools');
+      if (response.ok) {
+        const data = await response.json();
+        setPools(data.success ? data.data.pools : []);
+      } else {
+        throw new Error('Erro ao carregar piscinas');
+      }
+    } catch (error) {
+      console.error('Error loading pools:', error);
+      setError('Erro ao carregar piscinas');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreatePool = async (data: CreatePoolData) => {
+    try {
+      setFormLoading(true);
+      const response = await fetch('/api/pools', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          await loadPools(); // Reload data
+          setShowForm(false);
+          setEditingPool(null);
+        } else {
+          throw new Error(result.error || 'Erro ao criar piscina');
+        }
+      } else {
+        throw new Error('Erro ao criar piscina');
+      }
+    } catch (error) {
+      console.error('Error creating pool:', error);
+      alert(error instanceof Error ? error.message : 'Erro ao criar piscina');
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const handleUpdatePool = async (data: UpdatePoolData) => {
+    if (!editingPool) return;
+
+    try {
+      setFormLoading(true);
+      const response = await fetch(`/api/pools/${editingPool.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          await loadPools(); // Reload data
+          setShowForm(false);
+          setEditingPool(null);
+        } else {
+          throw new Error(result.error || 'Erro ao atualizar piscina');
+        }
+      } else {
+        throw new Error('Erro ao atualizar piscina');
+      }
+    } catch (error) {
+      console.error('Error updating pool:', error);
+      alert(error instanceof Error ? error.message : 'Erro ao atualizar piscina');
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const handleSubmit = async (data: CreatePoolData | UpdatePoolData) => {
+    if (editingPool) {
+      await handleUpdatePool(data as UpdatePoolData);
+    } else {
+      await handleCreatePool(data as CreatePoolData);
+    }
+  };
+
+  const handleEdit = (pool: Pool) => {
+    setEditingPool(pool);
+    setShowForm(true);
+  };
+
+  const handleCancel = () => {
+    setShowForm(false);
+    setEditingPool(null);
+  };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ocean-600"></div>
+          <span className="ml-2 text-gray-600">Carregando piscinas...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center py-12">
+          <div className="text-red-500 text-lg mb-4">❌ {error}</div>
+          <button
+            onClick={loadPools}
+            className="px-4 py-2 bg-ocean-600 text-white rounded-lg hover:bg-ocean-700 transition-colors"
+          >
+            Tentar Novamente
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -35,14 +174,16 @@ export const PoolsPage: React.FC = () => {
             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
             onClick={(e) => {
               if (e.target === e.currentTarget) {
-                setShowForm(false);
+                handleCancel();
               }
             }}
           >
             <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <PoolForm
-                onSubmit={async () => setShowForm(false)}
-                onCancel={() => setShowForm(false)}
+                pool={editingPool}
+                onSubmit={handleSubmit}
+                onCancel={handleCancel}
+                isLoading={formLoading}
               />
             </div>
           </motion.div>
@@ -50,58 +191,33 @@ export const PoolsPage: React.FC = () => {
       </AnimatePresence>
 
       {/* Pools Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Mock data - replace with real data */}
-        <PoolCard
-          pool={{
-            id: '1',
-            name: 'Piscina Principal',
-            capacity: 25,
-            length: 25,
-            lanes: 6,
-            temperature: 28,
-            description: 'Piscina principal para aulas e treinos',
-            createdAt: '2024-01-01T00:00:00.000Z'
-          }}
-          onEdit={() => {}}
-          onViewDetails={() => {}}
-        />
-        <PoolCard
-          pool={{
-            id: '2',
-            name: 'Piscina Olímpica',
-            capacity: 50,
-            length: 50,
-            lanes: 8,
-            temperature: 26,
-            description: 'Piscina olímpica para competições',
-            createdAt: '2024-01-01T00:00:00.000Z'
-          }}
-          onEdit={() => {}}
-          onViewDetails={() => {}}
-        />
-        <PoolCard
-          pool={{
-            id: '3',
-            name: 'Piscina Aquecida',
-            capacity: 15,
-            length: 20,
-            lanes: 4,
-            temperature: 30,
-            description: 'Piscina aquecida para iniciantes',
-            createdAt: '2024-01-01T00:00:00.000Z'
-          }}
-          onEdit={() => {}}
-          onViewDetails={() => {}}
-        />
-      </div>
-
-      {/* Empty State */}
-      <div className="text-center py-12 text-gray-500">
-        <div className="text-6xl mb-4">🏊‍♀️</div>
-        <h3 className="text-lg font-medium mb-2">Sistema de Piscinas Implementado</h3>
-        <p>Componentes de piscina criados e funcionando</p>
-      </div>
+      {pools.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {pools.map((pool) => (
+            <PoolCard
+              key={pool.id}
+              pool={pool}
+              onEdit={() => handleEdit(pool)}
+              onViewDetails={() => {
+                // TODO: Implement view details
+                console.log('View details for pool:', pool.id);
+              }}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-12 text-gray-500">
+          <div className="text-6xl mb-4">🏊‍♀️</div>
+          <h3 className="text-lg font-medium mb-2">Nenhuma piscina encontrada</h3>
+          <p className="mb-4">Comece criando sua primeira piscina</p>
+          <button
+            onClick={() => setShowForm(true)}
+            className="px-6 py-3 bg-ocean-600 text-white rounded-lg hover:bg-ocean-700 transition-colors"
+          >
+            Criar Primeira Piscina
+          </button>
+        </div>
+      )}
     </div>
   );
 };

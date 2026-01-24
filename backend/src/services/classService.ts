@@ -84,8 +84,9 @@ export interface PaginatedClasses {
 // Helper function to convert time string to Date object
 function timeStringToDate(timeString: string): Date {
   const [hours, minutes] = timeString.split(':').map(Number)
-  const date = new Date()
-  date.setHours(hours, minutes, 0, 0)
+  // Use a fixed date (1970-01-01) in UTC to represent just the time
+  const date = new Date('1970-01-01T00:00:00.000Z')
+  date.setUTCHours(hours, minutes, 0, 0)
   return date
 }
 
