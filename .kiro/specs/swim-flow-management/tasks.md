@@ -139,14 +139,14 @@ Este plano implementa o SwimFlow como um sistema web moderno usando React com Ty
     - **Property 8: Chronological Ordering**
     - **Validates: Requirements 4.3**
 
-- [ ] 8. Sistema de avaliações
-  - [ ] 8.1 Implementar modelo de avaliações
+- [x] 8. Sistema de avaliações
+  - [x] 8.1 Implementar modelo de avaliações
     - Criar schemas Prisma para Evaluation e StrokeEvaluation
     - Implementar validações para tipos de nado
     - Criar relacionamentos com alunos e professores
     - _Requirements: 5.1, 5.2_
 
-  - [ ] 8.2 Implementar API de avaliações
+  - [x] 8.2 Implementar API de avaliações
     - Criar endpoints CRUD para avaliações
     - Implementar lógica de atualização automática da data
     - Adicionar validações de dados de stroke
@@ -158,7 +158,7 @@ Este plano implementa o SwimFlow como um sistema web moderno usando React com Ty
     - **Property 15: Evaluation Round Trip**
     - **Validates: Requirements 5.1, 5.2, 5.3**
 
-  - [ ] 8.4 Implementar componentes React para avaliações
+  - [x] 8.4 Implementar componentes React para avaliações
     - Criar EvaluationForm com campos por tipo de nado
     - Implementar EvaluationHistory com timeline
     - Criar StrokeEvaluationCard para cada modalidade

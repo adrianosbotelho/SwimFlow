@@ -1,0 +1,123 @@
+import axios from 'axios';
+import { apiConfig } from '../config/api';
+
+// Create axios instance
+const api = axios.create(apiConfig);
+
+// Add auth token to requests
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+export interface StrokeEvaluation {
+  id?: string;
+  strokeType: 'crawl' | 'costas' | 'peito' | 'borboleta';
+  technique: number;
+  timeSeconds?: number;
+  resistance: number;
+  notes?: string;
+}
+
+export interface Evaluation {
+  id: string;
+  studentId: string;
+  professorId: string;
+  date: string;
+  generalNotes?: string;
+  strokeEvaluations: StrokeEvaluation[];
+  student: {
+    id: string;
+    name: string;
+    level: string;
+  };
+  professor: {
+    id: string;
+    name: string;
+  };
+  createdAt: string;
+}
+
+export interface CreateEvaluationData {
+  studentId: string;
+  professorId: string;
+  date: string;
+  strokeEvaluations: Omit<StrokeEvaluation, 'id'>[];
+  generalNotes?: string;
+}
+
+export interface UpdateEvaluationData {
+  date?: string;
+  strokeEvaluations?: Omit<StrokeEvaluation, 'id'>[];
+  generalNotes?: string;
+}
+
+export interface EvolutionData {
+  studentId: string;
+  strokeType: 'crawl' | 'costas' | 'peito' | 'borboleta';
+  evaluations: {
+    date: string;
+    technique: number;
+    timeSeconds?: number;
+    resistance: number;
+  }[];
+}
+
+export interface EvaluationStats {
+  totalEvaluations: number;
+  lastEvaluationDate?: string;
+  averageScores: {
+    [strokeType: string]: {
+      technique: number;
+      resistance: number;
+    };
+  };
+}
+
+class EvaluationService {
+  async createEvaluation(data: CreateEvaluationData): Promise<Evaluation> {
+    const response = await api.post('/evaluations', data);
+    return response.data.data;
+  }
+
+  async getEvaluation(id: string): Promise<Evaluation> {
+    const response = await api.get(`/evaluations/${id}`);
+    return response.data.data;
+  }
+
+  async listEvaluations(studentId?: string, professorId?: string): Promise<Evaluation[]> {
+    const params = new URLSearchParams();
+    if (studentId) params.append('studentId', studentId);
+    if (professorId) params.append('professorId', professorId);
+    
+    const response = await api.get(`/evaluations?${params.toString()}`);
+    return response.data.data;
+  }
+
+  async updateEvaluation(id: string, data: UpdateEvaluationData): Promise<Evaluation> {
+    const response = await api.put(`/evaluations/${id}`, data);
+    return response.data.data;
+  }
+
+  async deleteEvaluation(id: string): Promise<void> {
+    await api.delete(`/evaluations/${id}`);
+  }
+
+  async getEvolutionData(studentId: string, strokeType?: string): Promise<EvolutionData[]> {
+    const params = new URLSearchParams();
+    if (strokeType) params.append('strokeType', strokeType);
+    
+    const response = await api.get(`/evaluations/student/${studentId}/evolution?${params.toString()}`);
+    return response.data.data;
+  }
+
+  async getStudentStats(studentId: string): Promise<EvaluationStats> {
+    const response = await api.get(`/evaluations/student/${studentId}/stats`);
+    return response.data.data;
+  }
+}
+
+export default new EvaluationService();
