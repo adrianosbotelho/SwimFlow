@@ -76,14 +76,14 @@ Este plano implementa o SwimFlow como um sistema web moderno usando React com Ty
   - Testar fluxo completo de cadastro de aluno
   - Perguntar ao usuário se há dúvidas
 
-- [ ] 5. Módulo de gestão de turmas e piscinas
-  - [ ] 5.1 Implementar modelos de Piscina e Turma
+- [x] 5. Módulo de gestão de turmas e piscinas
+  - [x] 5.1 Implementar modelos de Piscina e Turma
     - Criar schemas Prisma para Pool e Class
     - Implementar relacionamentos entre entidades
     - Adicionar validações de negócio
     - _Requirements: 2.2, 3.1, 3.2_
 
-  - [ ] 5.2 Implementar APIs de turmas e piscinas
+  - [x] 5.2 Implementar APIs de turmas e piscinas
     - Criar endpoints CRUD para piscinas
     - Criar endpoints CRUD para turmas
     - Implementar associação aluno-turma e turma-piscina
@@ -93,7 +93,7 @@ Este plano implementa o SwimFlow como um sistema web moderno usando React com Ty
     - **Property 5: Association Integrity**
     - **Validates: Requirements 2.2, 3.2**
 
-  - [ ] 5.4 Implementar componentes React para turmas
+  - [x] 5.4 Implementar componentes React para turmas
     - Criar ClassCard e PoolCard components
     - Implementar ClassDetail com lista de alunos
     - Criar formulários de cadastro e edição

@@ -68,11 +68,15 @@ app.get('/health', async (req, res) => {
 import authRoutes from './routes/auth'
 import userRoutes from './routes/users'
 import studentRoutes from './routes/students'
+import poolRoutes from './routes/pools'
+import classRoutes from './routes/classes'
 
 // API routes
 app.use('/api/auth', authRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/students', studentRoutes)
+app.use('/api/pools', poolRoutes)
+app.use('/api/classes', classRoutes)
 
 app.get('/api', (req, res) => {
   res.json({ 
