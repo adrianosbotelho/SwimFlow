@@ -10,7 +10,7 @@ export const devAuthenticateToken = async (
   // In development, create a mock user
   if (process.env.NODE_ENV === 'development') {
     req.user = {
-      id: 'dev-user-1',
+      id: '00000000-0000-0000-0000-000000000001',
       email: 'dev@swimflow.com',
       role: 'professor'
     };
