@@ -169,7 +169,7 @@ Este plano implementa o SwimFlow como um sistema web moderno usando React com Ty
     - Testar exibição de histórico
     - _Requirements: 5.4_
 
-- [ ] 9. Checkpoint - Sistema de avaliações completo
+- [x] 9. Checkpoint - Sistema de avaliações completo
   - Verificar se todos os testes passam
   - Testar fluxo completo de criação de avaliação
   - Perguntar ao usuário se há dúvidas

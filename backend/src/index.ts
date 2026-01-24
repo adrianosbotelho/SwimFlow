@@ -72,6 +72,7 @@ import poolRoutes from './routes/pools'
 import classRoutes from './routes/classes'
 import trainingRoutes from './routes/trainings'
 import evaluationRoutes from './routes/evaluations'
+import testRoutes from './routes/test'
 
 // API routes
 app.use('/api/auth', authRoutes)
@@ -81,6 +82,7 @@ app.use('/api/pools', poolRoutes)
 app.use('/api/classes', classRoutes)
 app.use('/api/trainings', trainingRoutes)
 app.use('/api/evaluations', evaluationRoutes)
+app.use('/api/test', testRoutes)
 
 app.get('/api', (req, res) => {
   res.json({ 
