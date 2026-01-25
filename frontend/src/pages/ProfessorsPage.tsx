@@ -180,7 +180,7 @@ export const ProfessorsPage: React.FC = () => {
                       />
                     ) : null}
                     <div 
-                      className={`${professor.profileImage ? 'hidden' : ''} w-full h-full rounded-full bg-gradient-to-br from-ocean-400 to-teal-400 flex items-center justify-center text-white text-sm font-semibold`}
+                      className={`${professor.profileImage ? 'hidden' : ''} w-full h-full rounded-full bg-gradient-to-br from-blue-400 to-teal-400 flex items-center justify-center text-white text-sm font-semibold`}
                     >
                       {professor.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                     </div>
@@ -213,7 +213,7 @@ export const ProfessorsPage: React.FC = () => {
                 <div className="flex items-center justify-end space-x-2">
                   <button
                     onClick={() => console.log('View professor:', professor.id)}
-                    className="p-1 text-gray-400 hover:text-ocean-600 transition-colors"
+                    className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
                     title="Ver detalhes"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -252,7 +252,7 @@ export const ProfessorsPage: React.FC = () => {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ocean-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           <span className="ml-2 text-gray-600">Carregando professores...</span>
         </div>
       </div>
@@ -266,7 +266,7 @@ export const ProfessorsPage: React.FC = () => {
           <div className="text-red-500 text-lg mb-4">❌ {error}</div>
           <button
             onClick={loadProfessors}
-            className="px-4 py-2 bg-ocean-600 text-white rounded-lg hover:bg-ocean-700 transition-colors"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             Tentar Novamente
           </button>
@@ -280,12 +280,12 @@ export const ProfessorsPage: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-ocean-800">Professores</h1>
+          <h1 className="text-3xl font-bold text-blue-800">Professores</h1>
           <p className="text-gray-600 mt-1">Gerencie professores e administradores</p>
         </div>
         <button
           onClick={() => setShowForm(true)}
-          className="bg-ocean-600 hover:bg-ocean-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -302,13 +302,13 @@ export const ProfessorsPage: React.FC = () => {
             placeholder="Buscar por nome ou email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
         <select
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value as 'all' | 'admin' | 'professor')}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent"
+          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
           <option value="all">Todas as funções</option>
           <option value="professor">Professores</option>
@@ -321,7 +321,7 @@ export const ProfessorsPage: React.FC = () => {
             onClick={() => setViewMode('cards')}
             className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
               viewMode === 'cards'
-                ? 'bg-white text-ocean-600 shadow-sm'
+                ? 'bg-white text-blue-600 shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
             }`}
             title="Visualização em cards"
@@ -334,7 +334,7 @@ export const ProfessorsPage: React.FC = () => {
             onClick={() => setViewMode('list')}
             className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
               viewMode === 'list'
-                ? 'bg-white text-ocean-600 shadow-sm'
+                ? 'bg-white text-blue-600 shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
             }`}
             title="Visualização em lista"
@@ -452,7 +452,7 @@ export const ProfessorsPage: React.FC = () => {
           {!searchTerm && roleFilter === 'all' && (
             <button
               onClick={() => setShowForm(true)}
-              className="px-6 py-3 bg-ocean-600 text-white rounded-lg hover:bg-ocean-700 transition-colors"
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               Criar Primeiro Professor
             </button>

@@ -54,12 +54,12 @@ export const StudentsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-ocean-50 to-teal-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-teal-50">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-ocean-800">Alunos</h1>
+            <h1 className="text-3xl font-bold text-blue-800">Alunos</h1>
             <p className="text-gray-600 mt-1">Gerencie os alunos cadastrados no sistema</p>
           </div>
           <button

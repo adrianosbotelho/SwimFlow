@@ -377,12 +377,12 @@ export const ClassesPage: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-ocean-800">Turmas</h1>
+          <h1 className="text-3xl font-bold text-blue-800">Turmas</h1>
           <p className="text-gray-600 mt-1">Gerencie as turmas e seus alunos</p>
         </div>
         <button
           onClick={() => setShowForm(true)}
-          className="bg-ocean-600 hover:bg-ocean-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
