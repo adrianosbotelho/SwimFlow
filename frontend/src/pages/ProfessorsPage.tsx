@@ -5,6 +5,19 @@ import { ProfessorForm } from '../components/ProfessorForm';
 import { professorService } from '../services/professorService';
 import type { Professor, CreateProfessorData, UpdateProfessorData } from '../types/professor';
 
+type ViewMode = 'cards' | 'list'
+
+const listVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2
+    }
+  }
+}
+
 export const ProfessorsPage: React.FC = () => {
   const [professors, setProfessors] = useState<Professor[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -14,6 +27,7 @@ export const ProfessorsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<'all' | 'admin' | 'professor'>('all');
+  const [viewMode, setViewMode] = useState<ViewMode>('cards');
 
   useEffect(() => {
     loadProfessors();
@@ -105,6 +119,135 @@ export const ProfessorsPage: React.FC = () => {
     return matchesSearch && matchesRole;
   });
 
+  const getProfileImageUrl = (profileImage: string | null): string | undefined => {
+    if (!profileImage) return undefined
+    if (profileImage.startsWith('http')) return profileImage
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+    return `${baseUrl}${profileImage}`
+  }
+
+  const getRoleBadge = (role: string) => {
+    const roleConfig = {
+      admin: { label: 'Administrador', color: 'bg-red-100 text-red-800' },
+      professor: { label: 'Professor', color: 'bg-blue-100 text-blue-800' }
+    }
+    const config = roleConfig[role as keyof typeof roleConfig] || { label: role, color: 'bg-gray-100 text-gray-800' }
+    return (
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
+        {config.label}
+      </span>
+    )
+  }
+
+  // List view component
+  const ProfessorListView = () => (
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      {/* Table Header */}
+      <div className="bg-gray-50 px-6 py-3 border-b border-gray-200">
+        <div className="grid grid-cols-12 gap-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
+          <div className="col-span-4">Professor</div>
+          <div className="col-span-2">Função</div>
+          <div className="col-span-4">Email</div>
+          <div className="col-span-2 text-right">Ações</div>
+        </div>
+      </div>
+
+      {/* Table Body */}
+      <div className="divide-y divide-gray-200">
+        {filteredProfessors.map((professor, index) => (
+          <motion.div
+            key={professor.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.05 }}
+            className="px-6 py-4 hover:bg-gray-50 transition-colors"
+          >
+            <div className="grid grid-cols-12 gap-4 items-center">
+              {/* Professor Info */}
+              <div className="col-span-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 flex-shrink-0">
+                    {professor.profileImage ? (
+                      <img
+                        src={getProfileImageUrl(professor.profileImage)}
+                        alt={professor.name}
+                        className="w-full h-full rounded-full object-cover border border-gray-200"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement
+                          target.style.display = 'none'
+                          target.nextElementSibling?.classList.remove('hidden')
+                        }}
+                      />
+                    ) : null}
+                    <div 
+                      className={`${professor.profileImage ? 'hidden' : ''} w-full h-full rounded-full bg-gradient-to-br from-ocean-400 to-teal-400 flex items-center justify-center text-white text-sm font-semibold`}
+                    >
+                      {professor.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                    </div>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {professor.name}
+                    </p>
+                    <p className="text-sm text-gray-500 truncate">
+                      Professor
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Role */}
+              <div className="col-span-2">
+                {getRoleBadge(professor.role)}
+              </div>
+
+              {/* Email */}
+              <div className="col-span-4">
+                <span className="text-sm text-gray-900 truncate">
+                  {professor.email}
+                </span>
+              </div>
+
+              {/* Actions */}
+              <div className="col-span-2 text-right">
+                <div className="flex items-center justify-end space-x-2">
+                  <button
+                    onClick={() => console.log('View professor:', professor.id)}
+                    className="p-1 text-gray-400 hover:text-ocean-600 transition-colors"
+                    title="Ver detalhes"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => handleEdit(professor)}
+                    className="p-1 text-gray-400 hover:text-teal-600 transition-colors"
+                    title="Editar professor"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => handleDelete(professor)}
+                    className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                    title="Excluir professor"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  )
+
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -171,6 +314,36 @@ export const ProfessorsPage: React.FC = () => {
           <option value="professor">Professores</option>
           <option value="admin">Administradores</option>
         </select>
+        
+        {/* View Mode Toggle */}
+        <div className="flex items-center bg-gray-100 rounded-lg p-1">
+          <button
+            onClick={() => setViewMode('cards')}
+            className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+              viewMode === 'cards'
+                ? 'bg-white text-ocean-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+            title="Visualização em cards"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+            </svg>
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+              viewMode === 'list'
+                ? 'bg-white text-ocean-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+            title="Visualização em lista"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -234,22 +407,33 @@ export const ProfessorsPage: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Professors Grid */}
+      {/* Professors Display */}
       {filteredProfessors.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProfessors.map((professor) => (
-            <ProfessorCard
-              key={professor.id}
-              professor={professor}
-              onEdit={() => handleEdit(professor)}
-              onDelete={() => handleDelete(professor)}
-              onViewDetails={() => {
-                // TODO: Implement view details
-                console.log('View details for professor:', professor.id);
-              }}
-            />
-          ))}
-        </div>
+        <>
+          {viewMode === 'cards' ? (
+            <motion.div
+              variants={listVariants}
+              initial="hidden"
+              animate="visible"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            >
+              {filteredProfessors.map((professor) => (
+                <ProfessorCard
+                  key={professor.id}
+                  professor={professor}
+                  onEdit={() => handleEdit(professor)}
+                  onDelete={() => handleDelete(professor)}
+                  onViewDetails={() => {
+                    // TODO: Implement view details
+                    console.log('View details for professor:', professor.id);
+                  }}
+                />
+              ))}
+            </motion.div>
+          ) : (
+            <ProfessorListView />
+          )}
+        </>
       ) : (
         <div className="text-center py-12 text-gray-500">
           <div className="text-6xl mb-4">👨‍🏫</div>

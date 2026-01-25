@@ -7,6 +7,19 @@ import type { Class, CreateClassData, UpdateClassData } from '../types/class';
 import type { Pool } from '../types/pool';
 import type { Professor } from '../types/professor';
 
+type ViewMode = 'cards' | 'list'
+
+const listVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2
+    }
+  }
+}
+
 export const ClassesPage: React.FC = () => {
   const [classes, setClasses] = useState<Class[]>([]);
   const [professors, setProfessors] = useState<Professor[]>([]);
@@ -16,6 +29,8 @@ export const ClassesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [formLoading, setFormLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('cards');
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     loadData();
@@ -161,6 +176,160 @@ export const ClassesPage: React.FC = () => {
     setEditingClass(null);
   };
 
+  // Filter classes based on search term
+  const filteredClasses = classes.filter(classData => 
+    classData.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    classData.pool?.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const formatTime = (timeString: string) => {
+    return new Date(`1970-01-01T${timeString}`).toLocaleTimeString('pt-BR', {
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+
+  // List view component
+  const ClassListView = () => (
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      {/* Table Header */}
+      <div className="bg-gray-50 px-6 py-3 border-b border-gray-200">
+        <div className="grid grid-cols-12 gap-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
+          <div className="col-span-3">Turma</div>
+          <div className="col-span-2">Piscina</div>
+          <div className="col-span-2">Ocupação</div>
+          <div className="col-span-3">Horários</div>
+          <div className="col-span-2 text-right">Ações</div>
+        </div>
+      </div>
+
+      {/* Table Body */}
+      <div className="divide-y divide-gray-200">
+        {filteredClasses.map((classData, index) => {
+          const currentStudents = classData._count?.students || 0
+          const capacityPercentage = (currentStudents / classData.maxCapacity) * 100
+          
+          return (
+            <motion.div
+              key={classData.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+              className="px-6 py-4 hover:bg-gray-50 transition-colors"
+            >
+              <div className="grid grid-cols-12 gap-4 items-center">
+                {/* Class Info */}
+                <div className="col-span-3">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 flex-shrink-0 rounded-full bg-gradient-to-br from-teal-400 to-ocean-400 flex items-center justify-center text-white text-sm font-semibold">
+                      {classData.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {classData.name}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {classData.schedules?.length || 0} horário(s)
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pool */}
+                <div className="col-span-2">
+                  <span className="text-sm text-gray-900">
+                    {classData.pool?.name || 'Não definida'}
+                  </span>
+                </div>
+
+                {/* Capacity */}
+                <div className="col-span-2">
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-900">
+                        {currentStudents}/{classData.maxCapacity}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {Math.round(capacityPercentage)}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full transition-all duration-300 ${
+                          capacityPercentage >= 90 
+                            ? 'bg-red-500' 
+                            : capacityPercentage >= 70 
+                            ? 'bg-amber-500' 
+                            : 'bg-teal-500'
+                        }`}
+                        style={{ width: `${Math.min(capacityPercentage, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Schedules */}
+                <div className="col-span-3">
+                  <div className="flex flex-wrap gap-1">
+                    {classData.schedules?.slice(0, 2).map((schedule, idx) => (
+                      <span
+                        key={idx}
+                        className="inline-block px-2 py-1 text-xs bg-ocean-100 text-ocean-800 rounded-full"
+                      >
+                        {dayNames[schedule.dayOfWeek]} {formatTime(schedule.startTime)}
+                      </span>
+                    ))}
+                    {(classData.schedules?.length || 0) > 2 && (
+                      <span className="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full">
+                        +{(classData.schedules?.length || 0) - 2} mais
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="col-span-2 text-right">
+                  <div className="flex items-center justify-end space-x-2">
+                    <button
+                      onClick={() => console.log('View class:', classData.id)}
+                      className="p-1 text-gray-400 hover:text-ocean-600 transition-colors"
+                      title="Ver detalhes"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => handleEdit(classData)}
+                      className="p-1 text-gray-400 hover:text-teal-600 transition-colors"
+                      title="Editar turma"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(classData)}
+                      className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                      title="Excluir turma"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )
+        })}
+      </div>
+    </div>
+  )
+
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -207,6 +376,49 @@ export const ClassesPage: React.FC = () => {
         </button>
       </div>
 
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="flex-1">
+          <input
+            type="text"
+            placeholder="Buscar por nome da turma ou piscina..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent"
+          />
+        </div>
+        
+        {/* View Mode Toggle */}
+        <div className="flex items-center bg-gray-100 rounded-lg p-1">
+          <button
+            onClick={() => setViewMode('cards')}
+            className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+              viewMode === 'cards'
+                ? 'bg-white text-ocean-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+            title="Visualização em cards"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+            </svg>
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+              viewMode === 'list'
+                ? 'bg-white text-ocean-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+            title="Visualização em lista"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
       {/* Form Modal */}
       <AnimatePresence>
         {showForm && (
@@ -235,33 +447,50 @@ export const ClassesPage: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Classes Grid */}
-      {classes.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {classes.map((classData) => (
-            <ClassCard
-              key={classData.id}
-              class={classData}
-              onEdit={() => handleEdit(classData)}
-              onDelete={() => handleDelete(classData)}
-              onViewDetails={() => {
-                // TODO: Implement view details
-                console.log('View details for class:', classData.id);
-              }}
-            />
-          ))}
-        </div>
+      {/* Classes Display */}
+      {filteredClasses.length > 0 ? (
+        <>
+          {viewMode === 'cards' ? (
+            <motion.div
+              variants={listVariants}
+              initial="hidden"
+              animate="visible"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            >
+              {filteredClasses.map((classData) => (
+                <ClassCard
+                  key={classData.id}
+                  class={classData}
+                  onEdit={() => handleEdit(classData)}
+                  onDelete={() => handleDelete(classData)}
+                  onViewDetails={() => {
+                    // TODO: Implement view details
+                    console.log('View details for class:', classData.id);
+                  }}
+                />
+              ))}
+            </motion.div>
+          ) : (
+            <ClassListView />
+          )}
+        </>
       ) : (
         <div className="text-center py-12 text-gray-500">
           <div className="text-6xl mb-4">👥</div>
-          <h3 className="text-lg font-medium mb-2">Nenhuma turma encontrada</h3>
-          <p className="mb-4">Comece criando sua primeira turma</p>
-          <button
-            onClick={() => setShowForm(true)}
-            className="px-6 py-3 bg-ocean-600 text-white rounded-lg hover:bg-ocean-700 transition-colors"
-          >
-            Criar Primeira Turma
-          </button>
+          <h3 className="text-lg font-medium mb-2">
+            {searchTerm ? 'Nenhuma turma encontrada' : 'Nenhuma turma encontrada'}
+          </h3>
+          <p className="mb-4">
+            {searchTerm ? 'Tente ajustar os termos de busca' : 'Comece criando sua primeira turma'}
+          </p>
+          {!searchTerm && (
+            <button
+              onClick={() => setShowForm(true)}
+              className="px-6 py-3 bg-ocean-600 text-white rounded-lg hover:bg-ocean-700 transition-colors"
+            >
+              Criar Primeira Turma
+            </button>
+          )}
         </div>
       )}
     </div>
