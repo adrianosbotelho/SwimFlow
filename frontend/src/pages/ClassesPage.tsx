@@ -183,10 +183,25 @@ export const ClassesPage: React.FC = () => {
   );
 
   const formatTime = (timeString: string) => {
-    return new Date(`1970-01-01T${timeString}`).toLocaleTimeString('pt-BR', {
-      hour: '2-digit',
-      minute: '2-digit'
-    })
+    if (!timeString) return 'Horário não definido'
+    
+    try {
+      // Handle both ISO timestamp and time string formats
+      if (timeString.includes('T')) {
+        // It's an ISO timestamp, extract the time part directly from UTC
+        const date = new Date(timeString);
+        // Get UTC hours and minutes to avoid timezone conversion
+        const hours = date.getUTCHours().toString().padStart(2, '0');
+        const minutes = date.getUTCMinutes().toString().padStart(2, '0');
+        return `${hours}:${minutes}`;
+      } else {
+        // It's a time string like "07:00", format it directly
+        return timeString;
+      }
+    } catch (error) {
+      console.error('Error formatting time:', timeString, error)
+      return 'Horário inválido'
+    }
   }
 
   const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
