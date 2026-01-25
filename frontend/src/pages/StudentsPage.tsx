@@ -24,6 +24,24 @@ export const StudentsPage: React.FC = () => {
     console.log('View student:', studentId)
   }
 
+  const handleDeleteStudent = async (student: Student) => {
+    try {
+      const response = await fetch(`/api/students/${student.id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setRefreshKey(prev => prev + 1); // Force refresh of student list
+      } else {
+        const result = await response.json();
+        alert(result.error || 'Erro ao excluir aluno');
+      }
+    } catch (error) {
+      console.error('Error deleting student:', error);
+      alert('Erro ao excluir aluno');
+    }
+  };
+
   const handleFormSubmit = () => {
     setShowForm(false)
     setEditingStudent(null)
@@ -84,6 +102,7 @@ export const StudentsPage: React.FC = () => {
         <StudentList
           key={refreshKey}
           onEditStudent={handleEditStudent}
+          onDeleteStudent={handleDeleteStudent}
           onViewStudent={handleViewStudent}
         />
       </div>

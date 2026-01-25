@@ -100,6 +100,24 @@ export const PoolsPage: React.FC = () => {
     }
   };
 
+  const handleDelete = async (pool: Pool) => {
+    try {
+      const response = await fetch(`/api/pools/${pool.id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        await loadPools(); // Reload data
+      } else {
+        const result = await response.json();
+        alert(result.error || 'Erro ao excluir piscina');
+      }
+    } catch (error) {
+      console.error('Error deleting pool:', error);
+      alert('Erro ao excluir piscina');
+    }
+  };
+
   const handleSubmit = async (data: CreatePoolData | UpdatePoolData) => {
     if (editingPool) {
       await handleUpdatePool(data as UpdatePoolData);
@@ -198,6 +216,7 @@ export const PoolsPage: React.FC = () => {
               key={pool.id}
               pool={pool}
               onEdit={() => handleEdit(pool)}
+              onDelete={() => handleDelete(pool)}
               onViewDetails={() => {
                 // TODO: Implement view details
                 console.log('View details for pool:', pool.id);

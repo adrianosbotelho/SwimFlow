@@ -6,6 +6,7 @@ import type { Student, StudentFilters, Level } from '../types/student'
 
 interface StudentListProps {
   onEditStudent?: (student: Student) => void
+  onDeleteStudent?: (student: Student) => void
   onViewStudent?: (studentId: string) => void
   showLevel?: boolean
   showLastEvaluation?: boolean
@@ -33,6 +34,7 @@ const levelOptions: { value: Level | '', label: string }[] = [
 
 export const StudentList: React.FC<StudentListProps> = ({
   onEditStudent,
+  onDeleteStudent,
   onViewStudent,
   showLevel = true,
   showLastEvaluation = true,
@@ -257,6 +259,7 @@ export const StudentList: React.FC<StudentListProps> = ({
               key={student.id}
               student={student}
               onEdit={onEditStudent}
+              onDelete={onDeleteStudent}
               onViewDetails={onViewStudent}
               showLevel={showLevel}
               showLastEvaluation={showLastEvaluation}

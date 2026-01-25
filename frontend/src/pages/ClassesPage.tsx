@@ -123,6 +123,24 @@ export const ClassesPage: React.FC = () => {
     }
   };
 
+  const handleDelete = async (classData: Class) => {
+    try {
+      const response = await fetch(`/api/classes/${classData.id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        await loadData(); // Reload data
+      } else {
+        const result = await response.json();
+        alert(result.error || 'Erro ao excluir turma');
+      }
+    } catch (error) {
+      console.error('Error deleting class:', error);
+      alert('Erro ao excluir turma');
+    }
+  };
+
   const handleSubmit = async (data: CreateClassData | UpdateClassData) => {
     if (editingClass) {
       await handleUpdateClass(data as UpdateClassData);
@@ -223,6 +241,7 @@ export const ClassesPage: React.FC = () => {
               key={classData.id}
               class={classData}
               onEdit={() => handleEdit(classData)}
+              onDelete={() => handleDelete(classData)}
               onViewDetails={() => {
                 // TODO: Implement view details
                 console.log('View details for class:', classData.id);
