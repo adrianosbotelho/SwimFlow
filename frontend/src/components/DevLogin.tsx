@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ThemeToggle } from './ThemeToggle';
 
 interface DevLoginProps {
   onLogin: () => void;
@@ -20,70 +21,117 @@ const DevLogin: React.FC<DevLoginProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-ocean-50 to-teal-50 flex items-center justify-center">
-      <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full mx-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50 dark:from-dark-950 dark:via-dark-900 dark:to-dark-800 flex items-center justify-center transition-colors duration-300 relative">
+      {/* Theme Toggle */}
+      <div className="absolute top-6 right-6">
+        <ThemeToggle />
+      </div>
+
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-primary-400/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary-400/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-accent-400/10 rounded-full blur-3xl animate-pulse delay-500"></div>
+      </div>
+
+      <div className="card-gradient max-w-md w-full mx-4 relative z-10 overflow-hidden">
+        {/* Header */}
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center space-x-3 mb-4">
-            <span className="text-4xl">🌊</span>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-ocean-600 to-teal-600 bg-clip-text text-transparent">
+          <div className="flex items-center justify-center space-x-4 mb-6">
+            <div className="relative">
+              <span className="text-6xl animate-bounce-subtle">🌊</span>
+              <div className="absolute inset-0 bg-primary-400/30 rounded-full blur-2xl animate-glow"></div>
+            </div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary-600 via-secondary-600 to-accent-600 dark:from-primary-400 dark:via-secondary-400 dark:to-accent-400 bg-clip-text text-transparent">
               SwimFlow
             </h1>
           </div>
-          <p className="text-gray-600">Sistema de Gestão de Natação</p>
+          <p className="text-gray-600 dark:text-gray-300 text-lg font-medium">Sistema de Gestão de Natação</p>
+          <div className="mt-2 flex items-center justify-center space-x-2">
+            <div className="w-2 h-2 bg-secondary-500 rounded-full animate-pulse"></div>
+            <span className="text-sm text-gray-500 dark:text-gray-400">Versão 2.0 - Interface Moderna</span>
+            <div className="w-2 h-2 bg-secondary-500 rounded-full animate-pulse"></div>
+          </div>
         </div>
 
-        <div className="space-y-4">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-center space-x-2 mb-2">
-              <span className="text-blue-600">ℹ️</span>
-              <h3 className="font-medium text-blue-800">Modo Desenvolvimento</h3>
+        {/* Dev Mode Info */}
+        <div className="bg-gradient-to-r from-primary-50 to-secondary-50 dark:from-primary-900/20 dark:to-secondary-900/20 border border-primary-200/50 dark:border-primary-700/50 rounded-2xl p-6 mb-6">
+          <div className="flex items-center space-x-3 mb-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center">
+              <span className="text-white text-sm">ℹ️</span>
             </div>
-            <p className="text-sm text-blue-700">
-              Você está executando o sistema em modo de desenvolvimento. 
-              Clique no botão abaixo para acessar sem autenticação.
-            </p>
+            <h3 className="font-bold text-primary-800 dark:text-primary-300">Modo Desenvolvimento</h3>
           </div>
+          <p className="text-sm text-primary-700 dark:text-primary-300 leading-relaxed">
+            Você está executando o sistema em modo de desenvolvimento com interface moderna e suporte a dark mode. 
+            Clique no botão abaixo para acessar sem autenticação.
+          </p>
+        </div>
 
-          <button
-            onClick={handleDevLogin}
-            disabled={isLoggingIn}
-            className="w-full bg-ocean-600 hover:bg-ocean-700 disabled:bg-ocean-400 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
-          >
+        {/* Login Button */}
+        <button
+          onClick={handleDevLogin}
+          disabled={isLoggingIn}
+          className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-primary-600 to-secondary-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="relative z-10 flex items-center justify-center space-x-3">
             {isLoggingIn ? (
               <>
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                <span>Entrando...</span>
+                <div className="loading-spinner w-5 h-5"></div>
+                <span>Entrando no sistema...</span>
               </>
             ) : (
               <>
-                <span>🏊‍♂️</span>
+                <span className="text-xl">🏊‍♂️</span>
                 <span>Entrar como Professor</span>
+                <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </>
             )}
-          </button>
+          </div>
+        </button>
 
-          <div className="text-center text-sm text-gray-500">
-            <p>Credenciais de desenvolvimento:</p>
-            <p className="font-mono bg-gray-100 px-2 py-1 rounded mt-1">
+        {/* Credentials Info */}
+        <div className="mt-6 text-center">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Credenciais de desenvolvimento:</p>
+          <div className="bg-white/50 dark:bg-dark-800/50 backdrop-blur-sm rounded-xl px-4 py-2 border border-white/20 dark:border-dark-700/20">
+            <p className="font-mono text-sm text-gray-700 dark:text-gray-300">
               Professor: dev@swimflow.com
             </p>
           </div>
         </div>
 
-        <div className="mt-8 pt-6 border-t border-gray-200">
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div>
-              <div className="text-2xl mb-1">🏊‍♂️</div>
-              <div className="text-xs text-gray-600">Alunos</div>
+        {/* Features Preview */}
+        <div className="mt-8 pt-6 border-t border-white/20 dark:border-dark-700/20">
+          <div className="grid grid-cols-3 gap-6">
+            <div className="text-center group">
+              <div className="w-12 h-12 bg-gradient-to-br from-secondary-400 to-teal-500 rounded-2xl flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform duration-200 shadow-lg">
+                <span className="text-white text-xl">🏊‍♂️</span>
+              </div>
+              <div className="text-xs font-medium text-gray-700 dark:text-gray-300">Gestão de Alunos</div>
             </div>
-            <div>
-              <div className="text-2xl mb-1">📊</div>
-              <div className="text-xs text-gray-600">Avaliações</div>
+            <div className="text-center group">
+              <div className="w-12 h-12 bg-gradient-to-br from-accent-400 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform duration-200 shadow-lg">
+                <span className="text-white text-xl">📊</span>
+              </div>
+              <div className="text-xs font-medium text-gray-700 dark:text-gray-300">Avaliações</div>
             </div>
-            <div>
-              <div className="text-2xl mb-1">💪</div>
-              <div className="text-xs text-gray-600">Treinos</div>
+            <div className="text-center group">
+              <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform duration-200 shadow-lg">
+                <span className="text-white text-xl">💪</span>
+              </div>
+              <div className="text-xs font-medium text-gray-700 dark:text-gray-300">Treinos</div>
             </div>
+          </div>
+        </div>
+
+        {/* Version Info */}
+        <div className="mt-6 text-center">
+          <div className="inline-flex items-center space-x-2 px-3 py-1 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-dark-700 dark:to-dark-600 rounded-full text-xs text-gray-600 dark:text-gray-400">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <span>Sistema Online • Dark Mode • Interface 2.0</span>
           </div>
         </div>
       </div>

@@ -6,6 +6,7 @@ import { PoolsPage } from '../pages/PoolsPage';
 import { TrainingsPage } from '../pages/TrainingsPage';
 import { EvaluationsPage } from '../pages/EvaluationsPage';
 import { ProfessorsPage } from '../pages/ProfessorsPage';
+import { ThemeToggle } from './ThemeToggle';
 
 type PageType = 'dashboard' | 'students' | 'classes' | 'pools' | 'trainings' | 'evaluations' | 'professors';
 
@@ -14,6 +15,7 @@ interface NavigationItem {
   label: string;
   icon: string;
   description: string;
+  gradient: string;
 }
 
 const navigationItems: NavigationItem[] = [
@@ -21,43 +23,50 @@ const navigationItems: NavigationItem[] = [
     id: 'dashboard',
     label: 'Dashboard',
     icon: '🏠',
-    description: 'Visão geral do sistema'
+    description: 'Visão geral do sistema',
+    gradient: 'from-primary-500 to-primary-600'
   },
   {
     id: 'students',
     label: 'Alunos',
     icon: '🏊‍♂️',
-    description: 'Gerenciar alunos'
+    description: 'Gerenciar alunos',
+    gradient: 'from-secondary-500 to-teal-600'
   },
   {
     id: 'professors',
     label: 'Professores',
     icon: '👨‍🏫',
-    description: 'Gerenciar professores'
+    description: 'Gerenciar professores',
+    gradient: 'from-accent-500 to-purple-600'
   },
   {
     id: 'classes',
     label: 'Turmas',
     icon: '👥',
-    description: 'Gerenciar turmas'
+    description: 'Gerenciar turmas',
+    gradient: 'from-ocean-500 to-blue-600'
   },
   {
     id: 'pools',
     label: 'Piscinas',
     icon: '🏊‍♀️',
-    description: 'Gerenciar piscinas'
+    description: 'Gerenciar piscinas',
+    gradient: 'from-teal-500 to-cyan-600'
   },
   {
     id: 'trainings',
     label: 'Treinos',
     icon: '💪',
-    description: 'Registrar treinos'
+    description: 'Registrar treinos',
+    gradient: 'from-amber-500 to-orange-600'
   },
   {
     id: 'evaluations',
     label: 'Avaliações',
     icon: '📊',
-    description: 'Sistema de avaliações'
+    description: 'Sistema de avaliações',
+    gradient: 'from-coral-500 to-red-600'
   }
 ];
 
@@ -85,28 +94,41 @@ const Dashboard: React.FC = () => {
 
   if (currentPage !== 'dashboard') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-ocean-50 to-teal-50">
-        {/* Navigation Bar */}
-        <nav className="bg-white shadow-sm border-b border-gray-200">
-          <div className="container mx-auto px-4">
-            <div className="flex items-center justify-between h-16">
-              <div className="flex items-center space-x-4">
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50 dark:from-dark-950 dark:via-dark-900 dark:to-dark-800 transition-colors duration-300">
+        {/* Modern Navigation Bar */}
+        <nav className="glass border-b border-white/20 dark:border-dark-700/50 backdrop-blur-xl">
+          <div className="container mx-auto px-6">
+            <div className="flex items-center justify-between h-20">
+              <div className="flex items-center space-x-6">
                 <button
                   onClick={() => setCurrentPage('dashboard')}
-                  className="flex items-center space-x-2 text-ocean-600 hover:text-ocean-800 transition-colors"
+                  className="flex items-center space-x-3 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors group"
                 >
-                  <span className="text-2xl">🌊</span>
-                  <span className="font-bold text-xl">SwimFlow</span>
+                  <div className="relative">
+                    <span className="text-3xl group-hover:animate-bounce-subtle">🌊</span>
+                    <div className="absolute inset-0 bg-primary-400/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  </div>
+                  <span className="font-bold text-2xl bg-gradient-to-r from-primary-600 to-secondary-600 dark:from-primary-400 dark:to-secondary-400 bg-clip-text text-transparent">
+                    SwimFlow
+                  </span>
                 </button>
-                <span className="text-gray-300">|</span>
-                <span className="text-gray-600">
-                  {navigationItems.find(item => item.id === currentPage)?.label}
-                </span>
+                <div className="h-8 w-px bg-gradient-to-b from-transparent via-gray-300 dark:via-gray-600 to-transparent"></div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-2xl">
+                    {navigationItems.find(item => item.id === currentPage)?.icon}
+                  </span>
+                  <span className="text-gray-700 dark:text-gray-300 font-semibold">
+                    {navigationItems.find(item => item.id === currentPage)?.label}
+                  </span>
+                </div>
               </div>
               <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-600">Professor</span>
-                <div className="w-8 h-8 bg-ocean-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                  P
+                <ThemeToggle />
+                <div className="flex items-center space-x-3">
+                  <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">Professor</span>
+                  <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-lg">
+                    P
+                  </div>
                 </div>
               </div>
             </div>
@@ -122,7 +144,7 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-ocean-50 to-teal-50">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50 dark:from-dark-950 dark:via-dark-900 dark:to-dark-800 transition-colors duration-300">
       {renderPage()}
     </div>
   );
@@ -134,136 +156,171 @@ interface DashboardHomeProps {
 
 const DashboardHome: React.FC<DashboardHomeProps> = ({ onNavigate }) => {
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="text-center mb-12">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-center space-x-3 mb-4"
-        >
-          <span className="text-6xl">🌊</span>
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-ocean-600 to-teal-600 bg-clip-text text-transparent">
-            SwimFlow
-          </h1>
-        </motion.div>
+    <div className="container mx-auto px-6 py-12">
+      {/* Modern Header */}
+      <div className="text-center mb-16">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex-1"></div>
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center justify-center space-x-4"
+          >
+            <div className="relative">
+              <span className="text-8xl animate-bounce-subtle">🌊</span>
+              <div className="absolute inset-0 bg-primary-400/30 rounded-full blur-2xl animate-glow"></div>
+            </div>
+            <h1 className="text-7xl font-bold bg-gradient-to-r from-primary-600 via-secondary-600 to-accent-600 dark:from-primary-400 dark:via-secondary-400 dark:to-accent-400 bg-clip-text text-transparent">
+              SwimFlow
+            </h1>
+          </motion.div>
+          <div className="flex-1 flex justify-end">
+            <ThemeToggle />
+          </div>
+        </div>
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="text-xl text-gray-600 max-w-2xl mx-auto"
+          className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed"
         >
           Sistema completo de gestão para escolas de natação. 
-          Gerencie alunos, turmas, treinos e acompanhe a evolução técnica.
+          Gerencie alunos, turmas, treinos e acompanhe a evolução técnica com tecnologia moderna.
         </motion.p>
       </div>
 
-      {/* Quick Stats */}
+      {/* Enhanced Quick Stats */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16"
       >
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        <div className="stat-card stat-card-primary group">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total de Alunos</p>
-              <p className="text-2xl font-bold text-ocean-800">9</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">Total de Alunos</p>
+              <p className="text-3xl font-bold text-primary-700 dark:text-primary-300">14</p>
+              <p className="text-xs text-primary-600 dark:text-primary-400 mt-1">+2 este mês</p>
             </div>
-            <div className="text-3xl">🏊‍♂️</div>
+            <div className="text-4xl group-hover:animate-bounce-subtle">🏊‍♂️</div>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        <div className="stat-card stat-card-secondary group">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Turmas Ativas</p>
-              <p className="text-2xl font-bold text-teal-800">3</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">Turmas Ativas</p>
+              <p className="text-3xl font-bold text-secondary-700 dark:text-secondary-300">5</p>
+              <p className="text-xs text-secondary-600 dark:text-secondary-400 mt-1">100% ocupação</p>
             </div>
-            <div className="text-3xl">👥</div>
+            <div className="text-4xl group-hover:animate-bounce-subtle">👥</div>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        <div className="stat-card stat-card-accent group">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Treinos Hoje</p>
-              <p className="text-2xl font-bold text-blue-800">2</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">Treinos Hoje</p>
+              <p className="text-3xl font-bold text-accent-700 dark:text-accent-300">3</p>
+              <p className="text-xs text-accent-600 dark:text-accent-400 mt-1">2 concluídos</p>
             </div>
-            <div className="text-3xl">💪</div>
+            <div className="text-4xl group-hover:animate-bounce-subtle">💪</div>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        <div className="stat-card stat-card-coral group">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Avaliações</p>
-              <p className="text-2xl font-bold text-purple-800">12</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">Avaliações</p>
+              <p className="text-3xl font-bold text-coral-700 dark:text-coral-300">18</p>
+              <p className="text-xs text-coral-600 dark:text-coral-400 mt-1">5 pendentes</p>
             </div>
-            <div className="text-3xl">📊</div>
+            <div className="text-4xl group-hover:animate-bounce-subtle">📊</div>
           </div>
         </div>
       </motion.div>
 
-      {/* Navigation Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Modern Navigation Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {navigationItems.slice(1).map((item, index) => (
           <motion.div
             key={item.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 + index * 0.1 }}
-            whileHover={{ y: -4, scale: 1.02 }}
-            className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition-all duration-200"
+            whileHover={{ y: -8, scale: 1.02 }}
+            className="card-gradient group cursor-pointer overflow-hidden relative"
             onClick={() => onNavigate(item.id)}
           >
-            <div className="flex items-center space-x-4 mb-4">
-              <div className="text-4xl">{item.icon}</div>
-              <div>
-                <h3 className="text-xl font-semibold text-gray-900">{item.label}</h3>
-                <p className="text-gray-600 text-sm">{item.description}</p>
+            {/* Gradient overlay */}
+            <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
+            
+            <div className="relative z-10">
+              <div className="flex items-center space-x-4 mb-6">
+                <div className="text-5xl group-hover:animate-bounce-subtle">{item.icon}</div>
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                    {item.label}
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm">{item.description}</p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center text-ocean-600 text-sm font-medium">
-              <span>Acessar</span>
-              <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
+              <div className="flex items-center justify-between">
+                <div className={`flex items-center text-sm font-semibold bg-gradient-to-r ${item.gradient} bg-clip-text text-transparent`}>
+                  <span>Acessar módulo</span>
+                </div>
+                <div className="p-2 rounded-xl bg-white/50 dark:bg-dark-700/50 group-hover:bg-white dark:group-hover:bg-dark-600 transition-colors">
+                  <svg className="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
             </div>
           </motion.div>
         ))}
       </div>
 
-      {/* Recent Activity */}
+      {/* Enhanced Recent Activity */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.2 }}
-        className="mt-12 bg-white rounded-xl p-6 shadow-sm border border-gray-100"
+        className="mt-16 card-gradient"
       >
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Atividades Recentes</h2>
-        <div className="space-y-3">
-          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-            <div className="text-2xl">📊</div>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Atividades Recentes</h2>
+          <button className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium">
+            Ver todas
+          </button>
+        </div>
+        <div className="space-y-4 scrollbar-modern max-h-80 overflow-y-auto">
+          <div className="flex items-center space-x-4 p-4 bg-white/50 dark:bg-dark-800/50 rounded-xl border border-white/20 dark:border-dark-700/20 hover:bg-white/70 dark:hover:bg-dark-700/50 transition-colors">
+            <div className="text-3xl">📊</div>
             <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900">Nova avaliação criada</p>
-              <p className="text-xs text-gray-600">Maria Fernanda Costa - Crawl, Costas, Peito</p>
+              <p className="font-semibold text-gray-900 dark:text-gray-100">Nova avaliação criada</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Maria Fernanda Costa - Crawl, Costas, Peito</p>
             </div>
-            <span className="text-xs text-gray-500">Agora</span>
+            <div className="text-right">
+              <span className="text-xs text-gray-500 dark:text-gray-500 bg-gray-100 dark:bg-dark-700 px-2 py-1 rounded-full">Agora</span>
+            </div>
           </div>
-          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-            <div className="text-2xl">🏊‍♂️</div>
+          <div className="flex items-center space-x-4 p-4 bg-white/50 dark:bg-dark-800/50 rounded-xl border border-white/20 dark:border-dark-700/20 hover:bg-white/70 dark:hover:bg-dark-700/50 transition-colors">
+            <div className="text-3xl">🏊‍♂️</div>
             <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900">Dados de seed carregados</p>
-              <p className="text-xs text-gray-600">9 alunos, 3 turmas, 3 piscinas</p>
+              <p className="font-semibold text-gray-900 dark:text-gray-100">Sistema atualizado</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Correções no formulário de treinos implementadas</p>
             </div>
-            <span className="text-xs text-gray-500">Hoje</span>
+            <div className="text-right">
+              <span className="text-xs text-gray-500 dark:text-gray-500 bg-gray-100 dark:bg-dark-700 px-2 py-1 rounded-full">2h atrás</span>
+            </div>
           </div>
-          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-            <div className="text-2xl">💪</div>
+          <div className="flex items-center space-x-4 p-4 bg-white/50 dark:bg-dark-800/50 rounded-xl border border-white/20 dark:border-dark-700/20 hover:bg-white/70 dark:hover:bg-dark-700/50 transition-colors">
+            <div className="text-3xl">💪</div>
             <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900">Sistema de treinos ativo</p>
-              <p className="text-xs text-gray-600">Registros de treino funcionando</p>
+              <p className="font-semibold text-gray-900 dark:text-gray-100">Treino registrado</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Turma Natação Infantil - 5 participantes</p>
             </div>
-            <span className="text-xs text-gray-500">Hoje</span>
+            <div className="text-right">
+              <span className="text-xs text-gray-500 dark:text-gray-500 bg-gray-100 dark:bg-dark-700 px-2 py-1 rounded-full">Hoje</span>
+            </div>
           </div>
         </div>
       </motion.div>

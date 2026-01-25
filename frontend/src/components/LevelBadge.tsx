@@ -11,29 +11,32 @@ interface LevelBadgeProps {
 const levelConfig = {
   iniciante: {
     label: 'Iniciante',
-    bgColor: 'bg-amber-100',
-    textColor: 'text-amber-800',
-    borderColor: 'border-amber-200'
+    gradient: 'from-amber-400 to-orange-500',
+    textColor: 'text-white',
+    shadowColor: 'shadow-amber-200 dark:shadow-amber-900/50',
+    icon: '🌱'
   },
   intermediario: {
     label: 'Intermediário',
-    bgColor: 'bg-ocean-100',
-    textColor: 'text-ocean-800',
-    borderColor: 'border-ocean-200'
+    gradient: 'from-primary-500 to-ocean-600',
+    textColor: 'text-white',
+    shadowColor: 'shadow-primary-200 dark:shadow-primary-900/50',
+    icon: '🏊‍♂️'
   },
   avancado: {
     label: 'Avançado',
-    bgColor: 'bg-teal-100',
-    textColor: 'text-teal-800',
-    borderColor: 'border-teal-200'
+    gradient: 'from-secondary-500 to-teal-600',
+    textColor: 'text-white',
+    shadowColor: 'shadow-secondary-200 dark:shadow-secondary-900/50',
+    icon: '🏆'
   }
 }
 
 const sizeConfig = {
-  xs: 'px-1.5 py-0.5 text-xs',
-  sm: 'px-2 py-1 text-xs',
-  md: 'px-3 py-1 text-sm',
-  lg: 'px-4 py-2 text-base'
+  xs: 'px-2 py-1 text-xs gap-1',
+  sm: 'px-3 py-1.5 text-xs gap-1.5',
+  md: 'px-4 py-2 text-sm gap-2',
+  lg: 'px-5 py-2.5 text-base gap-2'
 }
 
 export const LevelBadge: React.FC<LevelBadgeProps> = ({ 
@@ -47,13 +50,15 @@ export const LevelBadge: React.FC<LevelBadgeProps> = ({
   return (
     <span
       className={`
-        inline-flex items-center rounded-full font-medium border
-        ${config.bgColor} ${config.textColor} ${config.borderColor}
+        inline-flex items-center rounded-full font-semibold
+        bg-gradient-to-r ${config.gradient} ${config.textColor} ${config.shadowColor}
         ${sizeClasses}
+        shadow-sm hover:shadow-md transition-all duration-200 transform hover:scale-105
         ${className}
       `}
     >
-      {config.label}
+      <span className="text-xs">{config.icon}</span>
+      <span>{config.label}</span>
     </span>
   )
 }

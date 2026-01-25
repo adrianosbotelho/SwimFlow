@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import Dashboard from './components/Dashboard'
 import ApiTest from './components/ApiTest'
 import DevLogin from './components/DevLogin'
+import { ThemeProvider } from './contexts/ThemeContext'
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -22,23 +23,34 @@ function App() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-ocean-50 to-teal-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ocean-600"></div>
-      </div>
+      <ThemeProvider>
+        <div className="min-h-screen bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50 dark:from-dark-950 dark:via-dark-900 dark:to-dark-800 flex items-center justify-center transition-colors duration-300">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="loading-spinner w-12 h-12"></div>
+            <p className="text-gray-600 dark:text-gray-400 font-medium">Carregando SwimFlow...</p>
+          </div>
+        </div>
+      </ThemeProvider>
     )
   }
 
   if (!isLoggedIn) {
-    return <DevLogin onLogin={handleLogin} />
+    return (
+      <ThemeProvider>
+        <DevLogin onLogin={handleLogin} />
+      </ThemeProvider>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-ocean-50 to-teal-50">
-      <div className="container mx-auto px-4 py-4">
-        <ApiTest />
+    <ThemeProvider>
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50 dark:from-dark-950 dark:via-dark-900 dark:to-dark-800 transition-colors duration-300">
+        <div className="container mx-auto px-4 py-4">
+          <ApiTest />
+        </div>
+        <Dashboard />
       </div>
-      <Dashboard />
-    </div>
+    </ThemeProvider>
   )
 }
 
