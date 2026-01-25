@@ -224,7 +224,7 @@ export const ProfessorsPage: React.FC = () => {
           >
             <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <ProfessorForm
-                professor={editingProfessor}
+                professor={editingProfessor || undefined}
                 onSubmit={handleSubmit}
                 onCancel={handleCancel}
                 isLoading={formLoading}

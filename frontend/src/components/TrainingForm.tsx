@@ -262,7 +262,7 @@ export const TrainingForm: React.FC<TrainingFormProps> = ({
             </select>
             {selectedClass && (
               <p className="text-sm text-gray-600 mt-1">
-                Prof. {selectedClass.professor?.name || 'Professor não definido'} • {selectedClass.pool?.name || 'Piscina não definida'}
+                Prof. {selectedClass.schedules?.[0]?.professor?.name || 'Professor não definido'} • {selectedClass.pool?.name || 'Piscina não definida'}
               </p>
             )}
           </div>

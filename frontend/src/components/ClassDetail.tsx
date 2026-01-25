@@ -105,35 +105,54 @@ export const ClassDetail: React.FC<ClassDetailProps> = ({
 
         {/* Class Info Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-          {/* Professor */}
-          {classData.professor && (
+          {/* Professors */}
+          {classData.schedules && classData.schedules.length > 0 && (
             <div>
-              <h3 className="text-sm font-medium text-gray-500 mb-2">Professor</h3>
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 flex-shrink-0">
-                  {classData.professor.profileImage ? (
-                    <img
-                      src={getProfileImageUrl(classData.professor.profileImage)}
-                      alt={classData.professor.name}
-                      className="w-full h-full rounded-full object-cover border border-gray-200"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement
-                        target.style.display = 'none'
-                        target.nextElementSibling?.classList.remove('hidden')
-                      }}
-                    />
-                  ) : null}
-                  <div 
-                    className={`${classData.professor.profileImage ? 'hidden' : ''} w-full h-full rounded-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center text-white text-sm font-semibold`}
-                  >
-                    {classData.professor.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+              <h3 className="text-sm font-medium text-gray-500 mb-2">
+                {classData.schedules.length === 1 ? 'Professor' : 'Professores'}
+              </h3>
+              {classData.schedules.length === 1 ? (
+                // Single professor display
+                classData.schedules[0].professor ? (
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 flex-shrink-0">
+                      {classData.schedules[0].professor.profileImage ? (
+                        <img
+                          src={getProfileImageUrl(classData.schedules[0].professor.profileImage)}
+                          alt={classData.schedules[0].professor.name}
+                          className="w-full h-full rounded-full object-cover border border-gray-200"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement
+                            target.style.display = 'none'
+                            target.nextElementSibling?.classList.remove('hidden')
+                          }}
+                        />
+                      ) : null}
+                      <div 
+                        className={`${classData.schedules[0].professor.profileImage ? 'hidden' : ''} w-full h-full rounded-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center text-white text-sm font-semibold`}
+                      >
+                        {classData.schedules[0].professor.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">{classData.schedules[0].professor.name}</p>
+                      <p className="text-sm text-gray-600">{classData.schedules[0].professor.email}</p>
+                    </div>
                   </div>
+                ) : (
+                  <p className="text-sm text-gray-500">Professor não definido</p>
+                )
+              ) : (
+                // Multiple professors - show count
+                <div className="space-y-1">
+                  <p className="font-medium text-gray-900">
+                    {classData.schedules.filter(s => s.professor).length} professor(es)
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Ver horários para detalhes
+                  </p>
                 </div>
-                <div>
-                  <p className="font-medium text-gray-900">{classData.professor.name}</p>
-                  <p className="text-sm text-gray-600">{classData.professor.email}</p>
-                </div>
-              </div>
+              )}
             </div>
           )}
 

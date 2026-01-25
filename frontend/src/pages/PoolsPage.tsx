@@ -198,7 +198,7 @@ export const PoolsPage: React.FC = () => {
           >
             <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <PoolForm
-                pool={editingPool}
+                pool={editingPool || undefined}
                 onSubmit={handleSubmit}
                 onCancel={handleCancel}
                 isLoading={formLoading}

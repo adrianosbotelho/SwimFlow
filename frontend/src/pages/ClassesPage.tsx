@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ClassCard } from '../components/ClassCard';
 import { ClassForm } from '../components/ClassForm';
-import { classService } from '../services/classService';
 import { professorService } from '../services/professorService';
 import type { Class, CreateClassData, UpdateClassData } from '../types/class';
 import type { Pool } from '../types/pool';
@@ -224,7 +223,7 @@ export const ClassesPage: React.FC = () => {
           >
             <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <ClassForm
-                class={editingClass}
+                class={editingClass || undefined}
                 professors={professors}
                 pools={pools}
                 onSubmit={handleSubmit}
