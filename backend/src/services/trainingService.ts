@@ -1,4 +1,4 @@
-import { PrismaClient, Training, TrainingParticipant } from '@prisma/client';
+import { PrismaClient, Training } from '@prisma/client';
 import Joi from 'joi';
 
 const prisma = new PrismaClient();
@@ -50,10 +50,6 @@ export interface TrainingWithParticipants extends Training {
   class: {
     id: string;
     name: string;
-    professor: {
-      id: string;
-      name: string;
-    };
     pool: {
       id: string;
       name: string;
@@ -138,12 +134,6 @@ class TrainingService {
           },
           class: {
             include: {
-              professor: {
-                select: {
-                  id: true,
-                  name: true
-                }
-              },
               pool: {
                 select: {
                   id: true,
@@ -181,12 +171,6 @@ class TrainingService {
         },
         class: {
           include: {
-            professor: {
-              select: {
-                id: true,
-                name: true
-              }
-            },
             pool: {
               select: {
                 id: true,
@@ -278,12 +262,6 @@ class TrainingService {
           },
           class: {
             include: {
-              professor: {
-                select: {
-                  id: true,
-                  name: true
-                }
-              },
               pool: {
                 select: {
                   id: true,
@@ -335,7 +313,11 @@ class TrainingService {
 
     if (professorId) {
       whereClause.class = {
-        professorId
+        schedules: {
+          some: {
+            professorId
+          }
+        }
       };
     }
 
@@ -374,12 +356,6 @@ class TrainingService {
         },
         class: {
           include: {
-            professor: {
-              select: {
-                id: true,
-                name: true
-              }
-            },
             pool: {
               select: {
                 id: true,

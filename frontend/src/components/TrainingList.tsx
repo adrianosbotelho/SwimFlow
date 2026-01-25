@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { motion } from 'framer-motion';
 import { Training, TrainingFilters } from '../types/training';
 import { TrainingCard } from './TrainingCard';
@@ -26,14 +26,18 @@ interface TrainingListProps {
   showFilters?: boolean;
 }
 
-export const TrainingList: React.FC<TrainingListProps> = ({
+export interface TrainingListRef {
+  refreshTrainings: () => void;
+}
+
+export const TrainingList = forwardRef<TrainingListRef, TrainingListProps>(({
   filters: initialFilters,
   onEdit,
   onDelete,
   onViewDetails,
   compact = false,
   showFilters = true
-}) => {
+}, ref) => {
   const [trainings, setTrainings] = useState<Training[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -61,6 +65,11 @@ export const TrainingList: React.FC<TrainingListProps> = ({
       setLoading(false);
     }
   };
+
+  // Expose refresh method to parent component
+  useImperativeHandle(ref, () => ({
+    refreshTrainings: loadTrainings
+  }));
 
   useEffect(() => {
     loadTrainings();
@@ -422,4 +431,4 @@ export const TrainingList: React.FC<TrainingListProps> = ({
       )}
     </div>
   );
-};
+});

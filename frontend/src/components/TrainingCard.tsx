@@ -66,7 +66,7 @@ export const TrainingCard: React.FC<TrainingCardProps> = ({
             </h3>
           </div>
           <p className="text-sm text-gray-600">
-            {training.class.pool.name} • Prof. {training.class.professor.name}
+            {training.class.pool.name}
           </p>
         </div>
         

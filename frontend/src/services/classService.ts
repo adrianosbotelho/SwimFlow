@@ -32,13 +32,27 @@ export const classService = {
     if (filters?.limit) params.append('limit', filters.limit.toString())
 
     const response = await api.get(`/api/classes?${params.toString()}`)
-    return response.data
+    
+    // Handle the API response structure
+    if (response.data.success && response.data.data) {
+      const data = response.data.data
+      // Check if it's paginated response with classes array
+      if (data.classes && Array.isArray(data.classes)) {
+        return data.classes
+      }
+      // Or if it's a direct array
+      if (Array.isArray(data)) {
+        return data
+      }
+    }
+    
+    return []
   },
 
   // Get class by ID
   async getClass(id: string): Promise<Class> {
     const response = await api.get(`/api/classes/${id}`)
-    return response.data
+    return response.data.success ? response.data.data : response.data
   },
 
   // Create new class

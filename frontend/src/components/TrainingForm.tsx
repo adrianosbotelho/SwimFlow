@@ -40,10 +40,11 @@ export const TrainingForm: React.FC<TrainingFormProps> = ({
     const loadClasses = async () => {
       try {
         setLoadingClasses(true);
-        const data = await classService.listClasses();
-        setClasses(data);
+        const classesData = await classService.listClasses();
+        setClasses(classesData);
       } catch (err) {
         setError('Erro ao carregar turmas');
+        console.error('Error loading classes:', err);
       } finally {
         setLoadingClasses(false);
       }
@@ -262,7 +263,10 @@ export const TrainingForm: React.FC<TrainingFormProps> = ({
             </select>
             {selectedClass && (
               <p className="text-sm text-gray-600 mt-1">
-                Prof. {selectedClass.schedules?.[0]?.professor?.name || 'Professor não definido'} • {selectedClass.pool?.name || 'Piscina não definida'}
+                {selectedClass.schedules && selectedClass.schedules.length > 0 
+                  ? `Prof. ${selectedClass.schedules[0]?.professor?.name || 'Professor não definido'} • ${selectedClass.pool?.name || 'Piscina não definida'}`
+                  : selectedClass.pool?.name || 'Piscina não definida'
+                }
               </p>
             )}
           </div>

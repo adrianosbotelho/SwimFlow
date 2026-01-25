@@ -17,10 +17,6 @@ export interface Training {
   class: {
     id: string;
     name: string;
-    professor: {
-      id: string;
-      name: string;
-    };
     pool: {
       id: string;
       name: string;
