@@ -24,7 +24,7 @@ function App() {
   if (isLoading) {
     return (
       <ThemeProvider>
-        <div className="min-h-screen bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50 dark:from-dark-950 dark:via-dark-900 dark:to-dark-800 flex items-center justify-center transition-colors duration-300">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 flex items-center justify-center transition-colors duration-300">
           <div className="flex flex-col items-center space-y-4">
             <div className="loading-spinner w-12 h-12"></div>
             <p className="text-gray-600 dark:text-gray-400 font-medium">Carregando SwimFlow...</p>
@@ -44,7 +44,7 @@ function App() {
 
   return (
     <ThemeProvider>
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50 dark:from-dark-950 dark:via-dark-900 dark:to-dark-800 transition-colors duration-300">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 transition-colors duration-300">
         <div className="container mx-auto px-4 py-4">
           <ApiTest />
         </div>

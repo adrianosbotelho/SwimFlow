@@ -75,7 +75,7 @@ export const StudentCard: React.FC<StudentCardProps> = ({
       onClick={() => onViewDetails?.(student.id)}
     >
       {/* Gradient overlay on hover */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary-500/10 via-secondary-500/10 to-accent-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-green-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       
       <div className="relative z-10">
         <div className="flex items-start space-x-4">
@@ -85,7 +85,7 @@ export const StudentCard: React.FC<StudentCardProps> = ({
               <img
                 src={getProfileImageUrl(student.profileImage)}
                 alt={student.name}
-                className="w-full h-full rounded-2xl object-cover border-2 border-white/50 dark:border-dark-600/50 shadow-lg group-hover:shadow-xl transition-shadow duration-300"
+                className="w-full h-full rounded-2xl object-cover border-2 border-white/50 dark:border-slate-600/50 shadow-lg group-hover:shadow-xl transition-shadow duration-300"
                 onError={(e) => {
                   // Fallback to initials if image fails to load
                   const target = e.target as HTMLImageElement
@@ -95,19 +95,19 @@ export const StudentCard: React.FC<StudentCardProps> = ({
               />
             ) : null}
             <div 
-              className={`${student.profileImage ? 'hidden' : ''} w-full h-full rounded-2xl bg-gradient-to-br from-primary-500 via-secondary-500 to-accent-500 flex items-center justify-center text-white font-bold shadow-lg group-hover:shadow-xl transition-shadow duration-300 ${compact ? 'text-sm' : 'text-lg'}`}
+              className={`${student.profileImage ? 'hidden' : ''} w-full h-full rounded-2xl bg-gradient-to-br from-blue-500 via-green-500 to-purple-500 flex items-center justify-center text-white font-bold shadow-lg group-hover:shadow-xl transition-shadow duration-300 ${compact ? 'text-sm' : 'text-lg'}`}
             >
               {student.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
             </div>
             {/* Online indicator */}
-            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-secondary-500 rounded-full border-2 border-white dark:border-dark-800 shadow-sm"></div>
+            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-slate-800 shadow-sm"></div>
           </div>
 
           {/* Enhanced Student Info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <h3 className={`font-bold text-gray-900 dark:text-gray-100 truncate group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors ${compact ? 'text-base' : 'text-xl'}`}>
+                <h3 className={`font-bold text-gray-900 dark:text-gray-100 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors ${compact ? 'text-base' : 'text-xl'}`}>
                   {student.name}
                 </h3>
                 <div className="flex items-center space-x-2 mt-1">
@@ -135,7 +135,7 @@ export const StudentCard: React.FC<StudentCardProps> = ({
                       e.stopPropagation()
                       onEdit(student)
                     }}
-                    className="p-2 rounded-xl bg-white/50 dark:bg-dark-700/50 text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-white dark:hover:bg-dark-600 transition-all duration-200 shadow-sm hover:shadow-md"
+                    className="p-2 rounded-xl bg-white/50 dark:bg-slate-700/50 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white dark:hover:bg-slate-600 transition-all duration-200 shadow-sm hover:shadow-md"
                     title="Editar aluno"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -151,7 +151,7 @@ export const StudentCard: React.FC<StudentCardProps> = ({
                         onDelete(student)
                       }
                     }}
-                    className="p-2 rounded-xl bg-white/50 dark:bg-dark-700/50 text-gray-600 dark:text-gray-400 hover:text-coral-600 dark:hover:text-coral-400 hover:bg-white dark:hover:bg-dark-600 transition-all duration-200 shadow-sm hover:shadow-md"
+                    className="p-2 rounded-xl bg-white/50 dark:bg-slate-700/50 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-white dark:hover:bg-slate-600 transition-all duration-200 shadow-sm hover:shadow-md"
                     title="Excluir aluno"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -164,7 +164,7 @@ export const StudentCard: React.FC<StudentCardProps> = ({
                     e.stopPropagation()
                     onViewDetails?.(student.id)
                   }}
-                  className="p-2 rounded-xl bg-white/50 dark:bg-dark-700/50 text-gray-600 dark:text-gray-400 hover:text-secondary-600 dark:hover:text-secondary-400 hover:bg-white dark:hover:bg-dark-600 transition-all duration-200 shadow-sm hover:shadow-md"
+                  className="p-2 rounded-xl bg-white/50 dark:bg-slate-700/50 text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-white dark:hover:bg-slate-600 transition-all duration-200 shadow-sm hover:shadow-md"
                   title="Ver detalhes"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -179,7 +179,7 @@ export const StudentCard: React.FC<StudentCardProps> = ({
               <div className="mt-4 space-y-2">
                 {student.email && (
                   <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-                    <div className="w-4 h-4 rounded bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
+                    <div className="w-4 h-4 rounded bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
                       <span className="text-xs">📧</span>
                     </div>
                     <span className="truncate">{student.email}</span>
@@ -187,7 +187,7 @@ export const StudentCard: React.FC<StudentCardProps> = ({
                 )}
                 {student.phone && (
                   <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-                    <div className="w-4 h-4 rounded bg-secondary-100 dark:bg-secondary-900/30 flex items-center justify-center">
+                    <div className="w-4 h-4 rounded bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
                       <span className="text-xs">📱</span>
                     </div>
                     <span>{student.phone}</span>
@@ -195,7 +195,7 @@ export const StudentCard: React.FC<StudentCardProps> = ({
                 )}
                 {showLastEvaluation && (
                   <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-                    <div className="w-4 h-4 rounded bg-accent-100 dark:bg-accent-900/30 flex items-center justify-center">
+                    <div className="w-4 h-4 rounded bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
                       <span className="text-xs">📊</span>
                     </div>
                     <span>Última avaliação: {formatDate(student.lastEvaluationDate)}</span>

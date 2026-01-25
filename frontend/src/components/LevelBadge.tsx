@@ -18,16 +18,16 @@ const levelConfig = {
   },
   intermediario: {
     label: 'Intermediário',
-    gradient: 'from-primary-500 to-ocean-600',
+    gradient: 'from-blue-500 to-blue-600',
     textColor: 'text-white',
-    shadowColor: 'shadow-primary-200 dark:shadow-primary-900/50',
+    shadowColor: 'shadow-blue-200 dark:shadow-blue-900/50',
     icon: '🏊‍♂️'
   },
   avancado: {
     label: 'Avançado',
-    gradient: 'from-secondary-500 to-teal-600',
+    gradient: 'from-green-500 to-teal-600',
     textColor: 'text-white',
-    shadowColor: 'shadow-secondary-200 dark:shadow-secondary-900/50',
+    shadowColor: 'shadow-green-200 dark:shadow-green-900/50',
     icon: '🏆'
   }
 }

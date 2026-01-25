@@ -21,7 +21,7 @@ const DevLogin: React.FC<DevLoginProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50 dark:from-dark-950 dark:via-dark-900 dark:to-dark-800 flex items-center justify-center transition-colors duration-300 relative">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 flex items-center justify-center transition-colors duration-300 relative">
       {/* Theme Toggle */}
       <div className="absolute top-6 right-6">
         <ThemeToggle />
@@ -29,9 +29,9 @@ const DevLogin: React.FC<DevLoginProps> = ({ onLogin }) => {
 
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-primary-400/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary-400/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-accent-400/10 rounded-full blur-3xl animate-pulse delay-500"></div>
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-400/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-green-400/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-purple-400/10 rounded-full blur-3xl animate-pulse delay-500"></div>
       </div>
 
       <div className="card-gradient max-w-md w-full mx-4 relative z-10 overflow-hidden">
@@ -40,29 +40,29 @@ const DevLogin: React.FC<DevLoginProps> = ({ onLogin }) => {
           <div className="flex items-center justify-center space-x-4 mb-6">
             <div className="relative">
               <span className="text-6xl animate-bounce-subtle">🌊</span>
-              <div className="absolute inset-0 bg-primary-400/30 rounded-full blur-2xl animate-glow"></div>
+              <div className="absolute inset-0 bg-blue-400/30 rounded-full blur-2xl animate-glow"></div>
             </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary-600 via-secondary-600 to-accent-600 dark:from-primary-400 dark:via-secondary-400 dark:to-accent-400 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-green-600 to-purple-600 dark:from-blue-400 dark:via-green-400 dark:to-purple-400 bg-clip-text text-transparent">
               SwimFlow
             </h1>
           </div>
           <p className="text-gray-600 dark:text-gray-300 text-lg font-medium">Sistema de Gestão de Natação</p>
           <div className="mt-2 flex items-center justify-center space-x-2">
-            <div className="w-2 h-2 bg-secondary-500 rounded-full animate-pulse"></div>
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
             <span className="text-sm text-gray-500 dark:text-gray-400">Versão 2.0 - Interface Moderna</span>
-            <div className="w-2 h-2 bg-secondary-500 rounded-full animate-pulse"></div>
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
           </div>
         </div>
 
         {/* Dev Mode Info */}
-        <div className="bg-gradient-to-r from-primary-50 to-secondary-50 dark:from-primary-900/20 dark:to-secondary-900/20 border border-primary-200/50 dark:border-primary-700/50 rounded-2xl p-6 mb-6">
+        <div className="bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 border border-blue-200/50 dark:border-blue-700/50 rounded-2xl p-6 mb-6">
           <div className="flex items-center space-x-3 mb-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-green-500 rounded-xl flex items-center justify-center">
               <span className="text-white text-sm">ℹ️</span>
             </div>
-            <h3 className="font-bold text-primary-800 dark:text-primary-300">Modo Desenvolvimento</h3>
+            <h3 className="font-bold text-blue-800 dark:text-blue-300">Modo Desenvolvimento</h3>
           </div>
-          <p className="text-sm text-primary-700 dark:text-primary-300 leading-relaxed">
+          <p className="text-sm text-blue-700 dark:text-blue-300 leading-relaxed">
             Você está executando o sistema em modo de desenvolvimento com interface moderna e suporte a dark mode. 
             Clique no botão abaixo para acessar sem autenticação.
           </p>
@@ -74,7 +74,7 @@ const DevLogin: React.FC<DevLoginProps> = ({ onLogin }) => {
           disabled={isLoggingIn}
           className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-primary-600 to-secondary-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-green-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="relative z-10 flex items-center justify-center space-x-3">
             {isLoggingIn ? (
               <>
@@ -96,7 +96,7 @@ const DevLogin: React.FC<DevLoginProps> = ({ onLogin }) => {
         {/* Credentials Info */}
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Credenciais de desenvolvimento:</p>
-          <div className="bg-white/50 dark:bg-dark-800/50 backdrop-blur-sm rounded-xl px-4 py-2 border border-white/20 dark:border-dark-700/20">
+          <div className="bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm rounded-xl px-4 py-2 border border-white/20 dark:border-slate-700/20">
             <p className="font-mono text-sm text-gray-700 dark:text-gray-300">
               Professor: dev@swimflow.com
             </p>
@@ -107,13 +107,13 @@ const DevLogin: React.FC<DevLoginProps> = ({ onLogin }) => {
         <div className="mt-8 pt-6 border-t border-white/20 dark:border-dark-700/20">
           <div className="grid grid-cols-3 gap-6">
             <div className="text-center group">
-              <div className="w-12 h-12 bg-gradient-to-br from-secondary-400 to-teal-500 rounded-2xl flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform duration-200 shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-teal-500 rounded-2xl flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform duration-200 shadow-lg">
                 <span className="text-white text-xl">🏊‍♂️</span>
               </div>
               <div className="text-xs font-medium text-gray-700 dark:text-gray-300">Gestão de Alunos</div>
             </div>
             <div className="text-center group">
-              <div className="w-12 h-12 bg-gradient-to-br from-accent-400 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform duration-200 shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform duration-200 shadow-lg">
                 <span className="text-white text-xl">📊</span>
               </div>
               <div className="text-xs font-medium text-gray-700 dark:text-gray-300">Avaliações</div>
@@ -129,7 +129,7 @@ const DevLogin: React.FC<DevLoginProps> = ({ onLogin }) => {
 
         {/* Version Info */}
         <div className="mt-6 text-center">
-          <div className="inline-flex items-center space-x-2 px-3 py-1 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-dark-700 dark:to-dark-600 rounded-full text-xs text-gray-600 dark:text-gray-400">
+          <div className="inline-flex items-center space-x-2 px-3 py-1 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-slate-700 dark:to-slate-600 rounded-full text-xs text-gray-600 dark:text-gray-400">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
             <span>Sistema Online • Dark Mode • Interface 2.0</span>
           </div>

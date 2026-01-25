@@ -45,7 +45,7 @@ export const PoolCard: React.FC<PoolCardProps> = ({
         <div className="flex-1">
           {/* Pool Icon and Name */}
           <div className="flex items-center space-x-3 mb-3">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-ocean-400 to-teal-400 flex items-center justify-center text-white">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-teal-400 flex items-center justify-center text-white">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
               </svg>
@@ -96,7 +96,7 @@ export const PoolCard: React.FC<PoolCardProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex space-x-4">
               <div className="text-center">
-                <div className="text-lg font-semibold text-ocean-600">
+                <div className="text-lg font-semibold text-blue-600">
                   {pool.classes?.length || 0}
                 </div>
                 <div className="text-xs text-gray-500">Turmas</div>
@@ -117,7 +117,7 @@ export const PoolCard: React.FC<PoolCardProps> = ({
                     e.stopPropagation()
                     onEdit(pool)
                   }}
-                  className="p-2 text-gray-400 hover:text-ocean-600 transition-colors"
+                  className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
                   title="Editar piscina"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -146,7 +146,7 @@ export const PoolCard: React.FC<PoolCardProps> = ({
                   e.stopPropagation()
                   onViewDetails?.(pool.id)
                 }}
-                className="p-2 text-gray-400 hover:text-ocean-600 transition-colors"
+                className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
                 title="Ver detalhes"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

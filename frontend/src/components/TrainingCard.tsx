@@ -55,12 +55,12 @@ export const TrainingCard: React.FC<TrainingCardProps> = ({
   const levelCounts = getLevelCounts();
 
   return (
-    <div className="bg-gradient-to-br from-ocean-50 to-teal-50 border border-ocean-200 rounded-xl p-6 hover:shadow-lg transition-all duration-200 hover:-translate-y-1">
+    <div className="bg-gradient-to-br from-blue-50 to-teal-50 border border-blue-200 rounded-xl p-6 hover:shadow-lg transition-all duration-200 hover:-translate-y-1">
       {/* Header */}
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-3 h-3 bg-ocean-500 rounded-full"></div>
+            <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
             <h3 className="text-lg font-semibold text-gray-800">
               {training.class.name}
             </h3>
@@ -75,7 +75,7 @@ export const TrainingCard: React.FC<TrainingCardProps> = ({
             {onViewDetails && (
               <button
                 onClick={() => onViewDetails(training.id)}
-                className="p-2 text-ocean-600 hover:bg-ocean-100 rounded-lg transition-colors"
+                className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
                 title="Ver detalhes"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -113,7 +113,7 @@ export const TrainingCard: React.FC<TrainingCardProps> = ({
       {/* Training Info */}
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div className="flex items-center gap-2">
-          <svg className="w-4 h-4 text-ocean-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4m-6 0h6m-6 0V7a1 1 0 00-1 1v11a2 2 0 002 2h6a2 2 0 002-2V8a1 1 0 00-1-1V7" />
           </svg>
           <span className="text-sm font-medium text-gray-700">
@@ -144,7 +144,7 @@ export const TrainingCard: React.FC<TrainingCardProps> = ({
               </span>
             )}
             {levelCounts.intermediario > 0 && (
-              <span className="text-xs bg-ocean-100 text-ocean-800 px-2 py-1 rounded-full">
+              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
                 {levelCounts.intermediario} Int
               </span>
             )}
@@ -170,8 +170,8 @@ export const TrainingCard: React.FC<TrainingCardProps> = ({
                     className="w-6 h-6 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="w-6 h-6 bg-ocean-200 rounded-full flex items-center justify-center">
-                    <span className="text-xs font-medium text-ocean-700">
+                  <div className="w-6 h-6 bg-blue-200 rounded-full flex items-center justify-center">
+                    <span className="text-xs font-medium text-blue-700">
                       {participant.student.name.charAt(0).toUpperCase()}
                     </span>
                   </div>
@@ -217,7 +217,7 @@ export const TrainingCard: React.FC<TrainingCardProps> = ({
 
       {/* Notes */}
       {training.notes && !compact && (
-        <div className="border-t border-ocean-200 pt-3">
+        <div className="border-t border-blue-200 pt-3">
           <span className="text-sm font-medium text-gray-700 block mb-1">
             Observações
           </span>

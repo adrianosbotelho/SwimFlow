@@ -24,28 +24,28 @@ const navigationItems: NavigationItem[] = [
     label: 'Dashboard',
     icon: '🏠',
     description: 'Visão geral do sistema',
-    gradient: 'from-primary-500 to-primary-600'
+    gradient: 'from-blue-500 to-blue-600'
   },
   {
     id: 'students',
     label: 'Alunos',
     icon: '🏊‍♂️',
     description: 'Gerenciar alunos',
-    gradient: 'from-secondary-500 to-teal-600'
+    gradient: 'from-green-500 to-teal-600'
   },
   {
     id: 'professors',
     label: 'Professores',
     icon: '👨‍🏫',
     description: 'Gerenciar professores',
-    gradient: 'from-accent-500 to-purple-600'
+    gradient: 'from-purple-500 to-purple-600'
   },
   {
     id: 'classes',
     label: 'Turmas',
     icon: '👥',
     description: 'Gerenciar turmas',
-    gradient: 'from-ocean-500 to-blue-600'
+    gradient: 'from-blue-500 to-blue-600'
   },
   {
     id: 'pools',
@@ -66,7 +66,7 @@ const navigationItems: NavigationItem[] = [
     label: 'Avaliações',
     icon: '📊',
     description: 'Sistema de avaliações',
-    gradient: 'from-coral-500 to-red-600'
+    gradient: 'from-red-500 to-red-600'
   }
 ];
 
@@ -94,21 +94,21 @@ const Dashboard: React.FC = () => {
 
   if (currentPage !== 'dashboard') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50 dark:from-dark-950 dark:via-dark-900 dark:to-dark-800 transition-colors duration-300">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 transition-colors duration-300">
         {/* Modern Navigation Bar */}
-        <nav className="glass border-b border-white/20 dark:border-dark-700/50 backdrop-blur-xl">
+        <nav className="glass border-b border-white/20 dark:border-slate-700/50 backdrop-blur-xl">
           <div className="container mx-auto px-6">
             <div className="flex items-center justify-between h-20">
               <div className="flex items-center space-x-6">
                 <button
                   onClick={() => setCurrentPage('dashboard')}
-                  className="flex items-center space-x-3 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors group"
+                  className="flex items-center space-x-3 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors group"
                 >
                   <div className="relative">
                     <span className="text-3xl group-hover:animate-bounce-subtle">🌊</span>
-                    <div className="absolute inset-0 bg-primary-400/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="absolute inset-0 bg-blue-400/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </div>
-                  <span className="font-bold text-2xl bg-gradient-to-r from-primary-600 to-secondary-600 dark:from-primary-400 dark:to-secondary-400 bg-clip-text text-transparent">
+                  <span className="font-bold text-2xl bg-gradient-to-r from-blue-600 to-green-600 dark:from-blue-400 dark:to-green-400 bg-clip-text text-transparent">
                     SwimFlow
                   </span>
                 </button>
@@ -126,7 +126,7 @@ const Dashboard: React.FC = () => {
                 <ThemeToggle />
                 <div className="flex items-center space-x-3">
                   <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">Professor</span>
-                  <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-lg">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-green-500 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-lg">
                     P
                   </div>
                 </div>
@@ -144,7 +144,7 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-secondary-50 to-accent-50 dark:from-dark-950 dark:via-dark-900 dark:to-dark-800 transition-colors duration-300">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 transition-colors duration-300">
       {renderPage()}
     </div>
   );
@@ -168,9 +168,9 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ onNavigate }) => {
           >
             <div className="relative">
               <span className="text-8xl animate-bounce-subtle">🌊</span>
-              <div className="absolute inset-0 bg-primary-400/30 rounded-full blur-2xl animate-glow"></div>
+              <div className="absolute inset-0 bg-blue-400/30 rounded-full blur-2xl animate-glow"></div>
             </div>
-            <h1 className="text-7xl font-bold bg-gradient-to-r from-primary-600 via-secondary-600 to-accent-600 dark:from-primary-400 dark:via-secondary-400 dark:to-accent-400 bg-clip-text text-transparent">
+            <h1 className="text-7xl font-bold bg-gradient-to-r from-blue-600 via-green-600 to-purple-600 dark:from-blue-400 dark:via-green-400 dark:to-purple-400 bg-clip-text text-transparent">
               SwimFlow
             </h1>
           </motion.div>
@@ -200,8 +200,8 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ onNavigate }) => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">Total de Alunos</p>
-              <p className="text-3xl font-bold text-primary-700 dark:text-primary-300">14</p>
-              <p className="text-xs text-primary-600 dark:text-primary-400 mt-1">+2 este mês</p>
+              <p className="text-3xl font-bold text-blue-700 dark:text-blue-300">14</p>
+              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">+2 este mês</p>
             </div>
             <div className="text-4xl group-hover:animate-bounce-subtle">🏊‍♂️</div>
           </div>
@@ -210,8 +210,8 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ onNavigate }) => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">Turmas Ativas</p>
-              <p className="text-3xl font-bold text-secondary-700 dark:text-secondary-300">5</p>
-              <p className="text-xs text-secondary-600 dark:text-secondary-400 mt-1">100% ocupação</p>
+              <p className="text-3xl font-bold text-green-700 dark:text-green-300">5</p>
+              <p className="text-xs text-green-600 dark:text-green-400 mt-1">100% ocupação</p>
             </div>
             <div className="text-4xl group-hover:animate-bounce-subtle">👥</div>
           </div>
@@ -220,8 +220,8 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ onNavigate }) => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">Treinos Hoje</p>
-              <p className="text-3xl font-bold text-accent-700 dark:text-accent-300">3</p>
-              <p className="text-xs text-accent-600 dark:text-accent-400 mt-1">2 concluídos</p>
+              <p className="text-3xl font-bold text-purple-700 dark:text-purple-300">3</p>
+              <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">2 concluídos</p>
             </div>
             <div className="text-4xl group-hover:animate-bounce-subtle">💪</div>
           </div>
@@ -230,8 +230,8 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ onNavigate }) => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">Avaliações</p>
-              <p className="text-3xl font-bold text-coral-700 dark:text-coral-300">18</p>
-              <p className="text-xs text-coral-600 dark:text-coral-400 mt-1">5 pendentes</p>
+              <p className="text-3xl font-bold text-red-700 dark:text-red-300">18</p>
+              <p className="text-xs text-red-600 dark:text-red-400 mt-1">5 pendentes</p>
             </div>
             <div className="text-4xl group-hover:animate-bounce-subtle">📊</div>
           </div>
@@ -267,8 +267,8 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ onNavigate }) => {
                 <div className={`flex items-center text-sm font-semibold bg-gradient-to-r ${item.gradient} bg-clip-text text-transparent`}>
                   <span>Acessar módulo</span>
                 </div>
-                <div className="p-2 rounded-xl bg-white/50 dark:bg-dark-700/50 group-hover:bg-white dark:group-hover:bg-dark-600 transition-colors">
-                  <svg className="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="p-2 rounded-xl bg-white/50 dark:bg-slate-700/50 group-hover:bg-white dark:group-hover:bg-slate-600 transition-colors">
+                  <svg className="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </div>
@@ -287,39 +287,39 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ onNavigate }) => {
       >
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Atividades Recentes</h2>
-          <button className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium">
+          <button className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium">
             Ver todas
           </button>
         </div>
         <div className="space-y-4 scrollbar-modern max-h-80 overflow-y-auto">
-          <div className="flex items-center space-x-4 p-4 bg-white/50 dark:bg-dark-800/50 rounded-xl border border-white/20 dark:border-dark-700/20 hover:bg-white/70 dark:hover:bg-dark-700/50 transition-colors">
+          <div className="flex items-center space-x-4 p-4 bg-white/50 dark:bg-slate-800/50 rounded-xl border border-white/20 dark:border-slate-700/20 hover:bg-white/70 dark:hover:bg-slate-700/50 transition-colors">
             <div className="text-3xl">📊</div>
             <div className="flex-1">
               <p className="font-semibold text-gray-900 dark:text-gray-100">Nova avaliação criada</p>
               <p className="text-sm text-gray-600 dark:text-gray-400">Maria Fernanda Costa - Crawl, Costas, Peito</p>
             </div>
             <div className="text-right">
-              <span className="text-xs text-gray-500 dark:text-gray-500 bg-gray-100 dark:bg-dark-700 px-2 py-1 rounded-full">Agora</span>
+              <span className="text-xs text-gray-500 dark:text-gray-500 bg-gray-100 dark:bg-slate-700 px-2 py-1 rounded-full">Agora</span>
             </div>
           </div>
-          <div className="flex items-center space-x-4 p-4 bg-white/50 dark:bg-dark-800/50 rounded-xl border border-white/20 dark:border-dark-700/20 hover:bg-white/70 dark:hover:bg-dark-700/50 transition-colors">
+          <div className="flex items-center space-x-4 p-4 bg-white/50 dark:bg-slate-800/50 rounded-xl border border-white/20 dark:border-slate-700/20 hover:bg-white/70 dark:hover:bg-slate-700/50 transition-colors">
             <div className="text-3xl">🏊‍♂️</div>
             <div className="flex-1">
               <p className="font-semibold text-gray-900 dark:text-gray-100">Sistema atualizado</p>
               <p className="text-sm text-gray-600 dark:text-gray-400">Correções no formulário de treinos implementadas</p>
             </div>
             <div className="text-right">
-              <span className="text-xs text-gray-500 dark:text-gray-500 bg-gray-100 dark:bg-dark-700 px-2 py-1 rounded-full">2h atrás</span>
+              <span className="text-xs text-gray-500 dark:text-gray-500 bg-gray-100 dark:bg-slate-700 px-2 py-1 rounded-full">2h atrás</span>
             </div>
           </div>
-          <div className="flex items-center space-x-4 p-4 bg-white/50 dark:bg-dark-800/50 rounded-xl border border-white/20 dark:border-dark-700/20 hover:bg-white/70 dark:hover:bg-dark-700/50 transition-colors">
+          <div className="flex items-center space-x-4 p-4 bg-white/50 dark:bg-slate-800/50 rounded-xl border border-white/20 dark:border-slate-700/20 hover:bg-white/70 dark:hover:bg-slate-700/50 transition-colors">
             <div className="text-3xl">💪</div>
             <div className="flex-1">
               <p className="font-semibold text-gray-900 dark:text-gray-100">Treino registrado</p>
               <p className="text-sm text-gray-600 dark:text-gray-400">Turma Natação Infantil - 5 participantes</p>
             </div>
             <div className="text-right">
-              <span className="text-xs text-gray-500 dark:text-gray-500 bg-gray-100 dark:bg-dark-700 px-2 py-1 rounded-full">Hoje</span>
+              <span className="text-xs text-gray-500 dark:text-gray-500 bg-gray-100 dark:bg-slate-700 px-2 py-1 rounded-full">Hoje</span>
             </div>
           </div>
         </div>
