@@ -1,17 +1,10 @@
 export interface Class {
   id: string
   name: string
-  professorId: string
   poolId: string
   maxCapacity: number
   createdAt: string
   updatedAt: string
-  professor?: {
-    id: string
-    name: string
-    email: string
-    profileImage?: string | null
-  }
   pool?: {
     id: string
     name: string
@@ -30,9 +23,16 @@ export interface Class {
 export interface ClassSchedule {
   id: string
   classId: string
+  professorId: string
   dayOfWeek: number
   startTime: string
   endTime: string
+  professor?: {
+    id: string
+    name: string
+    email: string
+    profileImage?: string | null
+  }
 }
 
 export interface ClassStudent {
@@ -50,25 +50,26 @@ export interface ClassStudent {
 
 export interface CreateClassData {
   name: string
-  professorId: string
   poolId: string
   maxCapacity: number
   schedules: {
     dayOfWeek: number
     startTime: string
     endTime: string
+    professorId: string
   }[]
 }
 
 export interface UpdateClassData {
   name?: string
-  professorId?: string
   poolId?: string
   maxCapacity?: number
   schedules?: {
+    id?: string
     dayOfWeek: number
     startTime: string
     endTime: string
+    professorId: string
   }[]
 }
 

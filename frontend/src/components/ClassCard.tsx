@@ -91,48 +91,49 @@ export const ClassCard: React.FC<ClassCardProps> = ({
             </div>
           </div>
 
-          {/* Professor Info */}
-          {classData.professor && (
-            <div className="flex items-center space-x-2 mb-3">
-              <div className="w-8 h-8 flex-shrink-0">
-                {classData.professor.profileImage ? (
-                  <img
-                    src={getProfileImageUrl(classData.professor.profileImage)}
-                    alt={classData.professor.name}
-                    className="w-full h-full rounded-full object-cover border border-gray-200"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement
-                      target.style.display = 'none'
-                      target.nextElementSibling?.classList.remove('hidden')
-                    }}
-                  />
-                ) : null}
-                <div 
-                  className={`${classData.professor.profileImage ? 'hidden' : ''} w-full h-full rounded-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center text-white text-xs font-semibold`}
-                >
-                  {classData.professor.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-                </div>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-700">
-                  {classData.professor.name}
-                </p>
-                <p className="text-xs text-gray-500">Professor</p>
-              </div>
-            </div>
-          )}
-
-          {/* Schedules */}
+          {/* Schedules with Professors */}
           {!compact && classData.schedules && classData.schedules.length > 0 && (
             <div className="mb-3">
-              <div className="flex flex-wrap gap-1">
+              <div className="space-y-2">
                 {classData.schedules.map((schedule) => (
-                  <span
+                  <div
                     key={schedule.id}
-                    className="inline-block px-2 py-1 text-xs bg-ocean-100 text-ocean-800 rounded-full"
+                    className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
                   >
-                    {dayNames[schedule.dayOfWeek]} {formatTime(schedule.startTime)}-{formatTime(schedule.endTime)}
-                  </span>
+                    <div className="flex items-center space-x-2">
+                      <span className="inline-block px-2 py-1 text-xs bg-ocean-100 text-ocean-800 rounded-full">
+                        {dayNames[schedule.dayOfWeek]} {formatTime(schedule.startTime)}-{formatTime(schedule.endTime)}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {schedule.professor && (
+                        <>
+                          <div className="w-6 h-6 flex-shrink-0">
+                            {schedule.professor.profileImage ? (
+                              <img
+                                src={getProfileImageUrl(schedule.professor.profileImage)}
+                                alt={schedule.professor.name}
+                                className="w-full h-full rounded-full object-cover border border-gray-200"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement
+                                  target.style.display = 'none'
+                                  target.nextElementSibling?.classList.remove('hidden')
+                                }}
+                              />
+                            ) : null}
+                            <div 
+                              className={`${schedule.professor.profileImage ? 'hidden' : ''} w-full h-full rounded-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center text-white text-xs font-semibold`}
+                            >
+                              {schedule.professor.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                            </div>
+                          </div>
+                          <span className="text-xs text-gray-600 font-medium">
+                            {schedule.professor.name}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>

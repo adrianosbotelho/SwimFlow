@@ -48,7 +48,6 @@ export const ClassForm: React.FC<ClassFormProps> = ({
 }) => {
   const [formData, setFormData] = useState({
     name: '',
-    professorId: '',
     poolId: '',
     maxCapacity: ''
   })
@@ -57,6 +56,7 @@ export const ClassForm: React.FC<ClassFormProps> = ({
     dayOfWeek: number
     startTime: string
     endTime: string
+    professorId: string
   }[]>([])
 
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -65,7 +65,6 @@ export const ClassForm: React.FC<ClassFormProps> = ({
     if (classData) {
       setFormData({
         name: classData.name || '',
-        professorId: classData.professorId || '',
         poolId: classData.poolId || '',
         maxCapacity: classData.maxCapacity?.toString() || ''
       })
@@ -74,7 +73,8 @@ export const ClassForm: React.FC<ClassFormProps> = ({
         setSchedules(classData.schedules.map(schedule => ({
           dayOfWeek: schedule.dayOfWeek,
           startTime: extractTimeFromTimestamp(schedule.startTime),
-          endTime: extractTimeFromTimestamp(schedule.endTime)
+          endTime: extractTimeFromTimestamp(schedule.endTime),
+          professorId: schedule.professorId || ''
         })))
       }
     }
@@ -87,10 +87,6 @@ export const ClassForm: React.FC<ClassFormProps> = ({
       newErrors.name = 'Nome é obrigatório'
     } else if (formData.name.length < 2) {
       newErrors.name = 'Nome deve ter pelo menos 2 caracteres'
-    }
-
-    if (!formData.professorId) {
-      newErrors.professorId = 'Professor é obrigatório'
     }
 
     if (!formData.poolId) {
@@ -120,6 +116,10 @@ export const ClassForm: React.FC<ClassFormProps> = ({
         } else if (schedule.startTime >= schedule.endTime) {
           newErrors[`schedule_${index}`] = 'Horário de início deve ser anterior ao horário de fim'
         }
+        
+        if (!schedule.professorId) {
+          newErrors[`schedule_${index}_professor`] = 'Professor é obrigatório para este horário'
+        }
       })
     }
 
@@ -137,13 +137,13 @@ export const ClassForm: React.FC<ClassFormProps> = ({
     try {
       const submitData: CreateClassData | UpdateClassData = {
         name: formData.name.trim(),
-        professorId: formData.professorId,
         poolId: formData.poolId,
         maxCapacity: parseInt(formData.maxCapacity),
         schedules: schedules.map(schedule => ({
           dayOfWeek: schedule.dayOfWeek,
           startTime: schedule.startTime,
-          endTime: schedule.endTime
+          endTime: schedule.endTime,
+          professorId: schedule.professorId
         }))
       }
 
@@ -166,7 +166,8 @@ export const ClassForm: React.FC<ClassFormProps> = ({
     setSchedules(prev => [...prev, {
       dayOfWeek: 1, // Monday
       startTime: '08:00',
-      endTime: '09:00'
+      endTime: '09:00',
+      professorId: ''
     }])
   }
 
@@ -186,8 +187,12 @@ export const ClassForm: React.FC<ClassFormProps> = ({
     ))
     
     // Clear error when user starts typing
-    if (errors[`schedule_${index}`]) {
-      setErrors(prev => ({ ...prev, [`schedule_${index}`]: '' }))
+    if (errors[`schedule_${index}`] || errors[`schedule_${index}_professor`]) {
+      setErrors(prev => ({ 
+        ...prev, 
+        [`schedule_${index}`]: '',
+        [`schedule_${index}_professor`]: ''
+      }))
     }
   }
 
@@ -215,51 +220,25 @@ export const ClassForm: React.FC<ClassFormProps> = ({
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Name */}
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-            Nome da Turma *
-          </label>
-          <input
-            type="text"
-            id="name"
-            value={formData.name}
-            onChange={(e) => handleInputChange('name', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent ${
-              errors.name ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="Ex: Natação Iniciante - Manhã"
-            disabled={isLoading}
-          />
-          {errors.name && (
-            <p className="mt-1 text-sm text-red-600">{errors.name}</p>
-          )}
-        </div>
-
-        {/* Professor and Pool */}
+        {/* Name and Pool */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="professorId" className="block text-sm font-medium text-gray-700 mb-2">
-              Professor *
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+              Nome da Turma *
             </label>
-            <select
-              id="professorId"
-              value={formData.professorId}
-              onChange={(e) => handleInputChange('professorId', e.target.value)}
+            <input
+              type="text"
+              id="name"
+              value={formData.name}
+              onChange={(e) => handleInputChange('name', e.target.value)}
               className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent ${
-                errors.professorId ? 'border-red-500' : 'border-gray-300'
+                errors.name ? 'border-red-500' : 'border-gray-300'
               }`}
+              placeholder="Ex: Natação Iniciante - Manhã"
               disabled={isLoading}
-            >
-              <option value="">Selecione um professor</option>
-              {professors.map(professor => (
-                <option key={professor.id} value={professor.id}>
-                  {professor.name}
-                </option>
-              ))}
-            </select>
-            {errors.professorId && (
-              <p className="mt-1 text-sm text-red-600">{errors.professorId}</p>
+            />
+            {errors.name && (
+              <p className="mt-1 text-sm text-red-600">{errors.name}</p>
             )}
           </div>
 
@@ -351,48 +330,94 @@ export const ClassForm: React.FC<ClassFormProps> = ({
           ) : (
             <div className="space-y-3">
               {schedules.map((schedule, index) => (
-                <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                  <select
-                    value={schedule.dayOfWeek}
-                    onChange={(e) => updateSchedule(index, 'dayOfWeek', parseInt(e.target.value))}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent"
-                    disabled={isLoading}
-                  >
-                    {dayNames.map((day, dayIndex) => (
-                      <option key={dayIndex} value={dayIndex}>
-                        {day}
-                      </option>
-                    ))}
-                  </select>
+                <div key={index} className="p-4 bg-gray-50 rounded-lg border">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Dia da Semana
+                      </label>
+                      <select
+                        value={schedule.dayOfWeek}
+                        onChange={(e) => updateSchedule(index, 'dayOfWeek', parseInt(e.target.value))}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent"
+                        disabled={isLoading}
+                      >
+                        {dayNames.map((day, dayIndex) => (
+                          <option key={dayIndex} value={dayIndex}>
+                            {day}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-                  <input
-                    type="time"
-                    value={schedule.startTime}
-                    onChange={(e) => updateSchedule(index, 'startTime', e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent"
-                    disabled={isLoading}
-                  />
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Início
+                      </label>
+                      <input
+                        type="time"
+                        value={schedule.startTime}
+                        onChange={(e) => updateSchedule(index, 'startTime', e.target.value)}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent"
+                        disabled={isLoading}
+                      />
+                    </div>
 
-                  <span className="text-gray-500">até</span>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Fim
+                      </label>
+                      <input
+                        type="time"
+                        value={schedule.endTime}
+                        onChange={(e) => updateSchedule(index, 'endTime', e.target.value)}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent"
+                        disabled={isLoading}
+                      />
+                    </div>
 
-                  <input
-                    type="time"
-                    value={schedule.endTime}
-                    onChange={(e) => updateSchedule(index, 'endTime', e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent"
-                    disabled={isLoading}
-                  />
+                    <div className="flex items-end">
+                      <button
+                        type="button"
+                        onClick={() => removeSchedule(index)}
+                        className="w-full p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors flex items-center justify-center"
+                        disabled={isLoading}
+                      >
+                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Remover
+                      </button>
+                    </div>
+                  </div>
 
-                  <button
-                    type="button"
-                    onClick={() => removeSchedule(index)}
-                    className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                    disabled={isLoading}
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Professor *
+                    </label>
+                    <select
+                      value={schedule.professorId}
+                      onChange={(e) => updateSchedule(index, 'professorId', e.target.value)}
+                      className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent ${
+                        errors[`schedule_${index}_professor`] ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                      disabled={isLoading}
+                    >
+                      <option value="">Selecione um professor</option>
+                      {professors.map(professor => (
+                        <option key={professor.id} value={professor.id}>
+                          {professor.name}
+                        </option>
+                      ))}
+                    </select>
+                    {errors[`schedule_${index}_professor`] && (
+                      <p className="mt-1 text-xs text-red-600">{errors[`schedule_${index}_professor`]}</p>
+                    )}
+                  </div>
+
+                  {(errors[`schedule_${index}`]) && (
+                    <p className="mt-2 text-xs text-red-600">{errors[`schedule_${index}`]}</p>
+                  )}
                 </div>
               ))}
             </div>

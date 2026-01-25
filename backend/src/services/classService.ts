@@ -6,28 +6,29 @@ const prisma = new PrismaClient()
 // Validation schemas
 export const createClassSchema = Joi.object({
   name: Joi.string().min(2).max(255).required(),
-  professorId: Joi.string().uuid().required(),
   poolId: Joi.string().uuid().required(),
   maxCapacity: Joi.number().integer().min(1).required(),
   schedules: Joi.array().items(
     Joi.object({
       dayOfWeek: Joi.number().integer().min(0).max(6).required(),
       startTime: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).required(),
-      endTime: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).required()
+      endTime: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).required(),
+      professorId: Joi.string().uuid().required()
     })
   ).min(1).required()
 })
 
 export const updateClassSchema = Joi.object({
   name: Joi.string().min(2).max(255).optional(),
-  professorId: Joi.string().uuid().optional(),
   poolId: Joi.string().uuid().optional(),
   maxCapacity: Joi.number().integer().min(1).optional(),
   schedules: Joi.array().items(
     Joi.object({
+      id: Joi.string().uuid().optional(),
       dayOfWeek: Joi.number().integer().min(0).max(6).required(),
       startTime: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).required(),
-      endTime: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).required()
+      endTime: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).required(),
+      professorId: Joi.string().uuid().required()
     })
   ).min(1).optional()
 })
@@ -43,25 +44,26 @@ export const classFiltersSchema = Joi.object({
 // Types
 export interface CreateClassData {
   name: string
-  professorId: string
   poolId: string
   maxCapacity: number
   schedules: {
     dayOfWeek: number
     startTime: string
     endTime: string
+    professorId: string
   }[]
 }
 
 export interface UpdateClassData {
   name?: string
-  professorId?: string
   poolId?: string
   maxCapacity?: number
   schedules?: {
+    id?: string
     dayOfWeek: number
     startTime: string
     endTime: string
+    professorId: string
   }[]
 }
 
@@ -99,15 +101,17 @@ export class ClassService {
     }
 
     try {
-      // Verify professor exists
-      const professor = await prisma.user.findUnique({
-        where: { id: data.professorId }
+      // Verify all professors exist
+      const professorIds = [...new Set(data.schedules.map(s => s.professorId))]
+      const professors = await prisma.user.findMany({
+        where: { 
+          id: { in: professorIds },
+          role: 'professor'
+        }
       })
-      if (!professor) {
-        throw new Error('Professor not found')
-      }
-      if (professor.role !== 'professor') {
-        throw new Error('User is not a professor')
+      
+      if (professors.length !== professorIds.length) {
+        throw new Error('One or more professors not found or not valid professors')
       }
 
       // Verify pool exists
@@ -128,7 +132,6 @@ export class ClassService {
         const newClass = await tx.class.create({
           data: {
             name: data.name,
-            professorId: data.professorId,
             poolId: data.poolId,
             maxCapacity: data.maxCapacity
           }
@@ -138,6 +141,7 @@ export class ClassService {
         await tx.classSchedule.createMany({
           data: data.schedules.map(schedule => ({
             classId: newClass.id,
+            professorId: schedule.professorId,
             dayOfWeek: schedule.dayOfWeek,
             startTime: timeStringToDate(schedule.startTime),
             endTime: timeStringToDate(schedule.endTime)
@@ -171,16 +175,18 @@ export class ClassService {
         throw new Error('Class not found')
       }
 
-      // Verify professor if provided
-      if (data.professorId) {
-        const professor = await prisma.user.findUnique({
-          where: { id: data.professorId }
+      // Verify all professors if schedules provided
+      if (data.schedules) {
+        const professorIds = [...new Set(data.schedules.map(s => s.professorId))]
+        const professors = await prisma.user.findMany({
+          where: { 
+            id: { in: professorIds },
+            role: 'professor'
+          }
         })
-        if (!professor) {
-          throw new Error('Professor not found')
-        }
-        if (professor.role !== 'professor') {
-          throw new Error('User is not a professor')
+        
+        if (professors.length !== professorIds.length) {
+          throw new Error('One or more professors not found or not valid professors')
         }
       }
 
@@ -206,7 +212,6 @@ export class ClassService {
           where: { id },
           data: {
             ...(data.name && { name: data.name }),
-            ...(data.professorId && { professorId: data.professorId }),
             ...(data.poolId && { poolId: data.poolId }),
             ...(data.maxCapacity && { maxCapacity: data.maxCapacity })
           }
@@ -223,6 +228,7 @@ export class ClassService {
           await tx.classSchedule.createMany({
             data: data.schedules.map(schedule => ({
               classId: id,
+              professorId: schedule.professorId,
               dayOfWeek: schedule.dayOfWeek,
               startTime: timeStringToDate(schedule.startTime),
               endTime: timeStringToDate(schedule.endTime)
@@ -246,9 +252,8 @@ export class ClassService {
   }
 
   static async getClass(id: string): Promise<Class & { 
-    professor: any, 
     pool: any, 
-    schedules: ClassSchedule[], 
+    schedules: (ClassSchedule & { professor: any })[], 
     students: any[],
     _count: { students: number }
   }> {
@@ -256,14 +261,6 @@ export class ClassService {
       const classData = await prisma.class.findUnique({
         where: { id },
         include: {
-          professor: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              profileImage: true
-            }
-          },
           pool: {
             select: {
               id: true,
@@ -275,6 +272,16 @@ export class ClassService {
             }
           },
           schedules: {
+            include: {
+              professor: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  profileImage: true
+                }
+              }
+            },
             orderBy: {
               dayOfWeek: 'asc'
             }
@@ -332,7 +339,11 @@ export class ClassService {
       }
 
       if (professorId) {
-        where.professorId = professorId
+        where.schedules = {
+          some: {
+            professorId: professorId
+          }
+        }
       }
 
       if (poolId) {
@@ -348,13 +359,6 @@ export class ClassService {
             name: 'asc'
           },
           include: {
-            professor: {
-              select: {
-                id: true,
-                name: true,
-                email: true
-              }
-            },
             pool: {
               select: {
                 id: true,
@@ -362,6 +366,15 @@ export class ClassService {
               }
             },
             schedules: {
+              include: {
+                professor: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true
+                  }
+                }
+              },
               orderBy: {
                 dayOfWeek: 'asc'
               }
@@ -479,10 +492,14 @@ export class ClassService {
         prisma.class.count(),
         prisma.class.findMany({
           include: {
-            professor: {
-              select: {
-                id: true,
-                name: true
+            schedules: {
+              include: {
+                professor: {
+                  select: {
+                    id: true,
+                    name: true
+                  }
+                }
               }
             },
             _count: {
@@ -497,9 +514,12 @@ export class ClassService {
       const totalStudents = classes.reduce((sum, cls) => sum + cls._count.students, 0)
       const averageStudentsPerClass = total > 0 ? Math.round(totalStudents / total) : 0
 
+      // Count classes by professor (a class can have multiple professors)
       const byProfessor = classes.reduce((acc, cls) => {
-        const professorName = cls.professor.name
-        acc[professorName] = (acc[professorName] || 0) + 1
+        const professors = [...new Set(cls.schedules.map(s => s.professor.name))]
+        professors.forEach(professorName => {
+          acc[professorName] = (acc[professorName] || 0) + 1
+        })
         return acc
       }, {} as Record<string, number>)
 
