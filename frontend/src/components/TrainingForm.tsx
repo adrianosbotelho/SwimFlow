@@ -64,9 +64,11 @@ export const TrainingForm: React.FC<TrainingFormProps> = ({
       try {
         setLoadingStudents(true);
         const selectedClass = await classService.getClass(formData.classId);
-        setAvailableStudents(selectedClass.students?.map((cs: any) => cs.student) || []);
+        const students = selectedClass.students?.map((cs: any) => cs.student) || [];
+        setAvailableStudents(students);
       } catch (err) {
-        setError('Erro ao carregar alunos da turma');
+        console.error('Error loading students:', err);
+        setError('Erro ao carregar alunos da turma: ' + (err instanceof Error ? err.message : 'Unknown error'));
         setAvailableStudents([]);
       } finally {
         setLoadingStudents(false);
@@ -354,7 +356,8 @@ export const TrainingForm: React.FC<TrainingFormProps> = ({
                 <button
                   type="button"
                   onClick={selectAllParticipants}
-                  className="text-sm text-teal-600 hover:text-teal-700 font-medium"
+                  disabled={availableStudents.length === 0}
+                  className="text-sm text-teal-600 hover:text-teal-700 font-medium disabled:text-gray-400"
                 >
                   Selecionar todos
                 </button>
@@ -375,7 +378,7 @@ export const TrainingForm: React.FC<TrainingFormProps> = ({
               </div>
             ) : availableStudents.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
-                Nenhum aluno encontrado nesta turma
+                {formData.classId ? 'Nenhum aluno encontrado nesta turma' : 'Selecione uma turma primeiro'}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-4">

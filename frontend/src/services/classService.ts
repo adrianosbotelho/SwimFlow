@@ -74,7 +74,7 @@ export const classService = {
 
   // Add student to class
   async addStudent(classId: string, studentId: string): Promise<void> {
-    await api.post(`/api/classes/${classId}/students`, { studentId })
+    await api.post(`/api/classes/${classId}/students/${studentId}`)
   },
 
   // Remove student from class

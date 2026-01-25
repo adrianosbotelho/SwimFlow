@@ -1,8 +1,10 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { motion } from 'framer-motion'
 import { studentService } from '../services/studentService'
+import classService from '../services/classService'
 import type { Student, CreateStudentData, UpdateStudentData, Level } from '../types/student'
+import type { Class } from '../types/class'
 
 interface StudentFormProps {
   student?: Student | null
@@ -18,6 +20,7 @@ type FormData = {
   level: Level
   objectives: string
   medicalNotes: string
+  classIds: string[]
 }
 
 const levelOptions: { value: Level; label: string }[] = [
@@ -35,6 +38,9 @@ export const StudentForm: React.FC<StudentFormProps> = ({
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [uploadingImage, setUploadingImage] = useState(false)
+  const [classes, setClasses] = useState<Class[]>([])
+  const [loadingClasses, setLoadingClasses] = useState(true)
+  const [selectedClassIds, setSelectedClassIds] = useState<string[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const isEditing = !!student
@@ -52,9 +58,53 @@ export const StudentForm: React.FC<StudentFormProps> = ({
       birthDate: student?.birthDate ? student.birthDate.split('T')[0] : '',
       level: student?.level || 'iniciante',
       objectives: student?.objectives || '',
-      medicalNotes: student?.medicalNotes || ''
+      medicalNotes: student?.medicalNotes || '',
+      classIds: []
     }
   })
+
+  // Load classes and student's current classes
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoadingClasses(true)
+        const classesData = await classService.listClasses()
+        setClasses(classesData)
+
+        // If editing, load student's current classes
+        if (student?.id) {
+          const studentData = await studentService.getStudent(student.id)
+          const currentClassIds = studentData.classStudents?.map(cs => cs.classId) || []
+          setSelectedClassIds(currentClassIds)
+        }
+      } catch (error) {
+        console.error('Error loading classes:', error)
+      } finally {
+        setLoadingClasses(false)
+      }
+    }
+
+    loadData()
+  }, [student?.id])
+
+  // Handle class selection
+  const handleClassToggle = (classId: string) => {
+    setSelectedClassIds(prev => {
+      if (prev.includes(classId)) {
+        return prev.filter(id => id !== classId)
+      } else {
+        return [...prev, classId]
+      }
+    })
+  }
+
+  const selectAllClasses = () => {
+    setSelectedClassIds(classes.map(c => c.id))
+  }
+
+  const clearAllClasses = () => {
+    setSelectedClassIds([])
+  }
 
   // Handle image selection
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -138,6 +188,39 @@ export const StudentForm: React.FC<StudentFormProps> = ({
         } finally {
           setUploadingImage(false)
         }
+      }
+
+      // Manage class enrollments
+      try {
+        // Get current enrollments if editing
+        let currentClassIds: string[] = []
+        if (isEditing) {
+          const currentStudent = await studentService.getStudent(savedStudent.id)
+          currentClassIds = currentStudent.classStudents?.map(cs => cs.classId) || []
+        }
+
+        // Add new enrollments
+        const classesToAdd = selectedClassIds.filter(classId => !currentClassIds.includes(classId))
+        for (const classId of classesToAdd) {
+          try {
+            await classService.addStudent(classId, savedStudent.id)
+          } catch (error) {
+            console.warn(`Failed to add student to class ${classId}:`, error)
+          }
+        }
+
+        // Remove old enrollments
+        const classesToRemove = currentClassIds.filter(classId => !selectedClassIds.includes(classId))
+        for (const classId of classesToRemove) {
+          try {
+            await classService.removeStudent(classId, savedStudent.id)
+          } catch (error) {
+            console.warn(`Failed to remove student from class ${classId}:`, error)
+          }
+        }
+      } catch (error) {
+        console.error('Error managing class enrollments:', error)
+        // Continue even if class management fails
       }
 
       onSubmit(savedStudent)
@@ -354,6 +437,74 @@ export const StudentForm: React.FC<StudentFormProps> = ({
           {errors.medicalNotes && (
             <p className="mt-1 text-sm text-red-600">{errors.medicalNotes.message}</p>
           )}
+        </div>
+
+        {/* Class Enrollment */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <label className="block text-sm font-medium text-gray-700">
+              Turmas ({selectedClassIds.length} selecionadas)
+            </label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={selectAllClasses}
+                disabled={loadingClasses || classes.length === 0}
+                className="text-sm text-teal-600 hover:text-teal-700 font-medium disabled:text-gray-400"
+              >
+                Selecionar todas
+              </button>
+              <button
+                type="button"
+                onClick={clearAllClasses}
+                className="text-sm text-gray-600 hover:text-gray-700 font-medium"
+              >
+                Limpar seleção
+              </button>
+            </div>
+          </div>
+
+          {loadingClasses ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-ocean-500"></div>
+              <span className="ml-2 text-gray-600">Carregando turmas...</span>
+            </div>
+          ) : classes.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              Nenhuma turma disponível
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-4">
+              {classes.map((classItem) => (
+                <label
+                  key={classItem.id}
+                  className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                    selectedClassIds.includes(classItem.id)
+                      ? 'bg-ocean-50 border-ocean-200'
+                      : 'bg-gray-50 hover:bg-gray-100'
+                  } border`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedClassIds.includes(classItem.id)}
+                    onChange={() => handleClassToggle(classItem.id)}
+                    className="w-4 h-4 text-ocean-600 border-gray-300 rounded focus:ring-ocean-500"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {classItem.name}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {classItem.pool?.name} • {classItem._count?.students || 0}/{classItem.maxCapacity} alunos
+                    </p>
+                  </div>
+                </label>
+              ))}
+            </div>
+          )}
+          <p className="text-xs text-gray-500 mt-2">
+            Opcional: Selecione as turmas que o aluno irá frequentar. Você pode alterar isso depois.
+          </p>
         </div>
 
         {/* Form Actions */}
