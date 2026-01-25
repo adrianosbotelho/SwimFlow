@@ -1,15 +1,19 @@
 import { Router, Request, Response } from 'express'
 import { UserService, CreateUserData, UpdateUserData, UserFilters } from '../services/userService'
 import { authenticateToken, requireAdmin, requireProfessorOrAdmin, AuthenticatedRequest } from '../middleware/auth'
+import { devAuthenticateToken } from '../middleware/devAuth'
 import { UserRole } from '@prisma/client'
 
 const router = Router()
 
-// All user routes require authentication
-router.use(authenticateToken)
+// Apply authentication middleware to all routes
+// Use dev auth in development, real auth in production
+const authMiddleware = process.env.NODE_ENV === 'development' ? devAuthenticateToken : authenticateToken
+router.use(authMiddleware)
 
-// Create user (admin only)
-router.post('/', requireAdmin, async (req: Request, res: Response): Promise<void> => {
+// Create user (admin only in production, anyone in development)
+const createUserMiddleware = process.env.NODE_ENV === 'development' ? [] : [requireAdmin];
+router.post('/', createUserMiddleware, async (req: Request, res: Response): Promise<void> => {
   try {
     const userData: CreateUserData = req.body
     const user = await UserService.createUser(userData)
@@ -51,8 +55,9 @@ router.post('/', requireAdmin, async (req: Request, res: Response): Promise<void
   }
 })
 
-// Get all users (admin only)
-router.get('/', requireAdmin, async (req: Request, res: Response): Promise<void> => {
+// Get all users (admin only in production, anyone in development)
+const getUsersMiddleware = process.env.NODE_ENV === 'development' ? [] : [requireAdmin];
+router.get('/', getUsersMiddleware, async (req: Request, res: Response): Promise<void> => {
   try {
     const filters: UserFilters = {}
     
@@ -82,13 +87,14 @@ router.get('/', requireAdmin, async (req: Request, res: Response): Promise<void>
   }
 })
 
-// Get user by ID (admin or own profile)
-router.get('/:id', requireProfessorOrAdmin, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+// Get user by ID (admin or own profile in production, anyone in development)
+const getUserByIdMiddleware = process.env.NODE_ENV === 'development' ? [] : [requireProfessorOrAdmin];
+router.get('/:id', getUserByIdMiddleware, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params
 
-    // Check if user is trying to access their own profile or is admin
-    if (req.user?.role !== 'admin' && req.user?.id !== id) {
+    // Check if user is trying to access their own profile or is admin (skip in development)
+    if (process.env.NODE_ENV !== 'development' && req.user?.role !== 'admin' && req.user?.id !== id) {
       res.status(403).json({
         code: 'FORBIDDEN',
         message: 'You can only access your own profile',
@@ -123,14 +129,15 @@ router.get('/:id', requireProfessorOrAdmin, async (req: AuthenticatedRequest, re
   }
 })
 
-// Update user (admin or own profile)
-router.put('/:id', requireProfessorOrAdmin, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+// Update user (admin or own profile in production, anyone in development)
+const updateUserMiddleware = process.env.NODE_ENV === 'development' ? [] : [requireProfessorOrAdmin];
+router.put('/:id', updateUserMiddleware, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params
     const updateData: UpdateUserData = req.body
 
-    // Check permissions
-    if (req.user?.role !== 'admin' && req.user?.id !== id) {
+    // Check permissions (skip in development)
+    if (process.env.NODE_ENV !== 'development' && req.user?.role !== 'admin' && req.user?.id !== id) {
       res.status(403).json({
         code: 'FORBIDDEN',
         message: 'You can only update your own profile',
@@ -139,8 +146,8 @@ router.put('/:id', requireProfessorOrAdmin, async (req: AuthenticatedRequest, re
       return
     }
 
-    // Non-admin users cannot change their role
-    if (req.user?.role !== 'admin' && updateData.role) {
+    // Non-admin users cannot change their role (skip in development)
+    if (process.env.NODE_ENV !== 'development' && req.user?.role !== 'admin' && updateData.role) {
       res.status(403).json({
         code: 'FORBIDDEN',
         message: 'You cannot change your own role',
@@ -197,13 +204,14 @@ router.put('/:id', requireProfessorOrAdmin, async (req: AuthenticatedRequest, re
   }
 })
 
-// Delete user (admin only)
-router.delete('/:id', requireAdmin, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+// Delete user (admin only in production, anyone in development)
+const deleteUserMiddleware = process.env.NODE_ENV === 'development' ? [] : [requireAdmin];
+router.delete('/:id', deleteUserMiddleware, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params
 
-    // Prevent admin from deleting themselves
-    if (req.user?.id === id) {
+    // Prevent admin from deleting themselves (skip in development)
+    if (process.env.NODE_ENV !== 'development' && req.user?.id === id) {
       res.status(400).json({
         code: 'VALIDATION_ERROR',
         message: 'You cannot delete your own account',
@@ -250,13 +258,14 @@ router.delete('/:id', requireAdmin, async (req: AuthenticatedRequest, res: Respo
   }
 })
 
-// Get user statistics (admin or own profile)
-router.get('/:id/stats', requireProfessorOrAdmin, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+// Get user statistics (admin or own profile in production, anyone in development)
+const getUserStatsMiddleware = process.env.NODE_ENV === 'development' ? [] : [requireProfessorOrAdmin];
+router.get('/:id/stats', getUserStatsMiddleware, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params
 
-    // Check permissions
-    if (req.user?.role !== 'admin' && req.user?.id !== id) {
+    // Check permissions (skip in development)
+    if (process.env.NODE_ENV !== 'development' && req.user?.role !== 'admin' && req.user?.id !== id) {
       res.status(403).json({
         code: 'FORBIDDEN',
         message: 'You can only access your own statistics',

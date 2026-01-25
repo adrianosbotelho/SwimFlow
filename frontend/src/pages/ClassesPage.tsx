@@ -3,14 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ClassCard } from '../components/ClassCard';
 import { ClassForm } from '../components/ClassForm';
 import { classService } from '../services/classService';
+import { professorService } from '../services/professorService';
 import type { Class, CreateClassData, UpdateClassData } from '../types/class';
 import type { Pool } from '../types/pool';
-
-interface Professor {
-  id: string;
-  name: string;
-  email: string;
-}
+import type { Professor } from '../types/professor';
 
 export const ClassesPage: React.FC = () => {
   const [classes, setClasses] = useState<Class[]>([]);
@@ -45,11 +41,18 @@ export const ClassesPage: React.FC = () => {
         setPools(poolsData.success ? poolsData.data.pools : []);
       }
 
-      // Mock professors for now (since we don't have a users endpoint working)
-      setProfessors([
-        { id: '0d4bc285-5d4d-4504-968d-f0e8e674f71f', name: 'Carlos Silva', email: 'carlos.silva@swimflow.com' },
-        { id: 'bfff4b46-61cb-48d4-a423-4af47d90d7a3', name: 'Ana Santos', email: 'ana.santos@swimflow.com' }
-      ]);
+      // Load professors from the real API
+      try {
+        const professorsData = await professorService.getAll();
+        setProfessors(professorsData);
+      } catch (professorError) {
+        console.error('Error loading professors:', professorError);
+        // Fallback to mock data if API fails
+        setProfessors([
+          { id: '0d4bc285-5d4d-4504-968d-f0e8e674f71f', name: 'Carlos Silva', email: 'carlos.silva@swimflow.com', role: 'professor', createdAt: '', updatedAt: '' },
+          { id: 'bfff4b46-61cb-48d4-a423-4af47d90d7a3', name: 'Ana Santos', email: 'ana.santos@swimflow.com', role: 'professor', createdAt: '', updatedAt: '' }
+        ]);
+      }
 
     } catch (error) {
       console.error('Error loading data:', error);

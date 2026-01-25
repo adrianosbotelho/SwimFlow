@@ -2,12 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import type { Class, CreateClassData, UpdateClassData } from '../types/class'
 import type { Pool } from '../types/pool'
-
-interface Professor {
-  id: string
-  name: string
-  email: string
-}
+import type { Professor } from '../types/professor'
 
 interface ClassFormProps {
   class?: Class

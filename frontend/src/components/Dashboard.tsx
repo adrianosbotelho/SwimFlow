@@ -5,8 +5,9 @@ import { ClassesPage } from '../pages/ClassesPage';
 import { PoolsPage } from '../pages/PoolsPage';
 import { TrainingsPage } from '../pages/TrainingsPage';
 import { EvaluationsPage } from '../pages/EvaluationsPage';
+import { ProfessorsPage } from '../pages/ProfessorsPage';
 
-type PageType = 'dashboard' | 'students' | 'classes' | 'pools' | 'trainings' | 'evaluations';
+type PageType = 'dashboard' | 'students' | 'classes' | 'pools' | 'trainings' | 'evaluations' | 'professors';
 
 interface NavigationItem {
   id: PageType;
@@ -27,6 +28,12 @@ const navigationItems: NavigationItem[] = [
     label: 'Alunos',
     icon: '🏊‍♂️',
     description: 'Gerenciar alunos'
+  },
+  {
+    id: 'professors',
+    label: 'Professores',
+    icon: '👨‍🏫',
+    description: 'Gerenciar professores'
   },
   {
     id: 'classes',
@@ -61,6 +68,8 @@ const Dashboard: React.FC = () => {
     switch (currentPage) {
       case 'students':
         return <StudentsPage />;
+      case 'professors':
+        return <ProfessorsPage />;
       case 'classes':
         return <ClassesPage />;
       case 'pools':
