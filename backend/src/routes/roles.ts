@@ -1,10 +1,13 @@
 import { Router } from 'express'
 import { RoleService, CreateRoleData, UpdateRoleData } from '../services/roleService'
-import { authMiddleware } from '../middleware/auth'
+import { authenticateToken } from '../middleware/auth'
+import { devAuthenticateToken } from '../middleware/devAuth'
 
 const router = Router()
 
-// Aplicar middleware de autenticação em todas as rotas
+// Apply authentication middleware to all routes
+// Use dev auth in development, real auth in production
+const authMiddleware = process.env.NODE_ENV === 'development' ? devAuthenticateToken : authenticateToken
 router.use(authMiddleware)
 
 // GET /api/roles - Listar todas as funções

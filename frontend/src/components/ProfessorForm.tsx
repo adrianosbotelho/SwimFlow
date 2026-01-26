@@ -30,6 +30,9 @@ export const ProfessorForm: React.FC<ProfessorFormProps> = ({
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone: '',
+    birthDate: '',
+    address: '',
     role: 'professor',
     profileImage: '',
     password: '',
@@ -49,6 +52,9 @@ export const ProfessorForm: React.FC<ProfessorFormProps> = ({
       setFormData({
         name: professor.name || '',
         email: professor.email || '',
+        phone: professor.phone || '',
+        birthDate: professor.birthDate ? professor.birthDate.split('T')[0] : '',
+        address: professor.address || '',
         role: professor.role || 'professor',
         profileImage: professor.profileImage || '',
         password: '',
@@ -84,6 +90,24 @@ export const ProfessorForm: React.FC<ProfessorFormProps> = ({
       newErrors.email = 'Email é obrigatório';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Email deve ter um formato válido';
+    }
+
+    // Phone validation (optional)
+    if (formData.phone && !/^[\d\s\-\(\)\+]+$/.test(formData.phone)) {
+      newErrors.phone = 'Telefone deve conter apenas números, espaços, parênteses, hífen e +';
+    }
+
+    // Birth date validation (optional)
+    if (formData.birthDate) {
+      const birthDate = new Date(formData.birthDate);
+      const today = new Date();
+      const age = today.getFullYear() - birthDate.getFullYear();
+      
+      if (birthDate > today) {
+        newErrors.birthDate = 'Data de nascimento não pode ser no futuro';
+      } else if (age > 100) {
+        newErrors.birthDate = 'Data de nascimento inválida';
+      }
     }
 
     // Password validation (only for new professors or when changing password)
@@ -122,6 +146,9 @@ export const ProfessorForm: React.FC<ProfessorFormProps> = ({
         name: formData.name.trim(),
         email: formData.email.trim().toLowerCase(),
         role: formData.role,
+        phone: formData.phone.trim() || undefined,
+        birthDate: formData.birthDate || undefined,
+        address: formData.address.trim() || undefined,
         profileImage: formData.profileImage.trim() || undefined
       };
 
@@ -206,6 +233,68 @@ export const ProfessorForm: React.FC<ProfessorFormProps> = ({
           />
           {errors.email && (
             <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+          )}
+        </div>
+
+        {/* Phone */}
+        <div>
+          <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+            Telefone
+          </label>
+          <input
+            type="tel"
+            id="phone"
+            value={formData.phone}
+            onChange={(e) => handleInputChange('phone', e.target.value)}
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent ${
+              errors.phone ? 'border-red-500' : 'border-gray-300'
+            }`}
+            placeholder="Ex: (11) 99999-9999"
+            disabled={isLoading}
+          />
+          {errors.phone && (
+            <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
+          )}
+        </div>
+
+        {/* Birth Date */}
+        <div>
+          <label htmlFor="birthDate" className="block text-sm font-medium text-gray-700 mb-2">
+            Data de Nascimento
+          </label>
+          <input
+            type="date"
+            id="birthDate"
+            value={formData.birthDate}
+            onChange={(e) => handleInputChange('birthDate', e.target.value)}
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent ${
+              errors.birthDate ? 'border-red-500' : 'border-gray-300'
+            }`}
+            disabled={isLoading}
+          />
+          {errors.birthDate && (
+            <p className="mt-1 text-sm text-red-600">{errors.birthDate}</p>
+          )}
+        </div>
+
+        {/* Address */}
+        <div>
+          <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
+            Endereço
+          </label>
+          <textarea
+            id="address"
+            value={formData.address}
+            onChange={(e) => handleInputChange('address', e.target.value)}
+            rows={3}
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent ${
+              errors.address ? 'border-red-500' : 'border-gray-300'
+            }`}
+            placeholder="Ex: Rua das Flores, 123 - Centro - São Paulo/SP"
+            disabled={isLoading}
+          />
+          {errors.address && (
+            <p className="mt-1 text-sm text-red-600">{errors.address}</p>
           )}
         </div>
 

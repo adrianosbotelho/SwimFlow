@@ -12,14 +12,17 @@ datasource db {
 
 // Users table (professors and admins)
 model User {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email        String   @unique @db.VarChar(255)
-  passwordHash String   @map("password_hash") @db.VarChar(255)
-  name         String   @db.VarChar(255)
-  role         String   @db.VarChar(100) // Changed from enum to string
-  profileImage String?  @map("profile_image") @db.VarChar(500)
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email        String    @unique @db.VarChar(255)
+  passwordHash String    @map("password_hash") @db.VarChar(255)
+  name         String    @db.VarChar(255)
+  role         String    @db.VarChar(100) // Changed from enum to string
+  phone        String?   @db.VarChar(20)
+  birthDate    DateTime? @map("birth_date") @db.Date
+  address      String?   @db.Text
+  profileImage String?   @map("profile_image") @db.VarChar(500)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
 
   // Relations
   schedules   ClassSchedule[]

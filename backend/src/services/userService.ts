@@ -17,20 +17,26 @@ export interface CreateUserData {
   email: string
   password: string
   name: string
-  role: UserRole
+  role: string
+  phone?: string
+  birthDate?: string
+  address?: string
   profileImage?: string
 }
 
 export interface UpdateUserData {
   email?: string
   name?: string
-  role?: UserRole
+  role?: string
+  phone?: string
+  birthDate?: string
+  address?: string
   profileImage?: string
   password?: string
 }
 
 export interface UserFilters {
-  role?: UserRole
+  role?: string
   search?: string
 }
 
@@ -45,7 +51,10 @@ export class UserService {
         'string.pattern.base': 'Password must contain at least one lowercase letter, one uppercase letter, and one number'
       }),
     name: Joi.string().min(2).max(255).required(),
-    role: Joi.string().valid('admin', 'professor').required(),
+    role: Joi.string().min(1).max(100).required(),
+    phone: Joi.string().pattern(/^[\d\s\-\(\)\+]+$/).optional(),
+    birthDate: Joi.date().max('now').optional(),
+    address: Joi.string().max(500).optional(),
     profileImage: Joi.string().uri().optional()
   })
 
@@ -56,7 +65,10 @@ export class UserService {
         'string.pattern.base': 'Password must contain at least one lowercase letter, one uppercase letter, and one number'
       }),
     name: Joi.string().min(2).max(255).optional(),
-    role: Joi.string().valid('admin', 'professor').optional(),
+    role: Joi.string().min(1).max(100).optional(),
+    phone: Joi.string().pattern(/^[\d\s\-\(\)\+]+$/).allow('').optional(),
+    birthDate: Joi.date().max('now').allow('').optional(),
+    address: Joi.string().max(500).allow('').optional(),
     profileImage: Joi.string().uri().allow('').optional()
   })
 
@@ -89,7 +101,10 @@ export class UserService {
         email: value.email.toLowerCase(),
         passwordHash,
         name: value.name,
-        role: value.role as UserRole,
+        role: value.role,
+        phone: value.phone,
+        birthDate: value.birthDate ? new Date(value.birthDate) : null,
+        address: value.address,
         profileImage: value.profileImage
       },
       select: {
@@ -97,6 +112,9 @@ export class UserService {
         email: true,
         name: true,
         role: true,
+        phone: true,
+        birthDate: true,
+        address: true,
         profileImage: true,
         createdAt: true,
         updatedAt: true
@@ -138,7 +156,10 @@ export class UserService {
     
     if (value.email) updateData.email = value.email.toLowerCase()
     if (value.name) updateData.name = value.name
-    if (value.role) updateData.role = value.role as UserRole
+    if (value.role) updateData.role = value.role
+    if (value.phone !== undefined) updateData.phone = value.phone || null
+    if (value.birthDate !== undefined) updateData.birthDate = value.birthDate ? new Date(value.birthDate) : null
+    if (value.address !== undefined) updateData.address = value.address || null
     if (value.profileImage !== undefined) updateData.profileImage = value.profileImage || null
     if (value.password) updateData.passwordHash = await this.hashPassword(value.password)
 
@@ -151,6 +172,9 @@ export class UserService {
         email: true,
         name: true,
         role: true,
+        phone: true,
+        birthDate: true,
+        address: true,
         profileImage: true,
         createdAt: true,
         updatedAt: true
@@ -168,6 +192,9 @@ export class UserService {
         email: true,
         name: true,
         role: true,
+        phone: true,
+        birthDate: true,
+        address: true,
         profileImage: true,
         createdAt: true,
         updatedAt: true
@@ -198,6 +225,9 @@ export class UserService {
         email: true,
         name: true,
         role: true,
+        phone: true,
+        birthDate: true,
+        address: true,
         profileImage: true,
         createdAt: true,
         updatedAt: true
