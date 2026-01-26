@@ -90,11 +90,13 @@ export const EvaluationsPage: React.FC = () => {
     try {
       console.log('Submitting evaluation data:', data); // Debug log
       
-      // Convert date string to Date object for backend
+      // Convert date string to proper ISO DateTime for backend
       const evaluationData = {
         ...data,
-        date: new Date(data.date)
+        date: new Date(data.date).toISOString()
       };
+      
+      console.log('Converted evaluation data:', evaluationData); // Debug log
       
       await evaluationService.createEvaluation(evaluationData);
       setShowForm(false);
