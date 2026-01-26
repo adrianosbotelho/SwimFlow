@@ -86,13 +86,19 @@ export const StudentList: React.FC<StudentListProps> = ({
       setLoading(true)
       setError(null)
       
+      console.log('Loading students with filters:', filters)
+      console.log('API Base URL:', import.meta.env.VITE_API_URL || 'http://localhost:3001')
+      
       const result = await studentService.getStudents(filters)
+      console.log('Students loaded successfully:', result)
       setStudents(result.students)
       setTotal(result.total)
       setTotalPages(result.totalPages)
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Erro ao carregar alunos')
-      console.error('Error loading students:', err)
+      console.error('Full error object:', err)
+      console.error('Error response:', err.response)
+      console.error('Error message:', err.message)
+      setError(err.response?.data?.error || err.message || 'Erro ao carregar alunos')
     } finally {
       setLoading(false)
     }
