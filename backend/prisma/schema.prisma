@@ -185,6 +185,13 @@ model Evaluation {
   professorId  String   @map("professor_id") @db.Uuid
   date         DateTime @db.Date
   generalNotes String?  @map("general_notes") @db.Text
+  
+  // New fields for approval system
+  evaluationType EvaluationType @default(REGULAR) @map("evaluation_type")
+  targetLevel    Level?          @map("target_level") // Level being evaluated for
+  isApproved     Boolean?        @map("is_approved") // null = not decided, true = approved, false = rejected
+  approvalNotes  String?         @map("approval_notes") @db.Text
+  
   createdAt    DateTime @default(now()) @map("created_at")
 
   // Relations
@@ -227,4 +234,11 @@ enum StrokeType {
   borboleta
 
   @@map("stroke_type")
+}
+
+enum EvaluationType {
+  REGULAR
+  LEVEL_PROGRESSION
+
+  @@map("evaluation_type")
 }

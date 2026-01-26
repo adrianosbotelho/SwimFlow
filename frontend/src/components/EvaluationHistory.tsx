@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Evaluation } from '../types/evaluation';
+import { Evaluation, EVALUATION_TYPES, LEVELS } from '../types/evaluation';
 import StrokeEvaluationCard from './StrokeEvaluationCard';
 import evaluationService from '../services/evaluationService';
 
@@ -60,6 +60,58 @@ const EvaluationHistory: React.FC<EvaluationHistoryProps> = ({
     if (score >= 6) return 'text-yellow-600 bg-yellow-100';
     if (score >= 4) return 'text-orange-600 bg-orange-100';
     return 'text-red-600 bg-red-100';
+  };
+
+  const getApprovalBadge = (evaluation: Evaluation) => {
+    if (evaluation.evaluationType !== 'LEVEL_PROGRESSION') return null;
+    
+    if (evaluation.isApproved === true) {
+      return (
+        <div className="flex items-center px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+          <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+          </svg>
+          Aprovado
+        </div>
+      );
+    } else if (evaluation.isApproved === false) {
+      return (
+        <div className="flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium">
+          <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+          </svg>
+          Reprovado
+        </div>
+      );
+    } else {
+      return (
+        <div className="flex items-center px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
+          <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+          </svg>
+          Pendente
+        </div>
+      );
+    }
+  };
+
+  const getEvaluationTypeBadge = (evaluation: Evaluation) => {
+    const evaluationType = EVALUATION_TYPES.find(t => t.value === evaluation.evaluationType);
+    if (!evaluationType) return null;
+
+    const isProgression = evaluation.evaluationType === 'LEVEL_PROGRESSION';
+    const badgeColor = isProgression ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800';
+
+    return (
+      <div className={`px-3 py-1 rounded-full text-sm font-medium ${badgeColor}`}>
+        {evaluationType.label}
+        {isProgression && evaluation.targetLevel && (
+          <span className="ml-1">
+            → {LEVELS.find(l => l.value === evaluation.targetLevel)?.label}
+          </span>
+        )}
+      </div>
+    );
   };
 
   const toggleExpanded = (evaluationId: string) => {
@@ -138,6 +190,8 @@ const EvaluationHistory: React.FC<EvaluationHistoryProps> = ({
                           <div className={`px-3 py-1 rounded-full text-sm font-medium ${getScoreColor(averageScore)}`}>
                             Média: {averageScore}/10
                           </div>
+                          {getEvaluationTypeBadge(evaluation)}
+                          {getApprovalBadge(evaluation)}
                         </div>
                         <div className="flex items-center space-x-4 text-sm text-gray-600">
                           <span>Professor: {evaluation.professor.name}</span>
@@ -214,6 +268,13 @@ const EvaluationHistory: React.FC<EvaluationHistoryProps> = ({
                           <div className="mt-4 p-4 bg-gray-50 rounded-lg">
                             <h4 className="text-sm font-medium text-gray-700 mb-2">Observações Gerais</h4>
                             <p className="text-gray-700 text-sm">{evaluation.generalNotes}</p>
+                          </div>
+                        )}
+
+                        {evaluation.evaluationType === 'LEVEL_PROGRESSION' && evaluation.approvalNotes && (
+                          <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                            <h4 className="text-sm font-medium text-blue-700 mb-2">Observações da Aprovação</h4>
+                            <p className="text-blue-700 text-sm">{evaluation.approvalNotes}</p>
                           </div>
                         )}
                       </div>

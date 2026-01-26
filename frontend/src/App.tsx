@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import Dashboard from './components/Dashboard'
-import ApiTest from './components/ApiTest'
 import DevLogin from './components/DevLogin'
 import { ThemeProvider } from './contexts/ThemeContext'
 

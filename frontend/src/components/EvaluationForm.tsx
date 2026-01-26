@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CreateEvaluationData, StrokeEvaluation, STROKE_TYPES, StrokeType } from '../types/evaluation';
+import { CreateEvaluationData, StrokeEvaluation, STROKE_TYPES, StrokeType, EVALUATION_TYPES, EvaluationType, LEVELS, Level, getNextLevel } from '../types/evaluation';
 import { Student } from '../types/student';
 
 interface EvaluationFormProps {
@@ -23,6 +23,10 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
     studentId: student?.id || '',
     professorId,
     date: new Date().toISOString().split('T')[0],
+    evaluationType: 'REGULAR',
+    targetLevel: undefined,
+    isApproved: null,
+    approvalNotes: '',
     strokeEvaluations: STROKE_TYPES.map(stroke => ({
       strokeType: stroke.value,
       technique: 5,
@@ -57,6 +61,19 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate level progression fields
+    if (formData.evaluationType === 'LEVEL_PROGRESSION') {
+      if (!formData.targetLevel) {
+        alert('Por favor, selecione o nível alvo para avaliação de progressão.');
+        return;
+      }
+      
+      if (formData.targetLevel === student?.level) {
+        alert('O nível alvo deve ser diferente do nível atual do aluno.');
+        return;
+      }
+    }
+    
     // Filter out stroke evaluations with no meaningful data and clean up timeSeconds
     const validStrokeEvaluations = formData.strokeEvaluations
       .filter(stroke => 
@@ -76,7 +93,8 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
     onSubmit({
       ...formData,
       strokeEvaluations: validStrokeEvaluations,
-      generalNotes: formData.generalNotes?.trim() || undefined
+      generalNotes: formData.generalNotes?.trim() || undefined,
+      approvalNotes: formData.approvalNotes?.trim() || undefined
     });
   };
 
@@ -116,7 +134,126 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
               required
             />
           </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Tipo de Avaliação
+            </label>
+            <select
+              value={formData.evaluationType}
+              onChange={(e) => {
+                const evaluationType = e.target.value as EvaluationType;
+                setFormData(prev => ({ 
+                  ...prev, 
+                  evaluationType,
+                  targetLevel: evaluationType === 'LEVEL_PROGRESSION' ? (getNextLevel(student?.level as Level) || undefined) : undefined,
+                  isApproved: evaluationType === 'REGULAR' ? null : prev.isApproved
+                }));
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              {EVALUATION_TYPES.map(type => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              {EVALUATION_TYPES.find(t => t.value === formData.evaluationType)?.description}
+            </p>
+          </div>
         </div>
+
+        {/* Level Progression Fields */}
+        {formData.evaluationType === 'LEVEL_PROGRESSION' && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h3 className="text-lg font-semibold text-blue-900 mb-4">Avaliação de Progressão de Nível</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Nível Atual: <span className="font-semibold capitalize">{student?.level}</span>
+                </label>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Nível Alvo
+                </label>
+                <select
+                  value={formData.targetLevel || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, targetLevel: e.target.value as Level }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                >
+                  <option value="">Selecione o nível alvo</option>
+                  {LEVELS
+                    .filter(level => level.value !== student?.level)
+                    .map(level => (
+                      <option key={level.value} value={level.value}>
+                        {level.label}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Status da Aprovação
+                </label>
+                <select
+                  value={formData.isApproved === null ? 'pending' : formData.isApproved ? 'approved' : 'rejected'}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setFormData(prev => ({ 
+                      ...prev, 
+                      isApproved: value === 'pending' ? null : value === 'approved' 
+                    }));
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="pending">Pendente</option>
+                  <option value="approved">Aprovado</option>
+                  <option value="rejected">Reprovado</option>
+                </select>
+              </div>
+
+              <div className="flex items-center">
+                {formData.isApproved === true && (
+                  <div className="flex items-center text-green-600">
+                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    Aluno será promovido para {LEVELS.find(l => l.value === formData.targetLevel)?.label}
+                  </div>
+                )}
+                {formData.isApproved === false && (
+                  <div className="flex items-center text-red-600">
+                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                    Aluno permanecerá no nível atual
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Observações da Aprovação
+              </label>
+              <textarea
+                value={formData.approvalNotes || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, approvalNotes: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                rows={3}
+                placeholder="Justificativa para aprovação/reprovação, pontos a melhorar, recomendações..."
+              />
+            </div>
+          </div>
+        )}
 
         {/* Stroke Evaluations */}
         <div>

@@ -1,5 +1,6 @@
-import { PrismaClient, Evaluation, StrokeEvaluation, StrokeType } from '@prisma/client';
+import { PrismaClient, Evaluation, StrokeEvaluation, StrokeType, EvaluationType, Level } from '@prisma/client';
 import Joi from 'joi';
+import { StudentService } from './studentService';
 
 const prisma = new PrismaClient();
 
@@ -9,21 +10,29 @@ const strokeEvaluationSchema = Joi.object({
   technique: Joi.number().integer().min(1).max(10).required(),
   timeSeconds: Joi.number().positive().optional(),
   resistance: Joi.number().integer().min(1).max(10).required(),
-  notes: Joi.string().max(500).optional()
+  notes: Joi.string().max(500).optional().allow('', null)
 });
 
 const createEvaluationSchema = Joi.object({
   studentId: Joi.string().uuid().required(),
   professorId: Joi.string().uuid().required(),
-  date: Joi.date().max('now').required(),
+  date: Joi.date().required(),
+  evaluationType: Joi.string().valid('REGULAR', 'LEVEL_PROGRESSION').default('REGULAR'),
+  targetLevel: Joi.string().valid('iniciante', 'intermediario', 'avancado').optional(),
+  isApproved: Joi.boolean().optional().allow(null),
+  approvalNotes: Joi.string().max(1000).optional().allow('', null),
   strokeEvaluations: Joi.array().items(strokeEvaluationSchema).min(1).required(),
-  generalNotes: Joi.string().max(1000).optional()
+  generalNotes: Joi.string().max(1000).optional().allow('', null)
 });
 
 const updateEvaluationSchema = Joi.object({
-  date: Joi.date().max('now').optional(),
+  date: Joi.date().optional(),
+  evaluationType: Joi.string().valid('REGULAR', 'LEVEL_PROGRESSION').optional(),
+  targetLevel: Joi.string().valid('iniciante', 'intermediario', 'avancado').optional(),
+  isApproved: Joi.boolean().optional().allow(null),
+  approvalNotes: Joi.string().max(1000).optional().allow('', null),
   strokeEvaluations: Joi.array().items(strokeEvaluationSchema).min(1).optional(),
-  generalNotes: Joi.string().max(1000).optional()
+  generalNotes: Joi.string().max(1000).optional().allow('', null)
 });
 
 // Types
@@ -31,6 +40,10 @@ export interface CreateEvaluationData {
   studentId: string;
   professorId: string;
   date: Date;
+  evaluationType?: EvaluationType;
+  targetLevel?: Level;
+  isApproved?: boolean | null;
+  approvalNotes?: string;
   strokeEvaluations: {
     strokeType: StrokeType;
     technique: number;
@@ -43,6 +56,10 @@ export interface CreateEvaluationData {
 
 export interface UpdateEvaluationData {
   date?: Date;
+  evaluationType?: EvaluationType;
+  targetLevel?: Level;
+  isApproved?: boolean | null;
+  approvalNotes?: string;
   strokeEvaluations?: {
     strokeType: StrokeType;
     technique: number;
@@ -101,6 +118,27 @@ class EvaluationService {
       throw new Error('Professor not found');
     }
 
+    // Validate level progression logic
+    if (data.evaluationType === 'LEVEL_PROGRESSION') {
+      if (!data.targetLevel) {
+        throw new Error('Target level is required for level progression evaluations');
+      }
+      
+      // Ensure target level is different from current level
+      if (data.targetLevel === student.level) {
+        throw new Error('Target level must be different from current level');
+      }
+      
+      // Validate level progression order (can only go up one level at a time)
+      const levelOrder = { 'iniciante': 1, 'intermediario': 2, 'avancado': 3 };
+      const currentOrder = levelOrder[student.level];
+      const targetOrder = levelOrder[data.targetLevel];
+      
+      if (targetOrder !== currentOrder + 1 && targetOrder !== currentOrder - 1) {
+        throw new Error('Can only progress one level up or down at a time');
+      }
+    }
+
     // Create evaluation with stroke evaluations in a transaction
     const evaluation = await prisma.$transaction(async (tx) => {
       // Create the evaluation
@@ -109,6 +147,10 @@ class EvaluationService {
           studentId: data.studentId,
           professorId: data.professorId,
           date: data.date,
+          evaluationType: data.evaluationType || 'REGULAR',
+          targetLevel: data.targetLevel,
+          isApproved: data.isApproved,
+          approvalNotes: data.approvalNotes,
           generalNotes: data.generalNotes,
           strokeEvaluations: {
             create: data.strokeEvaluations
@@ -137,6 +179,30 @@ class EvaluationService {
         where: { id: data.studentId },
         data: { lastEvaluationDate: data.date }
       });
+
+      // Handle level progression if approved
+      if (data.evaluationType === 'LEVEL_PROGRESSION' && 
+          data.isApproved === true && 
+          data.targetLevel && 
+          data.targetLevel !== student.level) {
+        
+        // Update student level
+        await tx.student.update({
+          where: { id: data.studentId },
+          data: { level: data.targetLevel }
+        });
+
+        // Create level history record
+        await tx.levelHistory.create({
+          data: {
+            studentId: data.studentId,
+            fromLevel: student.level,
+            toLevel: data.targetLevel,
+            reason: `Level progression evaluation - ${data.approvalNotes || 'Approved for next level'}`,
+            changedBy: data.professorId
+          }
+        });
+      }
 
       return newEvaluation;
     });
@@ -214,14 +280,36 @@ class EvaluationService {
 
     // Check if evaluation exists
     const existingEvaluation = await prisma.evaluation.findUnique({
-      where: { id }
+      where: { id },
+      include: {
+        student: true
+      }
     });
     if (!existingEvaluation) {
       throw new Error('Evaluation not found');
     }
 
+    // Validate level progression logic if being updated
+    if (data.evaluationType === 'LEVEL_PROGRESSION' || existingEvaluation.evaluationType === 'LEVEL_PROGRESSION') {
+      const targetLevel = data.targetLevel || existingEvaluation.targetLevel;
+      if (!targetLevel) {
+        throw new Error('Target level is required for level progression evaluations');
+      }
+      
+      // Ensure target level is different from current level
+      if (targetLevel === existingEvaluation.student.level) {
+        throw new Error('Target level must be different from current level');
+      }
+    }
+
     // Update evaluation in a transaction
     const evaluation = await prisma.$transaction(async (tx) => {
+      // Check if approval status is changing from null/false to true for level progression
+      const wasNotApproved = existingEvaluation.isApproved !== true;
+      const willBeApproved = data.isApproved === true;
+      const isLevelProgression = (data.evaluationType || existingEvaluation.evaluationType) === 'LEVEL_PROGRESSION';
+      const targetLevel = data.targetLevel || existingEvaluation.targetLevel;
+
       // If stroke evaluations are being updated, delete existing ones first
       if (data.strokeEvaluations) {
         await tx.strokeEvaluation.deleteMany({
@@ -234,6 +322,10 @@ class EvaluationService {
         where: { id },
         data: {
           date: data.date,
+          evaluationType: data.evaluationType,
+          targetLevel: data.targetLevel,
+          isApproved: data.isApproved,
+          approvalNotes: data.approvalNotes,
           generalNotes: data.generalNotes,
           ...(data.strokeEvaluations && {
             strokeEvaluations: {
@@ -264,6 +356,31 @@ class EvaluationService {
         await tx.student.update({
           where: { id: existingEvaluation.studentId },
           data: { lastEvaluationDate: data.date }
+        });
+      }
+
+      // Handle level progression if approval status changed to approved
+      if (isLevelProgression && 
+          wasNotApproved && 
+          willBeApproved && 
+          targetLevel && 
+          targetLevel !== existingEvaluation.student.level) {
+        
+        // Update student level
+        await tx.student.update({
+          where: { id: existingEvaluation.studentId },
+          data: { level: targetLevel }
+        });
+
+        // Create level history record
+        await tx.levelHistory.create({
+          data: {
+            studentId: existingEvaluation.studentId,
+            fromLevel: existingEvaluation.student.level,
+            toLevel: targetLevel,
+            reason: `Level progression evaluation updated - ${data.approvalNotes || existingEvaluation.approvalNotes || 'Approved for next level'}`,
+            changedBy: existingEvaluation.professorId
+          }
         });
       }
 

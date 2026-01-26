@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { apiConfig } from '../config/api';
+import type { Evaluation, CreateEvaluationData, UpdateEvaluationData, EvolutionData } from '../types/evaluation';
 
 // Create axios instance
 const api = axios.create(apiConfig);
@@ -12,59 +13,6 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
-
-export interface StrokeEvaluation {
-  id?: string;
-  strokeType: 'crawl' | 'costas' | 'peito' | 'borboleta';
-  technique: number;
-  timeSeconds?: number;
-  resistance: number;
-  notes?: string;
-}
-
-export interface Evaluation {
-  id: string;
-  studentId: string;
-  professorId: string;
-  date: string;
-  generalNotes?: string;
-  strokeEvaluations: StrokeEvaluation[];
-  student: {
-    id: string;
-    name: string;
-    level: string;
-  };
-  professor: {
-    id: string;
-    name: string;
-  };
-  createdAt: string;
-}
-
-export interface CreateEvaluationData {
-  studentId: string;
-  professorId: string;
-  date: string;
-  strokeEvaluations: Omit<StrokeEvaluation, 'id'>[];
-  generalNotes?: string;
-}
-
-export interface UpdateEvaluationData {
-  date?: string;
-  strokeEvaluations?: Omit<StrokeEvaluation, 'id'>[];
-  generalNotes?: string;
-}
-
-export interface EvolutionData {
-  studentId: string;
-  strokeType: 'crawl' | 'costas' | 'peito' | 'borboleta';
-  evaluations: {
-    date: string;
-    technique: number;
-    timeSeconds?: number;
-    resistance: number;
-  }[];
-}
 
 export interface EvaluationStats {
   totalEvaluations: number;
