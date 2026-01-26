@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { roleService } from '../services/roleService';
-import type { Role, CreateRoleData } from '../types/role';
+import type { Role } from '../types/role';
 
 interface RoleManagerProps {
   onClose: () => void;

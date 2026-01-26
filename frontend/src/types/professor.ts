@@ -2,7 +2,7 @@ export interface Professor {
   id: string;
   email: string;
   name: string;
-  role: 'admin' | 'professor';
+  role: string;
   profileImage?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -12,14 +12,14 @@ export interface CreateProfessorData {
   email: string;
   password: string;
   name: string;
-  role: 'admin' | 'professor';
+  role: string;
   profileImage?: string;
 }
 
 export interface UpdateProfessorData {
   email?: string;
   name?: string;
-  role?: 'admin' | 'professor';
+  role?: string;
   profileImage?: string;
   password?: string;
 }

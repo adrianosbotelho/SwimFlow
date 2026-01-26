@@ -44,12 +44,7 @@ function App() {
 
   return (
     <ThemeProvider>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 transition-colors duration-300">
-        <div className="container mx-auto px-4 py-4">
-          <ApiTest />
-        </div>
-        <Dashboard />
-      </div>
+      <Dashboard />
     </ThemeProvider>
   )
 }
