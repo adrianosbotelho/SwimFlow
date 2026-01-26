@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import EvaluationForm from '../components/EvaluationForm';
 import EvaluationHistory from '../components/EvaluationHistory';
+import { EvaluationChart } from '../components/EvaluationChart';
 import { studentService } from '../services/studentService';
 import evaluationService from '../services/evaluationService';
 import type { Student } from '../types/student';
-import type { Evaluation } from '../types/evaluation';
+import type { EvolutionData } from '../types/evaluation';
+import { STROKE_TYPES } from '../types/evaluation';
 
 export const EvaluationsPage: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
@@ -14,8 +16,9 @@ export const EvaluationsPage: React.FC = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
-  const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [evaluationStats, setEvaluationStats] = useState<any>(null);
+  const [evolutionData, setEvolutionData] = useState<EvolutionData[]>([]);
+  const [selectedStroke, setSelectedStroke] = useState<string>('');
 
   useEffect(() => {
     loadStudents();
@@ -27,10 +30,12 @@ export const EvaluationsPage: React.FC = () => {
       setSelectedStudent(student || null);
       if (student) {
         loadEvaluationStats(selectedStudentId);
+        loadEvolutionData(selectedStudentId);
       }
     } else {
       setSelectedStudent(null);
       setEvaluationStats(null);
+      setEvolutionData([]);
     }
   }, [selectedStudentId, students]);
 
@@ -55,6 +60,15 @@ export const EvaluationsPage: React.FC = () => {
     }
   };
 
+  const loadEvolutionData = async (studentId: string) => {
+    try {
+      const evolution = await evaluationService.getEvolutionData(studentId);
+      setEvolutionData(evolution);
+    } catch (error) {
+      console.error('Error loading evolution data:', error);
+    }
+  };
+
   const handleEvaluationSubmit = async (data: any) => {
     try {
       await evaluationService.createEvaluation(data);
@@ -62,6 +76,7 @@ export const EvaluationsPage: React.FC = () => {
       // Refresh stats if we have a selected student
       if (selectedStudentId) {
         loadEvaluationStats(selectedStudentId);
+        loadEvolutionData(selectedStudentId);
       }
     } catch (error) {
       console.error('Error creating evaluation:', error);
@@ -147,19 +162,34 @@ export const EvaluationsPage: React.FC = () => {
 
     return (
       <div className="space-y-6">
+        {/* Stroke Filter */}
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Filtrar por Tipo de Nado
+          </label>
+          <select
+            value={selectedStroke}
+            onChange={(e) => setSelectedStroke(e.target.value)}
+            className="w-full max-w-md px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent"
+          >
+            <option value="">Todos os nados</option>
+            {STROKE_TYPES.map((stroke) => (
+              <option key={stroke.value} value={stroke.value}>
+                {stroke.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Evolution Chart */}
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h4 className="text-lg font-semibold text-gray-900 mb-4">
-            Estatísticas de Evolução - {selectedStudent.name}
+            Evolução de Desempenho - {selectedStudent.name}
           </h4>
-          <div className="text-center py-8">
-            <div className="text-4xl mb-4">🚧</div>
-            <p className="text-gray-600">
-              Gráficos de evolução em desenvolvimento
-            </p>
-            <p className="text-sm text-gray-500 mt-2">
-              Em breve: gráficos interativos mostrando a evolução do aluno ao longo do tempo
-            </p>
-          </div>
+          <EvaluationChart 
+            evolutionData={evolutionData}
+            selectedStroke={selectedStroke}
+          />
         </div>
       </div>
     );
