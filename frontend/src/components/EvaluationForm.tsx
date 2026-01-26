@@ -57,10 +57,16 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Filter out stroke evaluations with no meaningful data
-    const validStrokeEvaluations = formData.strokeEvaluations.filter(stroke => 
-      stroke.technique > 0 || stroke.resistance > 0 || stroke.timeSeconds || stroke.notes
-    );
+    // Filter out stroke evaluations with no meaningful data and clean up timeSeconds
+    const validStrokeEvaluations = formData.strokeEvaluations
+      .filter(stroke => 
+        stroke.technique > 0 || stroke.resistance > 0 || stroke.timeSeconds || stroke.notes
+      )
+      .map(stroke => ({
+        ...stroke,
+        timeSeconds: stroke.timeSeconds && stroke.timeSeconds > 0 ? stroke.timeSeconds : undefined,
+        notes: stroke.notes?.trim() || undefined
+      }));
 
     if (validStrokeEvaluations.length === 0) {
       alert('Por favor, preencha pelo menos uma avaliação de nado.');
@@ -69,7 +75,8 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
 
     onSubmit({
       ...formData,
-      strokeEvaluations: validStrokeEvaluations
+      strokeEvaluations: validStrokeEvaluations,
+      generalNotes: formData.generalNotes?.trim() || undefined
     });
   };
 

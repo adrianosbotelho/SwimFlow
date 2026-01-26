@@ -88,15 +88,38 @@ export const EvaluationsPage: React.FC = () => {
 
   const handleEvaluationSubmit = async (data: any) => {
     try {
-      console.log('Submitting evaluation data:', data); // Debug log
+      console.log('Original form data:', data);
+      
+      // Validate data before sending
+      if (!data.studentId) {
+        throw new Error('ID do aluno é obrigatório');
+      }
+      if (!data.professorId) {
+        throw new Error('ID do professor é obrigatório');
+      }
+      if (!data.date) {
+        throw new Error('Data da avaliação é obrigatória');
+      }
+      if (!data.strokeEvaluations || data.strokeEvaluations.length === 0) {
+        throw new Error('Pelo menos uma avaliação de nado é obrigatória');
+      }
+      
+      // Check if date is not in the future
+      const selectedDate = new Date(data.date);
+      const today = new Date();
+      today.setHours(23, 59, 59, 999); // End of today
+      
+      if (selectedDate > today) {
+        throw new Error('A data da avaliação não pode ser no futuro');
+      }
       
       // Convert date string to proper ISO DateTime for backend
       const evaluationData = {
         ...data,
-        date: new Date(data.date).toISOString()
+        date: selectedDate.toISOString()
       };
       
-      console.log('Converted evaluation data:', evaluationData); // Debug log
+      console.log('Converted evaluation data:', evaluationData);
       
       await evaluationService.createEvaluation(evaluationData);
       setShowForm(false);
@@ -106,19 +129,25 @@ export const EvaluationsPage: React.FC = () => {
         loadEvolutionData(selectedStudentId);
       }
     } catch (error) {
-      console.error('Error creating evaluation:', error);
+      console.error('Full error object:', error);
       
       // More detailed error message
       let errorMessage = 'Erro ao criar avaliação. Tente novamente.';
-      if (error instanceof Error) {
-        errorMessage = `Erro: ${error.message}`;
-      } else if (typeof error === 'object' && error !== null && 'response' in error) {
+      
+      if (typeof error === 'object' && error !== null && 'response' in error) {
         const axiosError = error as any;
+        console.log('Response data:', axiosError.response?.data);
+        console.log('Response status:', axiosError.response?.status);
+        
         if (axiosError.response?.data?.message) {
           errorMessage = `Erro: ${axiosError.response.data.message}`;
+        } else if (axiosError.response?.data?.error) {
+          errorMessage = `Erro: ${axiosError.response.data.error}`;
         } else if (axiosError.response?.status) {
-          errorMessage = `Erro HTTP ${axiosError.response.status}: ${axiosError.response.statusText}`;
+          errorMessage = `Erro HTTP ${axiosError.response.status}: ${axiosError.response.statusText || 'Erro desconhecido'}`;
         }
+      } else if (error instanceof Error) {
+        errorMessage = `Erro: ${error.message}`;
       }
       
       alert(errorMessage);
