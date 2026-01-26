@@ -2,7 +2,6 @@ import { Router, Request, Response } from 'express'
 import { UserService, CreateUserData, UpdateUserData, UserFilters } from '../services/userService'
 import { authenticateToken, requireAdmin, requireProfessorOrAdmin, AuthenticatedRequest } from '../middleware/auth'
 import { devAuthenticateToken } from '../middleware/devAuth'
-import { UserRole } from '@prisma/client'
 
 const router = Router()
 
@@ -62,7 +61,7 @@ router.get('/', getUsersMiddleware, async (req: Request, res: Response): Promise
     const filters: UserFilters = {}
     
     if (req.query.role && typeof req.query.role === 'string') {
-      filters.role = req.query.role as UserRole
+      filters.role = req.query.role
     }
     
     if (req.query.search && typeof req.query.search === 'string') {

@@ -128,11 +128,15 @@ export class PoolService {
         include: {
           classes: {
             include: {
-              professor: {
-                select: {
-                  id: true,
-                  name: true,
-                  email: true
+              schedules: {
+                include: {
+                  professor: {
+                    select: {
+                      id: true,
+                      name: true,
+                      email: true
+                    }
+                  }
                 }
               },
               students: {
@@ -145,8 +149,7 @@ export class PoolService {
                     }
                   }
                 }
-              },
-              schedules: true
+              }
             }
           }
         }

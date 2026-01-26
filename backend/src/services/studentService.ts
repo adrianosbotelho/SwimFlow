@@ -196,11 +196,15 @@ export class StudentService {
             include: {
               class: {
                 include: {
-                  professor: {
-                    select: {
-                      id: true,
-                      name: true,
-                      email: true
+                  schedules: {
+                    include: {
+                      professor: {
+                        select: {
+                          id: true,
+                          name: true,
+                          email: true
+                        }
+                      }
                     }
                   },
                   pool: {
@@ -407,11 +411,15 @@ export class StudentService {
             include: {
               class: {
                 include: {
-                  professor: {
-                    select: {
-                      id: true,
-                      name: true,
-                      email: true
+                  schedules: {
+                    include: {
+                      professor: {
+                        select: {
+                          id: true,
+                          name: true,
+                          email: true
+                        }
+                      }
                     }
                   },
                   pool: {

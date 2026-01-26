@@ -246,7 +246,7 @@ export class UserService {
     const existingUser = await prisma.user.findUnique({
       where: { id },
       include: {
-        classes: true,
+        schedules: true,
         evaluations: true
       }
     })
@@ -256,8 +256,8 @@ export class UserService {
     }
 
     // Check if user has associated data
-    if (existingUser.classes.length > 0) {
-      throw new Error('Cannot delete user with associated classes')
+    if (existingUser.schedules.length > 0) {
+      throw new Error('Cannot delete user with associated class schedules')
     }
 
     if (existingUser.evaluations.length > 0) {
@@ -278,9 +278,13 @@ export class UserService {
     const user = await prisma.user.findUnique({
       where: { id },
       include: {
-        classes: {
+        schedules: {
           include: {
-            students: true
+            class: {
+              include: {
+                students: true
+              }
+            }
           }
         },
         evaluations: true
@@ -291,9 +295,9 @@ export class UserService {
       throw new Error('User not found')
     }
 
-    const totalClasses = user.classes.length
+    const totalClasses = user.schedules.length
     const totalEvaluations = user.evaluations.length
-    const totalStudents = user.classes.reduce((acc: number, cls: any) => acc + cls.students.length, 0)
+    const totalStudents = user.schedules.reduce((acc: number, schedule: any) => acc + schedule.class.students.length, 0)
 
     return {
       totalClasses,
