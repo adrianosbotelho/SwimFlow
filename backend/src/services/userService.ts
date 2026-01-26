@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt'
-import { PrismaClient, User, UserRole } from '@prisma/client'
+import { PrismaClient, User } from '@prisma/client'
 import Joi from 'joi'
 
 // Create a singleton instance that can be mocked in tests

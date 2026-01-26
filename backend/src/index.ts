@@ -72,6 +72,7 @@ import poolRoutes from './routes/pools'
 import classRoutes from './routes/classes'
 import trainingRoutes from './routes/trainings'
 import evaluationRoutes from './routes/evaluations'
+import roleRoutes from './routes/roles'
 import testRoutes from './routes/test'
 
 // API routes
@@ -82,6 +83,7 @@ app.use('/api/pools', poolRoutes)
 app.use('/api/classes', classRoutes)
 app.use('/api/trainings', trainingRoutes)
 app.use('/api/evaluations', evaluationRoutes)
+app.use('/api/roles', roleRoutes)
 app.use('/api/test', testRoutes)
 
 app.get('/api', (req, res) => {
@@ -106,9 +108,18 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' })
 })
 
-app.listen(Number(PORT), '0.0.0.0', () => {
+app.listen(Number(PORT), '0.0.0.0', async () => {
   console.log(`🏊‍♂️ SwimFlow API running on port ${PORT}`)
   console.log(`📊 Health check: http://localhost:${PORT}/health`)
   console.log(`🔗 API endpoint: http://localhost:${PORT}/api`)
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`)
+  
+  // Initialize default roles
+  try {
+    const { RoleService } = await import('./services/roleService')
+    await RoleService.initializeDefaultRoles()
+    console.log('✅ Default roles initialized')
+  } catch (error) {
+    console.error('❌ Error initializing default roles:', error)
+  }
 })

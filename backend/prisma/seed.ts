@@ -1,4 +1,4 @@
-import { PrismaClient, UserRole, Level, StrokeType } from '@prisma/client'
+import { PrismaClient, Level, StrokeType } from '@prisma/client'
 import bcrypt from 'bcrypt'
 
 const prisma = new PrismaClient()
@@ -29,7 +29,7 @@ async function main() {
       email: 'admin@swimflow.com',
       passwordHash: adminPassword,
       name: 'Administrador SwimFlow',
-      role: UserRole.admin,
+      role: 'admin',
       profileImage: null,
     },
   })
@@ -39,7 +39,7 @@ async function main() {
       email: 'carlos.silva@swimflow.com',
       passwordHash: professorPassword,
       name: 'Carlos Silva',
-      role: UserRole.professor,
+      role: 'professor',
       profileImage: null,
     },
   })
@@ -49,7 +49,7 @@ async function main() {
       email: 'ana.santos@swimflow.com',
       passwordHash: professorPassword,
       name: 'Ana Santos',
-      role: UserRole.professor,
+      role: 'professor',
       profileImage: null,
     },
   })
@@ -96,7 +96,6 @@ async function main() {
   const class1 = await prisma.class.create({
     data: {
       name: 'Natação Avançada - Manhã',
-      professorId: professor1.id,
       poolId: pool1.id,
       maxCapacity: 12,
     },
@@ -105,7 +104,6 @@ async function main() {
   const class2 = await prisma.class.create({
     data: {
       name: 'Natação Intermediária - Tarde',
-      professorId: professor2.id,
       poolId: pool2.id,
       maxCapacity: 15,
     },
@@ -114,7 +112,6 @@ async function main() {
   const class3 = await prisma.class.create({
     data: {
       name: 'Natação Infantil - Manhã',
-      professorId: professor2.id,
       poolId: pool3.id,
       maxCapacity: 10,
     },
@@ -128,18 +125,21 @@ async function main() {
       // Natação Avançada - Segunda, Quarta, Sexta 07:00-08:00
       {
         classId: class1.id,
+        professorId: professor1.id,
         dayOfWeek: 1, // Segunda
         startTime: new Date('1970-01-01T07:00:00Z'),
         endTime: new Date('1970-01-01T08:00:00Z'),
       },
       {
         classId: class1.id,
+        professorId: professor1.id,
         dayOfWeek: 3, // Quarta
         startTime: new Date('1970-01-01T07:00:00Z'),
         endTime: new Date('1970-01-01T08:00:00Z'),
       },
       {
         classId: class1.id,
+        professorId: professor1.id,
         dayOfWeek: 5, // Sexta
         startTime: new Date('1970-01-01T07:00:00Z'),
         endTime: new Date('1970-01-01T08:00:00Z'),
@@ -147,12 +147,14 @@ async function main() {
       // Natação Intermediária - Terça, Quinta 15:00-16:00
       {
         classId: class2.id,
+        professorId: professor2.id,
         dayOfWeek: 2, // Terça
         startTime: new Date('1970-01-01T15:00:00Z'),
         endTime: new Date('1970-01-01T16:00:00Z'),
       },
       {
         classId: class2.id,
+        professorId: professor2.id,
         dayOfWeek: 4, // Quinta
         startTime: new Date('1970-01-01T15:00:00Z'),
         endTime: new Date('1970-01-01T16:00:00Z'),
@@ -160,30 +162,35 @@ async function main() {
       // Natação Infantil - Segunda a Sexta 09:00-10:00
       {
         classId: class3.id,
+        professorId: professor2.id,
         dayOfWeek: 1, // Segunda
         startTime: new Date('1970-01-01T09:00:00Z'),
         endTime: new Date('1970-01-01T10:00:00Z'),
       },
       {
         classId: class3.id,
+        professorId: professor2.id,
         dayOfWeek: 2, // Terça
         startTime: new Date('1970-01-01T09:00:00Z'),
         endTime: new Date('1970-01-01T10:00:00Z'),
       },
       {
         classId: class3.id,
+        professorId: professor2.id,
         dayOfWeek: 3, // Quarta
         startTime: new Date('1970-01-01T09:00:00Z'),
         endTime: new Date('1970-01-01T10:00:00Z'),
       },
       {
         classId: class3.id,
+        professorId: professor2.id,
         dayOfWeek: 4, // Quinta
         startTime: new Date('1970-01-01T09:00:00Z'),
         endTime: new Date('1970-01-01T10:00:00Z'),
       },
       {
         classId: class3.id,
+        professorId: professor2.id,
         dayOfWeek: 5, // Sexta
         startTime: new Date('1970-01-01T09:00:00Z'),
         endTime: new Date('1970-01-01T10:00:00Z'),

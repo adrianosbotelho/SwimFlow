@@ -153,3 +153,6 @@ export const requireRole = (allowedRoles: string[]) => {
 
 export const requireAdmin = requireRole(['admin'])
 export const requireProfessorOrAdmin = requireRole(['professor', 'admin'])
+
+// Alias for backward compatibility
+export const authMiddleware = authenticateToken

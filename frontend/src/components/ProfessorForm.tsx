@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import type { Professor, CreateProfessorData, UpdateProfessorData } from '../types/professor';
+import type { Role } from '../types/role';
+import { roleService } from '../services/roleService';
+import { RoleManager } from './RoleManager';
 
 interface ProfessorFormProps {
   professor?: Professor;
@@ -27,7 +30,7 @@ export const ProfessorForm: React.FC<ProfessorFormProps> = ({
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    role: 'professor' as 'admin' | 'professor',
+    role: 'professor',
     profileImage: '',
     password: '',
     confirmPassword: ''
@@ -35,8 +38,13 @@ export const ProfessorForm: React.FC<ProfessorFormProps> = ({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState(false);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [loadingRoles, setLoadingRoles] = useState(true);
+  const [showRoleManager, setShowRoleManager] = useState(false);
 
   useEffect(() => {
+    loadRoles();
+    
     if (professor) {
       setFormData({
         name: professor.name || '',
@@ -48,6 +56,18 @@ export const ProfessorForm: React.FC<ProfessorFormProps> = ({
       });
     }
   }, [professor]);
+
+  const loadRoles = async () => {
+    try {
+      setLoadingRoles(true);
+      const rolesData = await roleService.getAllRoles();
+      setRoles(rolesData);
+    } catch (error) {
+      console.error('Error loading roles:', error);
+    } finally {
+      setLoadingRoles(false);
+    }
+  };
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -191,19 +211,42 @@ export const ProfessorForm: React.FC<ProfessorFormProps> = ({
 
         {/* Role */}
         <div>
-          <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Função *
           </label>
-          <select
-            id="role"
-            value={formData.role}
-            onChange={(e) => handleInputChange('role', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent"
-            disabled={isLoading}
-          >
-            <option value="professor">Professor</option>
-            <option value="admin">Administrador</option>
-          </select>
+          <div className="flex space-x-2">
+            <select
+              id="role"
+              value={formData.role}
+              onChange={(e) => handleInputChange('role', e.target.value)}
+              className="flex-1 input-modern"
+              disabled={isLoading || loadingRoles}
+            >
+              {loadingRoles ? (
+                <option value="">Carregando funções...</option>
+              ) : (
+                <>
+                  {roles.map((role) => (
+                    <option key={role.id} value={role.name}>
+                      {role.name} {role.description && `- ${role.description}`}
+                    </option>
+                  ))}
+                </>
+              )}
+            </select>
+            <button
+              type="button"
+              onClick={() => setShowRoleManager(true)}
+              className="px-3 py-2 bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
+              title="Gerenciar funções"
+              disabled={isLoading}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* Profile Image */}
@@ -323,6 +366,18 @@ export const ProfessorForm: React.FC<ProfessorFormProps> = ({
           </button>
         </div>
       </form>
+
+      {/* Role Manager Modal */}
+      {showRoleManager && (
+        <RoleManager
+          onClose={() => setShowRoleManager(false)}
+          onRoleSelect={(roleName) => {
+            handleInputChange('role', roleName);
+            setShowRoleManager(false);
+            loadRoles(); // Reload roles to get the updated list
+          }}
+        />
+      )}
     </motion.div>
   );
 };
