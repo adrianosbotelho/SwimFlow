@@ -4,6 +4,7 @@ import EvaluationForm from '../components/EvaluationForm';
 import EvaluationHistory from '../components/EvaluationHistory';
 import { EvaluationChart } from '../components/EvaluationChart';
 import { studentService } from '../services/studentService';
+import { professorService } from '../services/professorService';
 import evaluationService from '../services/evaluationService';
 import type { Student } from '../types/student';
 import type { EvolutionData } from '../types/evaluation';
@@ -19,9 +20,12 @@ export const EvaluationsPage: React.FC = () => {
   const [evaluationStats, setEvaluationStats] = useState<any>(null);
   const [evolutionData, setEvolutionData] = useState<EvolutionData[]>([]);
   const [selectedStroke, setSelectedStroke] = useState<string>('');
+  const [professors, setProfessors] = useState<any[]>([]);
+  const [selectedProfessorId, setSelectedProfessorId] = useState<string>('');
 
   useEffect(() => {
     loadStudents();
+    loadProfessors();
   }, []);
 
   useEffect(() => {
@@ -60,6 +64,19 @@ export const EvaluationsPage: React.FC = () => {
     }
   };
 
+  const loadProfessors = async () => {
+    try {
+      const professorsData = await professorService.getAll();
+      setProfessors(professorsData);
+      // Auto-select first professor if available
+      if (professorsData.length > 0 && !selectedProfessorId) {
+        setSelectedProfessorId(professorsData[0].id);
+      }
+    } catch (error) {
+      console.error('Error loading professors:', error);
+    }
+  };
+
   const loadEvolutionData = async (studentId: string) => {
     try {
       const evolution = await evaluationService.getEvolutionData(studentId);
@@ -71,7 +88,15 @@ export const EvaluationsPage: React.FC = () => {
 
   const handleEvaluationSubmit = async (data: any) => {
     try {
-      await evaluationService.createEvaluation(data);
+      console.log('Submitting evaluation data:', data); // Debug log
+      
+      // Convert date string to Date object for backend
+      const evaluationData = {
+        ...data,
+        date: new Date(data.date)
+      };
+      
+      await evaluationService.createEvaluation(evaluationData);
       setShowForm(false);
       // Refresh stats if we have a selected student
       if (selectedStudentId) {
@@ -80,7 +105,21 @@ export const EvaluationsPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Error creating evaluation:', error);
-      alert('Erro ao criar avaliação. Tente novamente.');
+      
+      // More detailed error message
+      let errorMessage = 'Erro ao criar avaliação. Tente novamente.';
+      if (error instanceof Error) {
+        errorMessage = `Erro: ${error.message}`;
+      } else if (typeof error === 'object' && error !== null && 'response' in error) {
+        const axiosError = error as any;
+        if (axiosError.response?.data?.message) {
+          errorMessage = `Erro: ${axiosError.response.data.message}`;
+        } else if (axiosError.response?.status) {
+          errorMessage = `Erro HTTP ${axiosError.response.status}: ${axiosError.response.statusText}`;
+        }
+      }
+      
+      alert(errorMessage);
     }
   };
 
@@ -205,7 +244,7 @@ export const EvaluationsPage: React.FC = () => {
         </div>
         <button
           onClick={() => setShowForm(true)}
-          disabled={!selectedStudent}
+          disabled={!selectedStudent || !selectedProfessorId}
           className="bg-ocean-600 hover:bg-ocean-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -232,7 +271,7 @@ export const EvaluationsPage: React.FC = () => {
             <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
               <EvaluationForm
                 student={selectedStudent}
-                professorId="professor-1" // TODO: Get from auth context
+                professorId={selectedProfessorId}
                 onSubmit={handleEvaluationSubmit}
                 onCancel={() => setShowForm(false)}
               />
@@ -280,28 +319,48 @@ export const EvaluationsPage: React.FC = () => {
 
         <div className="p-6">
           {/* Student Selector */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Selecionar Aluno
-            </label>
-            {loading ? (
-              <div className="w-full max-w-md px-3 py-2 border border-gray-300 rounded-lg bg-gray-50">
-                Carregando alunos...
-              </div>
-            ) : (
+          <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Selecionar Aluno
+              </label>
+              {loading ? (
+                <div className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50">
+                  Carregando alunos...
+                </div>
+              ) : (
+                <select
+                  value={selectedStudentId}
+                  onChange={(e) => setSelectedStudentId(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent"
+                >
+                  <option value="">Selecione um aluno...</option>
+                  {students.map((student) => (
+                    <option key={student.id} value={student.id}>
+                      {student.name} ({student.level})
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Professor Avaliador
+              </label>
               <select
-                value={selectedStudentId}
-                onChange={(e) => setSelectedStudentId(e.target.value)}
-                className="w-full max-w-md px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent"
+                value={selectedProfessorId}
+                onChange={(e) => setSelectedProfessorId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent"
               >
-                <option value="">Selecione um aluno...</option>
-                {students.map((student) => (
-                  <option key={student.id} value={student.id}>
-                    {student.name} ({student.level})
+                <option value="">Selecione um professor...</option>
+                {professors.map((professor) => (
+                  <option key={professor.id} value={professor.id}>
+                    {professor.name}
                   </option>
                 ))}
               </select>
-            )}
+            </div>
           </div>
 
           {/* Tab Content */}

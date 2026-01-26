@@ -74,10 +74,10 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
   };
 
   const getScoreColor = (score: number): string => {
-    if (score >= 8) return 'border-green-300 bg-green-50';
-    if (score >= 6) return 'border-yellow-300 bg-yellow-50';
-    if (score >= 4) return 'border-orange-300 bg-orange-50';
-    return 'border-red-300 bg-red-50';
+    if (score >= 8) return 'border-green-300 bg-green-50 text-green-800';
+    if (score >= 6) return 'border-yellow-300 bg-yellow-50 text-yellow-800';
+    if (score >= 4) return 'border-orange-300 bg-orange-50 text-orange-800';
+    return 'border-red-300 bg-red-50 text-red-800';
   };
 
   return (
