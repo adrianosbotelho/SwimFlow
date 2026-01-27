@@ -263,7 +263,7 @@ export const TrainingList = forwardRef<TrainingListRef, TrainingListProps>(({
                 type="date"
                 value={filters.startDate || ''}
                 onChange={(e) => handleFilterChange({ startDate: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent text-gray-900 bg-white"
               />
             </div>
             
@@ -275,7 +275,7 @@ export const TrainingList = forwardRef<TrainingListRef, TrainingListProps>(({
                 type="date"
                 value={filters.endDate || ''}
                 onChange={(e) => handleFilterChange({ endDate: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent text-gray-900 bg-white"
               />
             </div>
 
@@ -287,7 +287,7 @@ export const TrainingList = forwardRef<TrainingListRef, TrainingListProps>(({
               <select
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent text-gray-900 bg-white"
               >
                 <option value="desc">Mais recentes primeiro</option>
                 <option value="asc">Mais antigos primeiro</option>

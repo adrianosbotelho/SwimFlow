@@ -155,7 +155,7 @@ export const PoolForm: React.FC<PoolFormProps> = ({
             id="name"
             value={formData.name}
             onChange={(e) => handleInputChange('name', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent ${
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent text-gray-900 bg-white ${
               errors.name ? 'border-red-500' : 'border-gray-300'
             }`}
             placeholder="Ex: Piscina Principal"
@@ -177,7 +177,7 @@ export const PoolForm: React.FC<PoolFormProps> = ({
             min="1"
             value={formData.capacity}
             onChange={(e) => handleInputChange('capacity', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent ${
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent text-gray-900 bg-white ${
               errors.capacity ? 'border-red-500' : 'border-gray-300'
             }`}
             placeholder="Ex: 50"
@@ -201,7 +201,7 @@ export const PoolForm: React.FC<PoolFormProps> = ({
               step="0.1"
               value={formData.length}
               onChange={(e) => handleInputChange('length', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent ${
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent text-gray-900 bg-white ${
                 errors.length ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="Ex: 25"
@@ -222,7 +222,7 @@ export const PoolForm: React.FC<PoolFormProps> = ({
               min="1"
               value={formData.lanes}
               onChange={(e) => handleInputChange('lanes', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent ${
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent text-gray-900 bg-white ${
                 errors.lanes ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="Ex: 8"
@@ -247,7 +247,7 @@ export const PoolForm: React.FC<PoolFormProps> = ({
             step="0.1"
             value={formData.temperature}
             onChange={(e) => handleInputChange('temperature', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent ${
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent text-gray-900 bg-white ${
               errors.temperature ? 'border-red-500' : 'border-gray-300'
             }`}
             placeholder="Ex: 28.5"
@@ -268,7 +268,7 @@ export const PoolForm: React.FC<PoolFormProps> = ({
             rows={3}
             value={formData.description}
             onChange={(e) => handleInputChange('description', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent text-gray-900 bg-white"
             placeholder="Descrição adicional da piscina..."
             disabled={isLoading}
           />

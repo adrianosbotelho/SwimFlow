@@ -36,10 +36,12 @@ class EvaluationService {
     return response.data.data;
   }
 
-  async listEvaluations(studentId?: string, professorId?: string): Promise<Evaluation[]> {
+  async listEvaluations(studentId?: string, professorId?: string, startDate?: string, endDate?: string): Promise<Evaluation[]> {
     const params = new URLSearchParams();
     if (studentId) params.append('studentId', studentId);
     if (professorId) params.append('professorId', professorId);
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
     
     const response = await api.get(`/api/evaluations?${params.toString()}`);
     return response.data.data;
@@ -62,8 +64,12 @@ class EvaluationService {
     return response.data.data;
   }
 
-  async getStudentStats(studentId: string): Promise<EvaluationStats> {
-    const response = await api.get(`/api/evaluations/student/${studentId}/stats`);
+  async getStudentStats(studentId: string, startDate?: string, endDate?: string): Promise<EvaluationStats> {
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    
+    const response = await api.get(`/api/evaluations/student/${studentId}/stats?${params.toString()}`);
     return response.data.data;
   }
 }

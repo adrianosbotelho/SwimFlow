@@ -253,7 +253,7 @@ export const TrainingForm: React.FC<TrainingFormProps> = ({
               value={formData.classId}
               onChange={(e) => handleInputChange('classId', e.target.value)}
               disabled={loadingClasses || !!training}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent disabled:bg-gray-100"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent disabled:bg-gray-100 text-gray-900 bg-white"
               required
             >
               <option value="">Selecione uma turma</option>
@@ -282,7 +282,7 @@ export const TrainingForm: React.FC<TrainingFormProps> = ({
               type="date"
               value={formData.date}
               onChange={(e) => handleInputChange('date', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent text-gray-900 bg-white"
               required
             />
           </div>
@@ -298,7 +298,7 @@ export const TrainingForm: React.FC<TrainingFormProps> = ({
               max="480"
               value={formData.duration}
               onChange={(e) => handleInputChange('duration', parseInt(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent text-gray-900 bg-white"
               required
             />
           </div>
@@ -326,7 +326,7 @@ export const TrainingForm: React.FC<TrainingFormProps> = ({
                   value={activity}
                   onChange={(e) => handleActivityChange(index, e.target.value)}
                   placeholder={`Atividade ${index + 1}`}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent text-gray-900 bg-white"
                   required
                 />
                 {formData.activities.length > 1 && (
@@ -433,7 +433,7 @@ export const TrainingForm: React.FC<TrainingFormProps> = ({
             onChange={(e) => handleInputChange('notes', e.target.value)}
             rows={4}
             placeholder="Observações sobre o treino (opcional)"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent resize-none"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent resize-none text-gray-900 bg-white"
           />
         </div>
 

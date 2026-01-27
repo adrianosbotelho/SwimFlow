@@ -5,12 +5,16 @@ import evaluationService from '../services/evaluationService';
 
 interface EvaluationHistoryProps {
   studentId: string;
+  startDate?: string;
+  endDate?: string;
   onEditEvaluation?: (evaluation: Evaluation) => void;
   onDeleteEvaluation?: (evaluationId: string) => void;
 }
 
 const EvaluationHistory: React.FC<EvaluationHistoryProps> = ({
   studentId,
+  startDate,
+  endDate,
   onEditEvaluation,
   onDeleteEvaluation
 }) => {
@@ -21,13 +25,13 @@ const EvaluationHistory: React.FC<EvaluationHistoryProps> = ({
 
   useEffect(() => {
     loadEvaluations();
-  }, [studentId]);
+  }, [studentId, startDate, endDate]);
 
   const loadEvaluations = async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await evaluationService.listEvaluations(studentId);
+      const data = await evaluationService.listEvaluations(studentId, undefined, startDate, endDate);
       setEvaluations(data);
     } catch (err) {
       setError('Erro ao carregar histórico de avaliações');
@@ -223,10 +227,19 @@ const EvaluationHistory: React.FC<EvaluationHistoryProps> = ({
                         
                         {onDeleteEvaluation && (
                           <button
-                            onClick={(e) => {
+                            onClick={async (e) => {
                               e.stopPropagation();
                               if (window.confirm('Tem certeza que deseja excluir esta avaliação?')) {
-                                onDeleteEvaluation(evaluation.id);
+                                try {
+                                  await evaluationService.deleteEvaluation(evaluation.id);
+                                  // Remove from local state immediately
+                                  setEvaluations(prev => prev.filter(evalItem => evalItem.id !== evaluation.id));
+                                  // Call parent callback if provided
+                                  onDeleteEvaluation(evaluation.id);
+                                } catch (error) {
+                                  console.error('Error deleting evaluation:', error);
+                                  alert('Erro ao excluir avaliação. Tente novamente.');
+                                }
                               }
                             }}
                             className="p-2 text-gray-400 hover:text-red-600 transition-colors"

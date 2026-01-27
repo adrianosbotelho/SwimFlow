@@ -22,6 +22,10 @@ export const EvaluationsPage: React.FC = () => {
   const [selectedStroke, setSelectedStroke] = useState<string>('');
   const [professors, setProfessors] = useState<any[]>([]);
   const [selectedProfessorId, setSelectedProfessorId] = useState<string>('');
+  const [dateFilters, setDateFilters] = useState({
+    startDate: '',
+    endDate: ''
+  });
 
   useEffect(() => {
     loadStudents();
@@ -43,6 +47,13 @@ export const EvaluationsPage: React.FC = () => {
     }
   }, [selectedStudentId, students]);
 
+  // Reload stats when date filters change
+  useEffect(() => {
+    if (selectedStudentId) {
+      loadEvaluationStats(selectedStudentId);
+    }
+  }, [dateFilters, selectedStudentId]);
+
   const loadStudents = async () => {
     try {
       setLoading(true);
@@ -57,7 +68,11 @@ export const EvaluationsPage: React.FC = () => {
 
   const loadEvaluationStats = async (studentId: string) => {
     try {
-      const stats = await evaluationService.getStudentStats(studentId);
+      const stats = await evaluationService.getStudentStats(
+        studentId, 
+        dateFilters.startDate || undefined, 
+        dateFilters.endDate || undefined
+      );
       setEvaluationStats(stats);
     } catch (error) {
       console.error('Error loading evaluation stats:', error);
@@ -83,6 +98,14 @@ export const EvaluationsPage: React.FC = () => {
       setEvolutionData(evolution);
     } catch (error) {
       console.error('Error loading evolution data:', error);
+    }
+  };
+
+  const handleDeleteEvaluation = async () => {
+    // Refresh stats after deletion
+    if (selectedStudentId) {
+      loadEvaluationStats(selectedStudentId);
+      loadEvolutionData(selectedStudentId);
     }
   };
 
@@ -167,9 +190,91 @@ export const EvaluationsPage: React.FC = () => {
 
     return (
       <div className="space-y-6">
+        {/* Date Filters */}
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <h4 className="text-lg font-semibold text-gray-900 mb-4">Filtros de Data</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Data Inicial
+              </label>
+              <input
+                type="date"
+                value={dateFilters.startDate}
+                onChange={(e) => setDateFilters(prev => ({ ...prev, startDate: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent text-gray-900 bg-white"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Data Final
+              </label>
+              <input
+                type="date"
+                value={dateFilters.endDate}
+                onChange={(e) => setDateFilters(prev => ({ ...prev, endDate: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent text-gray-900 bg-white"
+              />
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2 mt-4">
+            <button
+              onClick={() => {
+                const today = new Date().toISOString().split('T')[0];
+                setDateFilters({ startDate: today, endDate: today });
+              }}
+              className="px-3 py-1 text-sm bg-ocean-100 text-ocean-700 rounded-full hover:bg-ocean-200 transition-colors"
+            >
+              Hoje
+            </button>
+            <button
+              onClick={() => {
+                const today = new Date();
+                const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+                setDateFilters({ 
+                  startDate: lastWeek.toISOString().split('T')[0], 
+                  endDate: today.toISOString().split('T')[0] 
+                });
+              }}
+              className="px-3 py-1 text-sm bg-teal-100 text-teal-700 rounded-full hover:bg-teal-200 transition-colors"
+            >
+              Última Semana
+            </button>
+            <button
+              onClick={() => {
+                const today = new Date();
+                const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+                setDateFilters({ 
+                  startDate: lastMonth.toISOString().split('T')[0], 
+                  endDate: today.toISOString().split('T')[0] 
+                });
+              }}
+              className="px-3 py-1 text-sm bg-amber-100 text-amber-700 rounded-full hover:bg-amber-200 transition-colors"
+            >
+              Último Mês
+            </button>
+            <button
+              onClick={() => setDateFilters({ startDate: '', endDate: '' })}
+              className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors"
+            >
+              Limpar Filtros
+            </button>
+          </div>
+        </div>
+
         <div className="bg-gradient-to-r from-blue-50 to-teal-50 rounded-xl p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Relatório de Progresso - {selectedStudent.name}
+            {(dateFilters.startDate || dateFilters.endDate) && (
+              <span className="text-sm font-normal text-gray-600 ml-2">
+                {dateFilters.startDate && dateFilters.endDate 
+                  ? `(${new Date(dateFilters.startDate).toLocaleDateString('pt-BR')} - ${new Date(dateFilters.endDate).toLocaleDateString('pt-BR')})`
+                  : dateFilters.startDate 
+                  ? `(a partir de ${new Date(dateFilters.startDate).toLocaleDateString('pt-BR')})`
+                  : `(até ${new Date(dateFilters.endDate).toLocaleDateString('pt-BR')})`
+                }
+              </span>
+            )}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white rounded-lg p-4">
@@ -215,6 +320,17 @@ export const EvaluationsPage: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* Evaluation History with Date Filters */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <h4 className="text-lg font-semibold text-gray-900 mb-4">Histórico de Avaliações</h4>
+          <EvaluationHistory
+            studentId={selectedStudent.id}
+            startDate={dateFilters.startDate || undefined}
+            endDate={dateFilters.endDate || undefined}
+            onDeleteEvaluation={handleDeleteEvaluation}
+          />
+        </div>
       </div>
     );
   };
@@ -240,7 +356,7 @@ export const EvaluationsPage: React.FC = () => {
           <select
             value={selectedStroke}
             onChange={(e) => setSelectedStroke(e.target.value)}
-            className="w-full max-w-md px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent"
+            className="w-full max-w-md px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent text-gray-900 bg-white"
           >
             <option value="">Todos os nados</option>
             {STROKE_TYPES.map((stroke) => (
@@ -363,7 +479,7 @@ export const EvaluationsPage: React.FC = () => {
                 <select
                   value={selectedStudentId}
                   onChange={(e) => setSelectedStudentId(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent text-gray-900 bg-white"
                 >
                   <option value="">Selecione um aluno...</option>
                   {students.map((student) => (
@@ -382,7 +498,7 @@ export const EvaluationsPage: React.FC = () => {
               <select
                 value={selectedProfessorId}
                 onChange={(e) => setSelectedProfessorId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent text-gray-900 bg-white"
               >
                 <option value="">Selecione um professor...</option>
                 {professors.map((professor) => (
@@ -397,15 +513,89 @@ export const EvaluationsPage: React.FC = () => {
           {/* Tab Content */}
           {activeTab === 'history' && (
             selectedStudentId ? (
-              <EvaluationHistory
-                studentId={selectedStudentId}
-                onEditEvaluation={(evaluation: any) => {
-                  console.log('Edit evaluation:', evaluation);
-                }}
-                onDeleteEvaluation={(evaluationId: string) => {
-                  console.log('Delete evaluation:', evaluationId);
-                }}
-              />
+              <div className="space-y-6">
+                {/* Date Filters for History */}
+                <div className="bg-white rounded-xl border border-gray-200 p-4">
+                  <h4 className="text-lg font-semibold text-gray-900 mb-4">Filtros de Data</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Data Inicial
+                      </label>
+                      <input
+                        type="date"
+                        value={dateFilters.startDate}
+                        onChange={(e) => setDateFilters(prev => ({ ...prev, startDate: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent text-gray-900 bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Data Final
+                      </label>
+                      <input
+                        type="date"
+                        value={dateFilters.endDate}
+                        onChange={(e) => setDateFilters(prev => ({ ...prev, endDate: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent text-gray-900 bg-white"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    <button
+                      onClick={() => {
+                        const today = new Date().toISOString().split('T')[0];
+                        setDateFilters({ startDate: today, endDate: today });
+                      }}
+                      className="px-3 py-1 text-sm bg-ocean-100 text-ocean-700 rounded-full hover:bg-ocean-200 transition-colors"
+                    >
+                      Hoje
+                    </button>
+                    <button
+                      onClick={() => {
+                        const today = new Date();
+                        const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+                        setDateFilters({ 
+                          startDate: lastWeek.toISOString().split('T')[0], 
+                          endDate: today.toISOString().split('T')[0] 
+                        });
+                      }}
+                      className="px-3 py-1 text-sm bg-teal-100 text-teal-700 rounded-full hover:bg-teal-200 transition-colors"
+                    >
+                      Última Semana
+                    </button>
+                    <button
+                      onClick={() => {
+                        const today = new Date();
+                        const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+                        setDateFilters({ 
+                          startDate: lastMonth.toISOString().split('T')[0], 
+                          endDate: today.toISOString().split('T')[0] 
+                        });
+                      }}
+                      className="px-3 py-1 text-sm bg-amber-100 text-amber-700 rounded-full hover:bg-amber-200 transition-colors"
+                    >
+                      Último Mês
+                    </button>
+                    <button
+                      onClick={() => setDateFilters({ startDate: '', endDate: '' })}
+                      className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors"
+                    >
+                      Limpar Filtros
+                    </button>
+                  </div>
+                </div>
+
+                <EvaluationHistory
+                  studentId={selectedStudentId}
+                  startDate={dateFilters.startDate || undefined}
+                  endDate={dateFilters.endDate || undefined}
+                  onEditEvaluation={(evaluation: any) => {
+                    console.log('Edit evaluation:', evaluation);
+                  }}
+                  onDeleteEvaluation={handleDeleteEvaluation}
+                />
+              </div>
             ) : (
               <div className="text-center py-12">
                 <div className="text-6xl mb-4">📊</div>

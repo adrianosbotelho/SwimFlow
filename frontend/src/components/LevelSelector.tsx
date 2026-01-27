@@ -144,7 +144,7 @@ export const LevelSelector: React.FC<LevelSelectorProps> = ({
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   placeholder="Descreva o motivo da mudança de nível..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean-500 focus:border-ocean-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean-500 focus:border-ocean-500 text-gray-900 bg-white"
                   rows={3}
                 />
               </div>

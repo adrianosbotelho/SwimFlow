@@ -204,7 +204,7 @@ export const ProfessorForm: React.FC<ProfessorFormProps> = ({
             id="name"
             value={formData.name}
             onChange={(e) => handleInputChange('name', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent ${
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent text-gray-900 bg-white ${
               errors.name ? 'border-red-500' : 'border-gray-300'
             }`}
             placeholder="Ex: João Silva"
@@ -225,7 +225,7 @@ export const ProfessorForm: React.FC<ProfessorFormProps> = ({
             id="email"
             value={formData.email}
             onChange={(e) => handleInputChange('email', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent ${
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent text-gray-900 bg-white ${
               errors.email ? 'border-red-500' : 'border-gray-300'
             }`}
             placeholder="Ex: joao.silva@swimflow.com"
@@ -246,7 +246,7 @@ export const ProfessorForm: React.FC<ProfessorFormProps> = ({
             id="phone"
             value={formData.phone}
             onChange={(e) => handleInputChange('phone', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent ${
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent text-gray-900 bg-white ${
               errors.phone ? 'border-red-500' : 'border-gray-300'
             }`}
             placeholder="Ex: (11) 99999-9999"
@@ -267,7 +267,7 @@ export const ProfessorForm: React.FC<ProfessorFormProps> = ({
             id="birthDate"
             value={formData.birthDate}
             onChange={(e) => handleInputChange('birthDate', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent ${
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent text-gray-900 bg-white ${
               errors.birthDate ? 'border-red-500' : 'border-gray-300'
             }`}
             disabled={isLoading}
@@ -287,7 +287,7 @@ export const ProfessorForm: React.FC<ProfessorFormProps> = ({
             value={formData.address}
             onChange={(e) => handleInputChange('address', e.target.value)}
             rows={3}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent ${
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent text-gray-900 bg-white ${
               errors.address ? 'border-red-500' : 'border-gray-300'
             }`}
             placeholder="Ex: Rua das Flores, 123 - Centro - São Paulo/SP"
@@ -348,7 +348,7 @@ export const ProfessorForm: React.FC<ProfessorFormProps> = ({
             id="profileImage"
             value={formData.profileImage}
             onChange={(e) => handleInputChange('profileImage', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent ${
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent text-gray-900 bg-white ${
               errors.profileImage ? 'border-red-500' : 'border-gray-300'
             }`}
             placeholder="https://exemplo.com/foto.jpg"
@@ -378,7 +378,7 @@ export const ProfessorForm: React.FC<ProfessorFormProps> = ({
                 id="password"
                 value={formData.password}
                 onChange={(e) => handleInputChange('password', e.target.value)}
-                className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent ${
+                className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent text-gray-900 bg-white ${
                   errors.password ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Mínimo 8 caracteres"
@@ -417,7 +417,7 @@ export const ProfessorForm: React.FC<ProfessorFormProps> = ({
                 id="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent ${
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent text-gray-900 bg-white ${
                   errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Digite a senha novamente"

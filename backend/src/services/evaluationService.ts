@@ -234,7 +234,7 @@ class EvaluationService {
     return evaluation;
   }
 
-  async listEvaluations(studentId?: string, professorId?: string): Promise<EvaluationWithStrokes[]> {
+  async listEvaluations(studentId?: string, professorId?: string, startDate?: string, endDate?: string): Promise<EvaluationWithStrokes[]> {
     const where: any = {};
     
     if (studentId) {
@@ -243,6 +243,20 @@ class EvaluationService {
     
     if (professorId) {
       where.professorId = professorId;
+    }
+
+    // Add date filters
+    if (startDate || endDate) {
+      where.date = {};
+      if (startDate) {
+        where.date.gte = new Date(startDate);
+      }
+      if (endDate) {
+        // Add one day to include the end date
+        const endDateTime = new Date(endDate);
+        endDateTime.setDate(endDateTime.getDate() + 1);
+        where.date.lt = endDateTime;
+      }
     }
 
     const evaluations = await prisma.evaluation.findMany({
@@ -471,9 +485,25 @@ class EvaluationService {
     return Object.values(groupedData);
   }
 
-  async getStudentEvaluationStats(studentId: string) {
+  async getStudentEvaluationStats(studentId: string, startDate?: string, endDate?: string) {
+    const where: any = { studentId };
+
+    // Add date filters
+    if (startDate || endDate) {
+      where.date = {};
+      if (startDate) {
+        where.date.gte = new Date(startDate);
+      }
+      if (endDate) {
+        // Add one day to include the end date
+        const endDateTime = new Date(endDate);
+        endDateTime.setDate(endDateTime.getDate() + 1);
+        where.date.lt = endDateTime;
+      }
+    }
+
     const evaluations = await prisma.evaluation.findMany({
-      where: { studentId },
+      where,
       include: {
         strokeEvaluations: true
       },

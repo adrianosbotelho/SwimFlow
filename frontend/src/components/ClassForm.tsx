@@ -231,7 +231,7 @@ export const ClassForm: React.FC<ClassFormProps> = ({
               id="name"
               value={formData.name}
               onChange={(e) => handleInputChange('name', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent ${
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent text-gray-900 bg-white ${
                 errors.name ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="Ex: Natação Iniciante - Manhã"
@@ -250,7 +250,7 @@ export const ClassForm: React.FC<ClassFormProps> = ({
               id="poolId"
               value={formData.poolId}
               onChange={(e) => handleInputChange('poolId', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent ${
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent text-gray-900 bg-white ${
                 errors.poolId ? 'border-red-500' : 'border-gray-300'
               }`}
               disabled={isLoading}
@@ -285,7 +285,7 @@ export const ClassForm: React.FC<ClassFormProps> = ({
             max={selectedPool?.capacity}
             value={formData.maxCapacity}
             onChange={(e) => handleInputChange('maxCapacity', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent ${
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent text-gray-900 bg-white ${
               errors.maxCapacity ? 'border-red-500' : 'border-gray-300'
             }`}
             placeholder="Ex: 20"
@@ -339,7 +339,7 @@ export const ClassForm: React.FC<ClassFormProps> = ({
                       <select
                         value={schedule.dayOfWeek}
                         onChange={(e) => updateSchedule(index, 'dayOfWeek', parseInt(e.target.value))}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent text-gray-900 bg-white"
                         disabled={isLoading}
                       >
                         {dayNames.map((day, dayIndex) => (
@@ -358,7 +358,7 @@ export const ClassForm: React.FC<ClassFormProps> = ({
                         type="time"
                         value={schedule.startTime}
                         onChange={(e) => updateSchedule(index, 'startTime', e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent text-gray-900 bg-white"
                         disabled={isLoading}
                       />
                     </div>
@@ -371,7 +371,7 @@ export const ClassForm: React.FC<ClassFormProps> = ({
                         type="time"
                         value={schedule.endTime}
                         onChange={(e) => updateSchedule(index, 'endTime', e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent text-gray-900 bg-white"
                         disabled={isLoading}
                       />
                     </div>
@@ -398,7 +398,7 @@ export const ClassForm: React.FC<ClassFormProps> = ({
                     <select
                       value={schedule.professorId}
                       onChange={(e) => updateSchedule(index, 'professorId', e.target.value)}
-                      className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent ${
+                      className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-transparent text-gray-900 bg-white ${
                         errors[`schedule_${index}_professor`] ? 'border-red-500' : 'border-gray-300'
                       }`}
                       disabled={isLoading}

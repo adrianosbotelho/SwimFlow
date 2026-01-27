@@ -30,11 +30,13 @@ router.post('/', async (req, res) => {
 // Get all evaluations with optional filters
 router.get('/', async (req, res) => {
   try {
-    const { studentId, professorId } = req.query;
+    const { studentId, professorId, startDate, endDate } = req.query;
     
     const evaluations = await evaluationService.listEvaluations(
       studentId as string,
-      professorId as string
+      professorId as string,
+      startDate as string,
+      endDate as string
     );
     
     res.json({
@@ -141,8 +143,13 @@ router.get('/student/:studentId/evolution', async (req, res) => {
 router.get('/student/:studentId/stats', async (req, res) => {
   try {
     const { studentId } = req.params;
+    const { startDate, endDate } = req.query;
     
-    const stats = await evaluationService.getStudentEvaluationStats(studentId);
+    const stats = await evaluationService.getStudentEvaluationStats(
+      studentId,
+      startDate as string,
+      endDate as string
+    );
     
     res.json({
       success: true,

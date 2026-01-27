@@ -309,7 +309,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({
                 required: 'Nome é obrigatório',
                 minLength: { value: 2, message: 'Nome deve ter pelo menos 2 caracteres' }
               })}
-              className={`block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ocean-500 focus:border-ocean-500 ${
+              className={`block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ocean-500 focus:border-ocean-500 text-gray-900 bg-white ${
                 errors.name ? 'border-red-300' : 'border-gray-300'
               }`}
               placeholder="Digite o nome completo"
@@ -333,7 +333,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({
                   return date <= today || 'Data não pode ser no futuro'
                 }
               })}
-              className={`block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ocean-500 focus:border-ocean-500 ${
+              className={`block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ocean-500 focus:border-ocean-500 text-gray-900 bg-white ${
                 errors.birthDate ? 'border-red-300' : 'border-gray-300'
               }`}
             />
@@ -354,7 +354,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({
                   message: 'Email inválido'
                 }
               })}
-              className={`block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ocean-500 focus:border-ocean-500 ${
+              className={`block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ocean-500 focus:border-ocean-500 text-gray-900 bg-white ${
                 errors.email ? 'border-red-300' : 'border-gray-300'
               }`}
               placeholder="email@exemplo.com"
@@ -371,7 +371,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({
             <input
               type="tel"
               {...register('phone')}
-              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ocean-500 focus:border-ocean-500"
+              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ocean-500 focus:border-ocean-500 text-gray-900 bg-white"
               placeholder="(11) 99999-9999"
             />
           </div>
@@ -382,7 +382,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({
             </label>
             <select
               {...register('level', { required: 'Nível é obrigatório' })}
-              className={`block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ocean-500 focus:border-ocean-500 ${
+              className={`block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ocean-500 focus:border-ocean-500 text-gray-900 bg-white ${
                 errors.level ? 'border-red-300' : 'border-gray-300'
               }`}
             >
@@ -409,7 +409,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({
               maxLength: { value: 1000, message: 'Máximo 1000 caracteres' }
             })}
             rows={3}
-            className={`block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ocean-500 focus:border-ocean-500 ${
+            className={`block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ocean-500 focus:border-ocean-500 text-gray-900 bg-white ${
               errors.objectives ? 'border-red-300' : 'border-gray-300'
             }`}
             placeholder="Descreva os objetivos do aluno com a natação..."
@@ -429,7 +429,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({
               maxLength: { value: 2000, message: 'Máximo 2000 caracteres' }
             })}
             rows={3}
-            className={`block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ocean-500 focus:border-ocean-500 ${
+            className={`block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ocean-500 focus:border-ocean-500 text-gray-900 bg-white ${
               errors.medicalNotes ? 'border-red-300' : 'border-gray-300'
             }`}
             placeholder="Alguma condição médica, alergia ou restrição importante..."

@@ -363,7 +363,7 @@ export const StudentList: React.FC<StudentListProps> = ({
               placeholder="Buscar por nome ou email..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-ocean-500 focus:border-ocean-500"
+              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-ocean-500 focus:border-ocean-500 text-gray-900"
             />
           </div>
         </div>
@@ -373,7 +373,7 @@ export const StudentList: React.FC<StudentListProps> = ({
           <select
             value={filters.level || ''}
             onChange={(e) => handleLevelChange(e.target.value as Level | '')}
-            className="block w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-ocean-500 focus:border-ocean-500"
+            className="block w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-ocean-500 focus:border-ocean-500 text-gray-900"
           >
             {levelOptions.map(option => (
               <option key={option.value} value={option.value}>

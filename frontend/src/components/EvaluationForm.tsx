@@ -130,7 +130,7 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
               type="date"
               value={formData.date}
               onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
               required
             />
           </div>
@@ -150,7 +150,7 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
                   isApproved: evaluationType === 'REGULAR' ? null : prev.isApproved
                 }));
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
             >
               {EVALUATION_TYPES.map(type => (
                 <option key={type.value} value={type.value}>
@@ -183,7 +183,7 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
                 <select
                   value={formData.targetLevel || ''}
                   onChange={(e) => setFormData(prev => ({ ...prev, targetLevel: e.target.value as Level }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
                   required
                 >
                   <option value="">Selecione o nível alvo</option>
@@ -212,7 +212,7 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
                       isApproved: value === 'pending' ? null : value === 'approved' 
                     }));
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
                 >
                   <option value="pending">Pendente</option>
                   <option value="approved">Aprovado</option>
@@ -247,7 +247,7 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
               <textarea
                 value={formData.approvalNotes || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, approvalNotes: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
                 rows={3}
                 placeholder="Justificativa para aprovação/reprovação, pontos a melhorar, recomendações..."
               />
@@ -325,7 +325,7 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
                         min="0"
                         value={strokeEval.timeSeconds || ''}
                         onChange={(e) => updateStrokeEvaluation(strokeType.value, 'timeSeconds', e.target.value ? parseFloat(e.target.value) : undefined)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
                         placeholder="Ex: 30.50"
                       />
                     </div>
@@ -339,7 +339,7 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
                     <textarea
                       value={strokeEval.notes || ''}
                       onChange={(e) => updateStrokeEvaluation(strokeType.value, 'notes', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
                       rows={2}
                       placeholder="Observações específicas sobre este nado..."
                     />
@@ -358,7 +358,7 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
           <textarea
             value={formData.generalNotes || ''}
             onChange={(e) => setFormData(prev => ({ ...prev, generalNotes: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
             rows={3}
             placeholder="Observações gerais sobre a avaliação, progresso do aluno, recomendações..."
           />
