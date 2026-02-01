@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { apiConfig } from '../config/api';
-import { StrokeType } from '../types/evaluation';
+import chartCacheService, { ChartCacheKey } from './chartCacheService';
+import type { EvolutionData, StrokeType } from '../types/evaluation';
 
 // Create axios instance
 const api = axios.create(apiConfig);
@@ -14,15 +15,15 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-export interface EvolutionTrendData {
+export interface EvolutionTrends {
   studentId: string;
   strokeType: StrokeType;
-  evaluations: {
-    date: string;
+  evaluations: Array<{
+    date: Date;
     technique: number;
     timeSeconds?: number;
     resistance: number;
-  }[];
+  }>;
   trends: {
     technique: TrendAnalysis;
     resistance: TrendAnalysis;
@@ -55,52 +56,27 @@ export interface TrendAnalysis {
   improvement: number;
 }
 
-export interface ProgressionAnalysis {
-  studentId: string;
-  currentLevel: string;
-  levelHistory: {
-    fromLevel: string | null;
-    toLevel: string;
-    changedAt: string;
-    reason: string;
-  }[];
-  readinessForNextLevel: {
-    score: number;
-    level: 'ready' | 'almost_ready' | 'needs_improvement' | 'not_ready';
-    factors: string[];
-  };
-  recommendedActions: string[];
-  recentProgressionEvaluations: number;
-  overallTrend: 'improving' | 'stable' | 'declining';
+export interface EvolutionSummary {
+  overallProgress: number;
+  strongestStroke: StrokeType | null;
+  weakestStroke: StrokeType | null;
+  recentTrend: 'improving' | 'stable' | 'declining';
+  daysToNextLevel: number | null;
+  recommendedFocus: string[];
 }
 
-export interface ChartDataPoint {
-  date: string;
-  technique: number;
-  resistance: number;
-  overall: number;
-  timeSeconds?: number;
-}
-
-export interface ChartData {
-  strokeType: StrokeType;
-  data: ChartDataPoint[];
-  trend: TrendAnalysis;
-  statistics: EvolutionTrendData['statistics'];
-}
-
-export interface EvolutionMetrics {
+export interface DetailedMetrics {
   studentId: string;
   strokeType: StrokeType;
   timeRange: string;
-  dataPoints: {
-    date: string;
+  dataPoints: Array<{
+    date: Date;
     technique: number;
     resistance: number;
     overall: number;
     timeSeconds?: number;
     evaluationId: string;
-  }[];
+  }>;
   trends: {
     technique: {
       slope: number;
@@ -134,296 +110,288 @@ export interface EvolutionMetrics {
       requiredImprovement: number;
     };
   };
-  milestones: {
-    date: string;
+  milestones: Array<{
+    date: Date;
     type: 'improvement' | 'decline' | 'plateau' | 'breakthrough';
     description: string;
     impact: 'high' | 'medium' | 'low';
     strokeType: StrokeType;
-  }[];
-}
-
-export interface ComparisonMetrics {
-  studentId: string;
-  level: string;
-  strokeType: StrokeType;
-  studentAverage: number;
-  levelAverage: number;
-  percentile: number;
-  ranking: number;
-  totalStudentsInLevel: number;
-}
-
-export interface EvolutionSummary {
-  overallProgress: number;
-  strongestStroke: StrokeType | null;
-  weakestStroke: StrokeType | null;
-  recentTrend: 'improving' | 'stable' | 'declining';
-  daysToNextLevel: number | null;
-  recommendedFocus: string[];
+  }>;
 }
 
 class EvolutionService {
-  async getEvolutionTrends(
-    studentId: string, 
-    strokeType?: StrokeType, 
-    timeRange?: string
-  ): Promise<EvolutionTrendData[]> {
-    const params = new URLSearchParams();
-    if (strokeType) params.append('strokeType', strokeType);
-    if (timeRange) params.append('timeRange', timeRange);
+  private loadingStates = new Map<string, boolean>();
+  private errorStates = new Map<string, string | null>();
+  private listeners = new Set<(studentId: string, type: 'loading' | 'error' | 'success', data?: any) => void>();
+
+  // Event listeners for state changes
+  addStateListener(callback: (studentId: string, type: 'loading' | 'error' | 'success', data?: any) => void): () => void {
+    this.listeners.add(callback);
     
-    const response = await api.get(`/evaluations/student/${studentId}/trends?${params}`);
-    return response.data.data;
+    return () => {
+      this.listeners.delete(callback);
+    };
   }
 
-  async getProgressionAnalysis(studentId: string): Promise<ProgressionAnalysis> {
-    const response = await api.get(`/evaluations/student/${studentId}/progression`);
-    return response.data.data;
+  private notifyListeners(studentId: string, type: 'loading' | 'error' | 'success', data?: any): void {
+    this.listeners.forEach(callback => {
+      try {
+        callback(studentId, type, data);
+      } catch (error) {
+        console.error('Error in evolution service listener:', error);
+      }
+    });
   }
 
-  async getChartData(
+  private setLoading(key: string, loading: boolean): void {
+    this.loadingStates.set(key, loading);
+  }
+
+  private setError(key: string, error: string | null): void {
+    this.errorStates.set(key, error);
+  }
+
+  isLoading(key: string): boolean {
+    return this.loadingStates.get(key) || false;
+  }
+
+  getError(key: string): string | null {
+    return this.errorStates.get(key) || null;
+  }
+
+  async getEvolutionData(
+    studentId: string, 
+    strokeType?: StrokeType,
+    useCache: boolean = true
+  ): Promise<EvolutionData[]> {
+    const cacheKey: ChartCacheKey = { studentId, strokeType };
+    const loadingKey = `evolution-${studentId}-${strokeType || 'all'}`;
+
+    // Check cache first
+    if (useCache) {
+      const cached = chartCacheService.get<EvolutionData[]>(cacheKey);
+      if (cached) {
+        return cached;
+      }
+    }
+
+    // Set loading state
+    this.setLoading(loadingKey, true);
+    this.setError(loadingKey, null);
+    this.notifyListeners(studentId, 'loading');
+
+    try {
+      const params = new URLSearchParams();
+      if (strokeType) params.append('strokeType', strokeType);
+      
+      const response = await api.get(`/api/evaluations/student/${studentId}/evolution?${params.toString()}`);
+      const data = response.data.data;
+
+      // Cache the result
+      chartCacheService.set(cacheKey, data);
+
+      this.setLoading(loadingKey, false);
+      this.notifyListeners(studentId, 'success', data);
+      
+      return data;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch evolution data';
+      this.setError(loadingKey, errorMessage);
+      this.setLoading(loadingKey, false);
+      this.notifyListeners(studentId, 'error', errorMessage);
+      
+      throw error;
+    }
+  }
+
+  async getEvolutionTrends(
     studentId: string,
     strokeType?: StrokeType,
     timeRange?: string,
-    metric?: string
-  ): Promise<{
-    data: ChartData[];
-    metadata: {
-      timeRange: string;
-      metric: string;
-      totalStrokes: number;
-    };
-  }> {
-    const params = new URLSearchParams();
-    if (strokeType) params.append('strokeType', strokeType);
-    if (timeRange) params.append('timeRange', timeRange);
-    if (metric) params.append('metric', metric);
-    
-    const response = await api.get(`/evaluations/student/${studentId}/chart-data?${params}`);
-    return {
-      data: response.data.data,
-      metadata: response.data.metadata
-    };
+    useCache: boolean = true
+  ): Promise<EvolutionTrends[]> {
+    const cacheKey: ChartCacheKey = { studentId, strokeType, timeRange };
+    const loadingKey = `trends-${studentId}-${strokeType || 'all'}-${timeRange || 'all'}`;
+
+    // Check cache first
+    if (useCache) {
+      const cached = chartCacheService.get<EvolutionTrends[]>(cacheKey);
+      if (cached) {
+        return cached;
+      }
+    }
+
+    // Set loading state
+    this.setLoading(loadingKey, true);
+    this.setError(loadingKey, null);
+    this.notifyListeners(studentId, 'loading');
+
+    try {
+      const params = new URLSearchParams();
+      if (strokeType) params.append('strokeType', strokeType);
+      if (timeRange) params.append('timeRange', timeRange);
+      
+      const response = await api.get(`/api/evaluations/student/${studentId}/trends?${params.toString()}`);
+      const data = response.data.data;
+
+      // Cache the result
+      chartCacheService.set(cacheKey, data);
+
+      this.setLoading(loadingKey, false);
+      this.notifyListeners(studentId, 'success', data);
+      
+      return data;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch evolution trends';
+      this.setError(loadingKey, errorMessage);
+      this.setLoading(loadingKey, false);
+      this.notifyListeners(studentId, 'error', errorMessage);
+      
+      throw error;
+    }
   }
 
   async getDetailedMetrics(
     studentId: string,
     strokeType?: StrokeType,
-    timeRange?: string
-  ): Promise<EvolutionMetrics[]> {
-    const params = new URLSearchParams();
-    if (strokeType) params.append('strokeType', strokeType);
-    if (timeRange) params.append('timeRange', timeRange);
-    
-    const response = await api.get(`/evaluations/student/${studentId}/detailed-metrics?${params}`);
-    return response.data.data;
-  }
+    timeRange?: string,
+    useCache: boolean = true
+  ): Promise<DetailedMetrics[]> {
+    const cacheKey: ChartCacheKey = { studentId, strokeType, timeRange };
+    const loadingKey = `detailed-${studentId}-${strokeType || 'all'}-${timeRange || 'all'}`;
 
-  async getComparativeAnalysis(studentId: string): Promise<ComparisonMetrics[]> {
-    const response = await api.get(`/evaluations/student/${studentId}/comparison`);
-    return response.data.data;
-  }
-
-  async getEvolutionSummary(studentId: string): Promise<EvolutionSummary> {
-    const response = await api.get(`/evaluations/student/${studentId}/summary`);
-    return response.data.data;
-  }
-
-  // Enhanced method to get evolution data for charts
-  async getEvolutionData(
-    studentId: string,
-    strokeType?: StrokeType
-  ): Promise<{
-    studentId: string;
-    strokeType: StrokeType;
-    evaluations: {
-      date: string;
-      technique: number;
-      resistance: number;
-      overall: number;
-      timeSeconds?: number;
-    }[];
-  }[]> {
-    const response = await api.get(`/evaluations/student/${studentId}/evolution`, {
-      params: { strokeType }
-    });
-    return response.data.data;
-  }
-
-  // Method to generate timeline events from milestones
-  async getTimelineEvents(studentId: string): Promise<{
-    id: string;
-    date: string;
-    type: 'improvement' | 'decline' | 'plateau' | 'breakthrough' | 'level_change' | 'evaluation';
-    title: string;
-    description: string;
-    strokeType?: StrokeType;
-    impact?: 'high' | 'medium' | 'low';
-    value?: number;
-    previousValue?: number;
-    metadata?: {
-      evaluationId?: string;
-      fromLevel?: string;
-      toLevel?: string;
-      professorName?: string;
-    };
-  }[]> {
-    try {
-      const [metrics, evaluations] = await Promise.all([
-        this.getDetailedMetrics(studentId),
-        api.get(`/evaluations/student/${studentId}`)
-      ]);
-
-      const events: any[] = [];
-
-      // Add milestone events from metrics
-      metrics.forEach(metric => {
-        metric.milestones.forEach((milestone, index) => {
-          events.push({
-            id: `milestone-${metric.strokeType}-${index}`,
-            date: milestone.date,
-            type: milestone.type,
-            title: milestone.description,
-            description: milestone.description,
-            strokeType: milestone.strokeType,
-            impact: milestone.impact
-          });
-        });
-      });
-
-      // Add evaluation events
-      if (evaluations.data.data) {
-        evaluations.data.data.slice(0, 10).forEach((evaluation: any) => {
-          const avgScore = evaluation.strokeEvaluations.reduce(
-            (sum: number, se: any) => sum + (se.technique + se.resistance) / 2, 0
-          ) / evaluation.strokeEvaluations.length;
-
-          events.push({
-            id: `evaluation-${evaluation.id}`,
-            date: evaluation.date,
-            type: 'evaluation' as const,
-            title: 'Nova Avaliação',
-            description: `Avaliação registrada com média de ${avgScore.toFixed(1)}/10`,
-            value: avgScore,
-            metadata: {
-              evaluationId: evaluation.id,
-              professorName: evaluation.professor?.name
-            }
-          });
-        });
+    // Check cache first
+    if (useCache) {
+      const cached = chartCacheService.get<DetailedMetrics[]>(cacheKey);
+      if (cached) {
+        return cached;
       }
+    }
 
-      // Sort by date (most recent first)
-      return events.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    // Set loading state
+    this.setLoading(loadingKey, true);
+    this.setError(loadingKey, null);
+    this.notifyListeners(studentId, 'loading');
+
+    try {
+      const params = new URLSearchParams();
+      if (strokeType) params.append('strokeType', strokeType);
+      if (timeRange) params.append('timeRange', timeRange);
+      
+      const response = await api.get(`/api/evaluations/student/${studentId}/detailed-metrics?${params.toString()}`);
+      const data = response.data.data;
+
+      // Cache the result
+      chartCacheService.set(cacheKey, data);
+
+      this.setLoading(loadingKey, false);
+      this.notifyListeners(studentId, 'success', data);
+      
+      return data;
     } catch (error) {
-      console.error('Error fetching timeline events:', error);
-      return [];
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch detailed metrics';
+      this.setError(loadingKey, errorMessage);
+      this.setLoading(loadingKey, false);
+      this.notifyListeners(studentId, 'error', errorMessage);
+      
+      throw error;
     }
   }
 
-  // Utility methods for data processing
-  formatTrendDirection(direction: 'improving' | 'declining' | 'stable'): string {
-    switch (direction) {
-      case 'improving': return 'Melhorando';
-      case 'declining': return 'Declinando';
-      case 'stable': return 'Estável';
-      default: return 'Desconhecido';
+  async getEvolutionSummary(
+    studentId: string,
+    useCache: boolean = true
+  ): Promise<EvolutionSummary> {
+    const cacheKey: ChartCacheKey = { studentId };
+    const loadingKey = `summary-${studentId}`;
+
+    // Check cache first
+    if (useCache) {
+      const cached = chartCacheService.get<EvolutionSummary>(cacheKey);
+      if (cached) {
+        return cached;
+      }
+    }
+
+    // Set loading state
+    this.setLoading(loadingKey, true);
+    this.setError(loadingKey, null);
+    this.notifyListeners(studentId, 'loading');
+
+    try {
+      const response = await api.get(`/api/evaluations/student/${studentId}/summary`);
+      const data = response.data.data;
+
+      // Cache the result
+      chartCacheService.set(cacheKey, data);
+
+      this.setLoading(loadingKey, false);
+      this.notifyListeners(studentId, 'success', data);
+      
+      return data;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch evolution summary';
+      this.setError(loadingKey, errorMessage);
+      this.setLoading(loadingKey, false);
+      this.notifyListeners(studentId, 'error', errorMessage);
+      
+      throw error;
     }
   }
 
-  getTrendColor(direction: 'improving' | 'declining' | 'stable'): string {
-    switch (direction) {
-      case 'improving': return 'text-green-600';
-      case 'declining': return 'text-red-600';
-      case 'stable': return 'text-yellow-600';
-      default: return 'text-gray-600';
-    }
-  }
-
-  getTrendIcon(direction: 'improving' | 'declining' | 'stable'): string {
-    switch (direction) {
-      case 'improving': return '📈';
-      case 'declining': return '📉';
-      case 'stable': return '➡️';
-      default: return '❓';
-    }
-  }
-
-  formatReadinessLevel(level: 'ready' | 'almost_ready' | 'needs_improvement' | 'not_ready'): {
-    label: string;
-    color: string;
-    bgColor: string;
-  } {
-    switch (level) {
-      case 'ready':
-        return {
-          label: 'Pronto',
-          color: 'text-green-800',
-          bgColor: 'bg-green-100'
-        };
-      case 'almost_ready':
-        return {
-          label: 'Quase Pronto',
-          color: 'text-yellow-800',
-          bgColor: 'bg-yellow-100'
-        };
-      case 'needs_improvement':
-        return {
-          label: 'Precisa Melhorar',
-          color: 'text-orange-800',
-          bgColor: 'bg-orange-100'
-        };
-      case 'not_ready':
-        return {
-          label: 'Não Pronto',
-          color: 'text-red-800',
-          bgColor: 'bg-red-100'
-        };
-      default:
-        return {
-          label: 'Desconhecido',
-          color: 'text-gray-800',
-          bgColor: 'bg-gray-100'
-        };
-    }
-  }
-
-  calculateProgressPercentage(current: number, target: number): number {
-    return Math.min(Math.round((current / target) * 100), 100);
-  }
-
-  formatTimeEstimate(days: number | null): string {
-    if (!days) return 'Não estimado';
+  // Invalidate cache when evaluations change
+  invalidateStudentCache(studentId: string): void {
+    chartCacheService.invalidateStudent(studentId);
     
-    if (days < 30) return `${days} dias`;
-    if (days < 365) return `${Math.round(days / 30)} meses`;
-    return `${Math.round(days / 365)} anos`;
+    // Clear loading and error states
+    const keysToClean = Array.from(this.loadingStates.keys()).filter(key => key.includes(studentId));
+    keysToClean.forEach(key => {
+      this.loadingStates.delete(key);
+      this.errorStates.delete(key);
+    });
+
+    // Notify listeners that cache was invalidated
+    this.notifyListeners(studentId, 'success', { cacheInvalidated: true });
   }
 
-  getConfidenceLabel(confidence: number): string {
-    if (confidence >= 0.8) return 'Alta confiança';
-    if (confidence >= 0.6) return 'Média confiança';
-    if (confidence >= 0.4) return 'Baixa confiança';
-    return 'Muito baixa confiança';
+  // Force refresh data (bypass cache)
+  async refreshEvolutionData(studentId: string, strokeType?: StrokeType): Promise<EvolutionData[]> {
+    return this.getEvolutionData(studentId, strokeType, false);
   }
 
-  getMilestoneIcon(type: 'improvement' | 'decline' | 'plateau' | 'breakthrough'): string {
-    switch (type) {
-      case 'improvement': return '⬆️';
-      case 'decline': return '⬇️';
-      case 'plateau': return '➡️';
-      case 'breakthrough': return '🚀';
-      default: return '📊';
-    }
+  async refreshEvolutionTrends(studentId: string, strokeType?: StrokeType, timeRange?: string): Promise<EvolutionTrends[]> {
+    return this.getEvolutionTrends(studentId, strokeType, timeRange, false);
   }
 
-  getMilestoneColor(impact: 'high' | 'medium' | 'low'): string {
-    switch (impact) {
-      case 'high': return 'border-red-500 bg-red-50';
-      case 'medium': return 'border-yellow-500 bg-yellow-50';
-      case 'low': return 'border-blue-500 bg-blue-50';
-      default: return 'border-gray-500 bg-gray-50';
+  async refreshDetailedMetrics(studentId: string, strokeType?: StrokeType, timeRange?: string): Promise<DetailedMetrics[]> {
+    return this.getDetailedMetrics(studentId, strokeType, timeRange, false);
+  }
+
+  async refreshEvolutionSummary(studentId: string): Promise<EvolutionSummary> {
+    return this.getEvolutionSummary(studentId, false);
+  }
+
+  // Preload data for better UX
+  async preloadStudentData(studentId: string): Promise<void> {
+    try {
+      // Preload basic evolution data
+      await this.getEvolutionData(studentId);
+      
+      // Preload trends for different time ranges
+      const timeRanges = ['3months', '6months', '1year', 'all'];
+      await Promise.all(
+        timeRanges.map(timeRange => 
+          this.getEvolutionTrends(studentId, undefined, timeRange).catch(() => {
+            // Ignore errors during preloading
+          })
+        )
+      );
+      
+      // Preload summary
+      await this.getEvolutionSummary(studentId);
+    } catch (error) {
+      // Ignore errors during preloading
+      console.warn('Error preloading student data:', error);
     }
   }
 }

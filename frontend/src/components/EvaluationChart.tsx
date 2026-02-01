@@ -14,7 +14,8 @@ import {
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import { motion } from 'framer-motion';
-import { StrokeType, getStrokeColor, getStrokeLabel, EvolutionData } from '../types/evaluation';
+import { useEvolutionDataOnly } from '../hooks/useEvolutionData';
+import { StrokeType, getStrokeColor, getStrokeLabel } from '../types/evaluation';
 
 // Register Chart.js components
 ChartJS.register(
@@ -29,22 +30,27 @@ ChartJS.register(
 );
 
 interface EvolutionChartProps {
-  evolutionData: EvolutionData[];
+  studentId: string;
   selectedStroke?: StrokeType;
   metric?: 'technique' | 'resistance' | 'overall' | 'time';
   timeRange?: '3months' | '6months' | '1year' | 'all';
   showTrendLine?: boolean;
   showPredictions?: boolean;
   height?: number;
+  autoRefresh?: boolean;
+  onRefresh?: () => void;
 }
 
 export const EvolutionChart: React.FC<EvolutionChartProps> = ({
-  evolutionData,
+  studentId,
   selectedStroke,
   metric = 'overall',
   timeRange = 'all',
-  height = 400
+  height = 400,
+  onRefresh
 }) => {
+  // Use the evolution data hook
+  const { data: evolutionData, loading, error, refresh, lastUpdated } = useEvolutionDataOnly(studentId, selectedStroke);
   const filteredData = useMemo(() => {
     if (!evolutionData || evolutionData.length === 0) return [];
     
@@ -228,6 +234,66 @@ export const EvolutionChart: React.FC<EvolutionChartProps> = ({
     }
   }), [metric]);
 
+  // Handle refresh
+  const handleRefresh = async () => {
+    await refresh();
+    onRefresh?.();
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white rounded-xl border border-gray-200 p-6"
+        style={{ height: `${height + 120}px` }}
+      >
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ocean-500 mx-auto mb-4"></div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Carregando dados de evolução...
+            </h3>
+            <p className="text-gray-600">
+              Processando avaliações do aluno
+            </p>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white rounded-xl border border-red-200 p-6"
+        style={{ height: `${height + 120}px` }}
+      >
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center">
+            <div className="text-6xl mb-4">⚠️</div>
+            <h3 className="text-lg font-medium text-red-900 mb-2">
+              Erro ao carregar dados
+            </h3>
+            <p className="text-red-600 mb-4">
+              {error}
+            </p>
+            <button
+              onClick={handleRefresh}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Tentar novamente
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
   if (!evolutionData || evolutionData.length === 0) {
     return (
       <motion.div 
@@ -288,20 +354,49 @@ export const EvolutionChart: React.FC<EvolutionChartProps> = ({
                       metric === 'resistance' ? 'Resistência' : 
                       metric === 'time' ? 'Tempo' : 'Geral'}
           </h3>
-          <div className="flex items-center space-x-2 text-sm text-gray-500">
-            <span>
-              {filteredData.reduce((sum, d) => sum + d.evaluations.length, 0)} avaliações
-            </span>
-            {timeRange !== 'all' && (
-              <>
-                <span>•</span>
-                <span>
-                  {timeRange === '3months' ? 'Últimos 3 meses' :
-                   timeRange === '6months' ? 'Últimos 6 meses' :
-                   timeRange === '1year' ? 'Último ano' : 'Todos os dados'}
-                </span>
-              </>
-            )}
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 text-sm text-gray-500">
+              <span>
+                {filteredData.reduce((sum, d) => sum + d.evaluations.length, 0)} avaliações
+              </span>
+              {timeRange !== 'all' && (
+                <>
+                  <span>•</span>
+                  <span>
+                    {timeRange === '3months' ? 'Últimos 3 meses' :
+                     timeRange === '6months' ? 'Últimos 6 meses' :
+                     timeRange === '1year' ? 'Último ano' : 'Todos os dados'}
+                  </span>
+                </>
+              )}
+              {lastUpdated && (
+                <>
+                  <span>•</span>
+                  <span>
+                    Atualizado: {lastUpdated.toLocaleTimeString('pt-BR', { 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    })}
+                  </span>
+                </>
+              )}
+            </div>
+            <button
+              onClick={handleRefresh}
+              disabled={loading}
+              className="flex items-center space-x-1 px-3 py-1 text-sm bg-ocean-50 text-ocean-700 rounded-lg hover:bg-ocean-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Atualizar dados"
+            >
+              <svg 
+                className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span>Atualizar</span>
+            </button>
           </div>
         </div>
         

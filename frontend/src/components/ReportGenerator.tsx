@@ -449,20 +449,19 @@ export const ReportGenerator: React.FC<ReportGeneratorProps> = ({
             {/* Evolution Charts */}
             <div className="space-y-6">
               <EvolutionChart
-                evolutionData={reportData.evolutionData}
+                studentId={reportData.student.id}
                 metric="overall"
                 height={300}
-                showTrendLine={true}
               />
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <EvolutionChart
-                  evolutionData={reportData.evolutionData}
+                  studentId={reportData.student.id}
                   metric="technique"
                   height={250}
                 />
                 <EvolutionChart
-                  evolutionData={reportData.evolutionData}
+                  studentId={reportData.student.id}
                   metric="resistance"
                   height={250}
                 />

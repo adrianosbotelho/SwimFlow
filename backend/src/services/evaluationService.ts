@@ -1,6 +1,7 @@
 import { PrismaClient, Evaluation, StrokeEvaluation, StrokeType, EvaluationType, Level } from '@prisma/client';
 import Joi from 'joi';
 import { StudentService } from './studentService';
+import eventService from './eventService';
 
 const prisma = new PrismaClient();
 
@@ -261,6 +262,12 @@ class EvaluationService {
       return newEvaluation;
     });
 
+    // Emit event for cache invalidation
+    eventService.emitEvaluationCreated(data.studentId, evaluation.id, {
+      evaluationType: evaluation.evaluationType,
+      strokeTypes: data.strokeEvaluations.map(se => se.strokeType)
+    });
+
     return evaluation;
   }
 
@@ -455,6 +462,12 @@ class EvaluationService {
       return updatedEvaluation;
     });
 
+    // Emit event for cache invalidation
+    eventService.emitEvaluationUpdated(existingEvaluation.studentId, id, {
+      evaluationType: evaluation.evaluationType,
+      strokeTypes: data.strokeEvaluations?.map(se => se.strokeType) || []
+    });
+
     return evaluation;
   }
 
@@ -486,6 +499,9 @@ class EvaluationService {
         }
       });
     });
+
+    // Emit event for cache invalidation
+    eventService.emitEvaluationDeleted(existingEvaluation.studentId, id);
   }
 
   async getEvolutionData(studentId: string, strokeType?: StrokeType): Promise<EvolutionData[]> {

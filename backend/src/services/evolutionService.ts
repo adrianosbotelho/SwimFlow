@@ -268,6 +268,10 @@ class EvolutionService {
       }
     });
     
+    if (!strokeEvaluations) {
+      return [];
+    }
+    
     return strokeEvaluations.map(se => ({
       date: se.evaluation.date,
       technique: se.technique,

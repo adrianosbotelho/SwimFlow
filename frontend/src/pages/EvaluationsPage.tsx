@@ -7,7 +7,7 @@ import { studentService } from '../services/studentService';
 import { professorService } from '../services/professorService';
 import evaluationService from '../services/evaluationService';
 import type { Student } from '../types/student';
-import type { EvolutionData, StrokeType } from '../types/evaluation';
+import type { StrokeType } from '../types/evaluation';
 import { STROKE_TYPES } from '../types/evaluation';
 
 export const EvaluationsPage: React.FC = () => {
@@ -18,7 +18,6 @@ export const EvaluationsPage: React.FC = () => {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
   const [evaluationStats, setEvaluationStats] = useState<any>(null);
-  const [evolutionData, setEvolutionData] = useState<EvolutionData[]>([]);
   const [selectedStroke, setSelectedStroke] = useState<string>('');
   const [professors, setProfessors] = useState<any[]>([]);
   const [selectedProfessorId, setSelectedProfessorId] = useState<string>('');
@@ -38,12 +37,10 @@ export const EvaluationsPage: React.FC = () => {
       setSelectedStudent(student || null);
       if (student) {
         loadEvaluationStats(selectedStudentId);
-        loadEvolutionData(selectedStudentId);
       }
     } else {
       setSelectedStudent(null);
       setEvaluationStats(null);
-      setEvolutionData([]);
     }
   }, [selectedStudentId, students]);
 
@@ -92,20 +89,10 @@ export const EvaluationsPage: React.FC = () => {
     }
   };
 
-  const loadEvolutionData = async (studentId: string) => {
-    try {
-      const evolution = await evaluationService.getEvolutionData(studentId);
-      setEvolutionData(evolution);
-    } catch (error) {
-      console.error('Error loading evolution data:', error);
-    }
-  };
-
   const handleDeleteEvaluation = async () => {
     // Refresh stats after deletion
     if (selectedStudentId) {
       loadEvaluationStats(selectedStudentId);
-      loadEvolutionData(selectedStudentId);
     }
   };
 
@@ -149,7 +136,6 @@ export const EvaluationsPage: React.FC = () => {
       // Refresh stats if we have a selected student
       if (selectedStudentId) {
         loadEvaluationStats(selectedStudentId);
-        loadEvolutionData(selectedStudentId);
       }
     } catch (error) {
       console.error('Full error object:', error);
@@ -373,7 +359,7 @@ export const EvaluationsPage: React.FC = () => {
             Evolução de Desempenho - {selectedStudent.name}
           </h4>
           <EvolutionChart 
-            evolutionData={evolutionData}
+            studentId={selectedStudent.id}
             selectedStroke={selectedStroke as StrokeType}
           />
         </div>

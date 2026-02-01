@@ -1,5 +1,7 @@
 import axios from 'axios';
 import { apiConfig } from '../config/api';
+import chartCacheService from './chartCacheService';
+import evolutionService from './evolutionService';
 import type { Evaluation, CreateEvaluationData, UpdateEvaluationData, EvolutionData } from '../types/evaluation';
 
 // Create axios instance
@@ -28,7 +30,13 @@ export interface EvaluationStats {
 class EvaluationService {
   async createEvaluation(data: CreateEvaluationData): Promise<Evaluation> {
     const response = await api.post('/api/evaluations', data);
-    return response.data.data;
+    const evaluation = response.data.data;
+    
+    // Invalidate cache for this student
+    chartCacheService.invalidateStudent(data.studentId);
+    evolutionService.invalidateStudentCache(data.studentId);
+    
+    return evaluation;
   }
 
   async getEvaluation(id: string): Promise<Evaluation> {
@@ -48,12 +56,28 @@ class EvaluationService {
   }
 
   async updateEvaluation(id: string, data: UpdateEvaluationData): Promise<Evaluation> {
+    // Get the evaluation first to know which student to invalidate
+    const existingEvaluation = await this.getEvaluation(id);
+    
     const response = await api.put(`/api/evaluations/${id}`, data);
-    return response.data.data;
+    const updatedEvaluation = response.data.data;
+    
+    // Invalidate cache for this student
+    chartCacheService.invalidateStudent(existingEvaluation.student.id);
+    evolutionService.invalidateStudentCache(existingEvaluation.student.id);
+    
+    return updatedEvaluation;
   }
 
   async deleteEvaluation(id: string): Promise<void> {
+    // Get the evaluation first to know which student to invalidate
+    const existingEvaluation = await this.getEvaluation(id);
+    
     await api.delete(`/api/evaluations/${id}`);
+    
+    // Invalidate cache for this student
+    chartCacheService.invalidateStudent(existingEvaluation.student.id);
+    evolutionService.invalidateStudentCache(existingEvaluation.student.id);
   }
 
   async getEvolutionData(studentId: string, strokeType?: string): Promise<EvolutionData[]> {
