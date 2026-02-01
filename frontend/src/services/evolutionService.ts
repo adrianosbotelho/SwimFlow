@@ -230,6 +230,98 @@ class EvolutionService {
     return response.data.data;
   }
 
+  // Enhanced method to get evolution data for charts
+  async getEvolutionData(
+    studentId: string,
+    strokeType?: StrokeType
+  ): Promise<{
+    studentId: string;
+    strokeType: StrokeType;
+    evaluations: {
+      date: string;
+      technique: number;
+      resistance: number;
+      overall: number;
+      timeSeconds?: number;
+    }[];
+  }[]> {
+    const response = await api.get(`/evaluations/student/${studentId}/evolution`, {
+      params: { strokeType }
+    });
+    return response.data.data;
+  }
+
+  // Method to generate timeline events from milestones
+  async getTimelineEvents(studentId: string): Promise<{
+    id: string;
+    date: string;
+    type: 'improvement' | 'decline' | 'plateau' | 'breakthrough' | 'level_change' | 'evaluation';
+    title: string;
+    description: string;
+    strokeType?: StrokeType;
+    impact?: 'high' | 'medium' | 'low';
+    value?: number;
+    previousValue?: number;
+    metadata?: {
+      evaluationId?: string;
+      fromLevel?: string;
+      toLevel?: string;
+      professorName?: string;
+    };
+  }[]> {
+    try {
+      const [metrics, evaluations] = await Promise.all([
+        this.getDetailedMetrics(studentId),
+        api.get(`/evaluations/student/${studentId}`)
+      ]);
+
+      const events: any[] = [];
+
+      // Add milestone events from metrics
+      metrics.forEach(metric => {
+        metric.milestones.forEach((milestone, index) => {
+          events.push({
+            id: `milestone-${metric.strokeType}-${index}`,
+            date: milestone.date,
+            type: milestone.type,
+            title: milestone.description,
+            description: milestone.description,
+            strokeType: milestone.strokeType,
+            impact: milestone.impact
+          });
+        });
+      });
+
+      // Add evaluation events
+      if (evaluations.data.data) {
+        evaluations.data.data.slice(0, 10).forEach((evaluation: any) => {
+          const avgScore = evaluation.strokeEvaluations.reduce(
+            (sum: number, se: any) => sum + (se.technique + se.resistance) / 2, 0
+          ) / evaluation.strokeEvaluations.length;
+
+          events.push({
+            id: `evaluation-${evaluation.id}`,
+            date: evaluation.date,
+            type: 'evaluation' as const,
+            title: 'Nova Avaliação',
+            description: `Avaliação registrada com média de ${avgScore.toFixed(1)}/10`,
+            value: avgScore,
+            metadata: {
+              evaluationId: evaluation.id,
+              professorName: evaluation.professor?.name
+            }
+          });
+        });
+      }
+
+      // Sort by date (most recent first)
+      return events.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    } catch (error) {
+      console.error('Error fetching timeline events:', error);
+      return [];
+    }
+  }
+
   // Utility methods for data processing
   formatTrendDirection(direction: 'improving' | 'declining' | 'stable'): string {
     switch (direction) {

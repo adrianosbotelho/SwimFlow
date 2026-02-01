@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import EvaluationForm from '../components/EvaluationForm';
 import EvaluationHistory from '../components/EvaluationHistory';
-import { EvaluationChart } from '../components/EvaluationChart';
+import { EvolutionChart } from '../components/EvaluationChart';
 import { studentService } from '../services/studentService';
 import { professorService } from '../services/professorService';
 import evaluationService from '../services/evaluationService';
 import type { Student } from '../types/student';
-import type { EvolutionData } from '../types/evaluation';
+import type { EvolutionData, StrokeType } from '../types/evaluation';
 import { STROKE_TYPES } from '../types/evaluation';
 
 export const EvaluationsPage: React.FC = () => {
@@ -372,9 +372,9 @@ export const EvaluationsPage: React.FC = () => {
           <h4 className="text-lg font-semibold text-gray-900 mb-4">
             Evolução de Desempenho - {selectedStudent.name}
           </h4>
-          <EvaluationChart 
+          <EvolutionChart 
             evolutionData={evolutionData}
-            selectedStroke={selectedStroke}
+            selectedStroke={selectedStroke as StrokeType}
           />
         </div>
       </div>
