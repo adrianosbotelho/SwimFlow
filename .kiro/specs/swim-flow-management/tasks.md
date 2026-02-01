@@ -175,7 +175,7 @@ Este plano implementa o SwimFlow como um sistema web moderno usando React com Ty
   - Perguntar ao usuário se há dúvidas
 
 - [ ] 10. Sistema de evolução e relatórios
-  - [ ] 10.1 Implementar lógica de cálculo de evolução
+  - [x] 10.1 Implementar lógica de cálculo de evolução
     - Criar serviços para agregação de dados de avaliação
     - Implementar cálculos de tendências e progressão
     - Criar endpoints para dados de gráficos
