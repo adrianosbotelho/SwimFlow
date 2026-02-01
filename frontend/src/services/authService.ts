@@ -15,7 +15,6 @@ export interface RegisterCredentials {
   email: string;
   password: string;
   confirmPassword: string;
-  role?: 'admin' | 'professor';
 }
 
 export interface User {
@@ -71,8 +70,7 @@ class AuthService {
       name: credentials.name,
       email: credentials.email,
       password: credentials.password,
-      confirmPassword: credentials.confirmPassword,
-      role: credentials.role || 'professor'
+      confirmPassword: credentials.confirmPassword
     });
 
     const authData = response.data;

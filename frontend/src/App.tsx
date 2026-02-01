@@ -21,6 +21,10 @@ function App() {
     setIsLoggedIn(true)
   }
 
+  const handleLogout = () => {
+    setIsLoggedIn(false)
+  }
+
   if (isLoading) {
     return (
       <ThemeProvider>
@@ -44,7 +48,7 @@ function App() {
 
   return (
     <ThemeProvider>
-      <Dashboard />
+      <Dashboard onLogout={handleLogout} />
     </ThemeProvider>
   )
 }

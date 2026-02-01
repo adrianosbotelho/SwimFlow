@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { StudentsPage } from '../pages/StudentsPage';
 import { ClassesPage } from '../pages/ClassesPage';
 import { PoolsPage } from '../pages/PoolsPage';
@@ -7,8 +7,14 @@ import { TrainingsPage } from '../pages/TrainingsPage';
 import { EvaluationsPage } from '../pages/EvaluationsPage';
 import { ProfessorsPage } from '../pages/ProfessorsPage';
 import { ThemeToggle } from './ThemeToggle';
+import authService, { User } from '../services/authService';
+import { ProfilePage } from './ProfilePage';
 
-type PageType = 'dashboard' | 'students' | 'classes' | 'pools' | 'trainings' | 'evaluations' | 'professors';
+type PageType = 'dashboard' | 'students' | 'classes' | 'pools' | 'trainings' | 'evaluations' | 'professors' | 'profile';
+
+interface DashboardProps {
+  onLogout?: () => void;
+}
 
 interface NavigationItem {
   id: PageType;
@@ -70,8 +76,26 @@ const navigationItems: NavigationItem[] = [
   }
 ];
 
-const Dashboard: React.FC = () => {
+const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
   const [currentPage, setCurrentPage] = useState<PageType>('dashboard');
+  const [user, setUser] = useState<User | null>(null);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+
+  useEffect(() => {
+    const currentUser = authService.getUser();
+    setUser(currentUser);
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+      if (onLogout) {
+        onLogout();
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   const renderPage = () => {
     switch (currentPage) {
@@ -87,6 +111,8 @@ const Dashboard: React.FC = () => {
         return <TrainingsPage />;
       case 'evaluations':
         return <EvaluationsPage />;
+      case 'profile':
+        return <ProfilePage onBack={() => setCurrentPage('dashboard')} />;
       default:
         return <DashboardHome onNavigate={setCurrentPage} />;
     }
@@ -124,11 +150,83 @@ const Dashboard: React.FC = () => {
               </div>
               <div className="flex items-center space-x-4">
                 <ThemeToggle />
-                <div className="flex items-center space-x-3">
-                  <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">Professor</span>
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-green-500 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-lg">
-                    P
-                  </div>
+                <div className="relative">
+                  <button
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    className="flex items-center space-x-3 p-2 rounded-xl hover:bg-white/10 dark:hover:bg-slate-700/50 transition-colors group"
+                  >
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{user?.name || 'Usuário'}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{user?.role || 'Professor'}</p>
+                    </div>
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-green-500 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-lg">
+                      {user?.name?.charAt(0).toUpperCase() || 'U'}
+                    </div>
+                    <svg className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  <AnimatePresence>
+                    {showUserMenu && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-gray-200 dark:border-slate-700 py-2 z-50"
+                      >
+                        <div className="px-4 py-3 border-b border-gray-200 dark:border-slate-700">
+                          <p className="font-semibold text-gray-900 dark:text-gray-100">{user?.name}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">{user?.email}</p>
+                          <span className="inline-block mt-1 px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full capitalize">
+                            {user?.role}
+                          </span>
+                        </div>
+                        
+                        <button
+                          onClick={() => {
+                            setCurrentPage('profile');
+                            setShowUserMenu(false);
+                          }}
+                          className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors flex items-center space-x-3"
+                        >
+                          <svg className="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                          <span className="text-gray-700 dark:text-gray-300">Meu Perfil</span>
+                        </button>
+                        
+                        <button
+                          onClick={() => {
+                            setCurrentPage('profile');
+                            setShowUserMenu(false);
+                          }}
+                          className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors flex items-center space-x-3"
+                        >
+                          <svg className="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                          <span className="text-gray-700 dark:text-gray-300">Alterar Senha</span>
+                        </button>
+                        
+                        <div className="border-t border-gray-200 dark:border-slate-700 mt-2 pt-2">
+                          <button
+                            onClick={() => {
+                              handleLogout();
+                              setShowUserMenu(false);
+                            }}
+                            className="w-full px-4 py-3 text-left hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center space-x-3 text-red-600 dark:text-red-400"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                            <span>Sair</span>
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
             </div>

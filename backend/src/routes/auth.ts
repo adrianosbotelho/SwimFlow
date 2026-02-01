@@ -17,8 +17,7 @@ const registerSchema = Joi.object({
   name: Joi.string().min(2).max(100).required(),
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
-  confirmPassword: Joi.string().valid(Joi.ref('password')).required(),
-  role: Joi.string().valid('admin', 'professor').default('professor')
+  confirmPassword: Joi.string().valid(Joi.ref('password')).required()
 })
 
 const refreshTokenSchema = Joi.object({
@@ -124,7 +123,10 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
       return
     }
 
-    const { name, email, password, role } = value
+    const { name, email, password } = value
+
+    // Determine role based on email - only adrianosbotelho@gmail.com gets admin role
+    const role = email.toLowerCase() === 'adrianosbotelho@gmail.com' ? 'admin' : 'professor'
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -360,6 +362,11 @@ const resetPasswordSchema = Joi.object({
   confirmPassword: Joi.string().valid(Joi.ref('newPassword')).required()
 })
 
+const changePasswordSchema = Joi.object({
+  currentPassword: Joi.string().required(),
+  newPassword: Joi.string().min(6).required()
+})
+
 // Forgot password endpoint
 router.post('/forgot-password', async (req: Request, res: Response): Promise<void> => {
   try {
@@ -538,6 +545,94 @@ router.post('/reset-password', async (req: Request, res: Response): Promise<void
     res.status(500).json({
       code: 'INTERNAL_ERROR',
       message: 'Failed to reset password',
+      timestamp: new Date().toISOString()
+    })
+  }
+})
+
+// Change password endpoint (for logged-in users)
+router.post('/change-password', authenticateToken, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        code: 'UNAUTHORIZED',
+        message: 'User not authenticated',
+        timestamp: new Date().toISOString()
+      })
+      return
+    }
+
+    // Validate input
+    const { error, value } = changePasswordSchema.validate(req.body)
+    if (error) {
+      res.status(400).json({
+        code: 'VALIDATION_ERROR',
+        message: 'Invalid input data',
+        details: error.details.map(d => d.message),
+        timestamp: new Date().toISOString()
+      })
+      return
+    }
+
+    const { currentPassword, newPassword } = value
+
+    // Get user with password hash
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: { id: true, passwordHash: true }
+    })
+
+    if (!user) {
+      res.status(404).json({
+        code: 'NOT_FOUND',
+        message: 'User not found',
+        timestamp: new Date().toISOString()
+      })
+      return
+    }
+
+    // Verify current password
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.passwordHash)
+    if (!isCurrentPasswordValid) {
+      res.status(400).json({
+        code: 'INVALID_PASSWORD',
+        message: 'Current password is incorrect',
+        timestamp: new Date().toISOString()
+      })
+      return
+    }
+
+    // Check if new password is different from current
+    const isSamePassword = await bcrypt.compare(newPassword, user.passwordHash)
+    if (isSamePassword) {
+      res.status(400).json({
+        code: 'SAME_PASSWORD',
+        message: 'New password must be different from current password',
+        timestamp: new Date().toISOString()
+      })
+      return
+    }
+
+    // Hash new password
+    const saltRounds = 12
+    const newPasswordHash = await bcrypt.hash(newPassword, saltRounds)
+
+    // Update password
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash: newPasswordHash }
+    })
+
+    res.json({
+      message: 'Password changed successfully',
+      timestamp: new Date().toISOString()
+    })
+
+  } catch (error) {
+    console.error('Change password error:', error)
+    res.status(500).json({
+      code: 'INTERNAL_ERROR',
+      message: 'Failed to change password',
       timestamp: new Date().toISOString()
     })
   }

@@ -12,7 +12,6 @@ interface FormErrors {
   email?: string;
   password?: string;
   confirmPassword?: string;
-  role?: string;
   general?: string;
 }
 
@@ -21,8 +20,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSuccess, o
     name: '',
     email: '',
     password: '',
-    confirmPassword: '',
-    role: 'professor'
+    confirmPassword: ''
   });
   
   const [errors, setErrors] = useState<FormErrors>({});
@@ -238,31 +236,18 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSuccess, o
               </AnimatePresence>
             </div>
 
-            {/* Role Field */}
-            <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
-                Tipo de Conta
-              </label>
-              <div className="relative">
-                <select
-                  id="role"
-                  name="role"
-                  value={formData.role}
-                  onChange={(e) => handleInputChange('role', e.target.value)}
-                  className="appearance-none relative block w-full px-3 py-3 pl-10 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean-500 focus:border-ocean-500 focus:z-10 sm:text-sm transition-colors bg-white"
-                >
-                  <option value="professor">Professor</option>
-                  <option value="admin">Administrador</option>
-                </select>
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                </div>
-                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
+            {/* Role Information */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-start">
+                <svg className="h-5 w-5 text-blue-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-blue-800">Tipo de Conta</h3>
+                  <p className="mt-1 text-sm text-blue-700">
+                    Sua conta será automaticamente configurada como <strong>Professor</strong>. 
+                    Apenas o administrador do sistema possui acesso completo.
+                  </p>
                 </div>
               </div>
             </div>
