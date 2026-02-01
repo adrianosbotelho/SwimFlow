@@ -263,7 +263,85 @@ Este plano implementa o SwimFlow como um sistema web moderno usando React com Ty
     - **Property 14: Temporal Data Consistency**
     - **Validates: Requirements 9.4**
 
-- [ ] 14. Checkpoint final - Sistema completo
+- [ ] 15. Sistema de Login e Interface de Autenticação
+  - [ ] 15.1 Implementar tela de login
+    - Criar LoginForm component com validação
+    - Implementar recuperação de senha
+    - Adicionar autenticação social (Google/Facebook)
+    - _Requirements: Security, User Experience_
+
+  - [ ] 15.2 Implementar gestão de sessão
+    - Criar AuthContext para gerenciamento de estado
+    - Implementar auto-logout por inatividade
+    - Adicionar "Lembrar-me" functionality
+    - _Requirements: Security_
+
+  - [ ]* 15.3 Escrever testes de propriedade para login
+    - **Property 16: Authentication Flow Integrity**
+    - **Validates: Requirements Security**
+
+- [ ] 16. Sistema Multi-Tenant
+  - [ ] 16.1 Implementar arquitetura multi-tenant
+    - Adicionar modelo Tenant no schema Prisma
+    - Implementar isolamento de dados por tenant
+    - Criar middleware de tenant resolution
+    - _Requirements: Scalability, Data Isolation_
+
+  - [ ] 16.2 Implementar gestão de tenants
+    - Criar TenantAdmin interface
+    - Implementar onboarding de novos tenants
+    - Adicionar configurações por tenant
+    - _Requirements: Multi-tenancy_
+
+  - [ ] 16.3 Implementar subdomain routing
+    - Configurar roteamento por subdomínio
+    - Implementar tenant detection automático
+    - Adicionar fallback para tenant padrão
+    - _Requirements: Multi-tenancy_
+
+  - [ ]* 16.4 Escrever testes de propriedade para multi-tenancy
+    - **Property 17: Tenant Data Isolation**
+    - **Property 18: Tenant Configuration Consistency**
+    - **Validates: Requirements Multi-tenancy, Data Isolation**
+
+- [ ] 17. Sistema de Observabilidade
+  - [ ] 17.1 Implementar logging estruturado
+    - Configurar Winston para logs estruturados
+    - Implementar correlation IDs para rastreamento
+    - Adicionar logs de auditoria para ações críticas
+    - _Requirements: Monitoring, Compliance_
+
+  - [ ] 17.2 Implementar métricas e monitoramento
+    - Configurar Prometheus para coleta de métricas
+    - Implementar health checks e readiness probes
+    - Adicionar métricas de performance e uso
+    - _Requirements: Monitoring, Performance_
+
+  - [ ] 17.3 Implementar tracing distribuído
+    - Configurar OpenTelemetry para tracing
+    - Implementar spans para operações críticas
+    - Adicionar correlação entre frontend e backend
+    - _Requirements: Monitoring, Debugging_
+
+  - [ ] 17.4 Implementar alertas e dashboards
+    - Configurar Grafana para visualização
+    - Implementar alertas para métricas críticas
+    - Criar dashboards para monitoramento operacional
+    - _Requirements: Monitoring, Operations_
+
+  - [ ]* 17.5 Escrever testes de propriedade para observabilidade
+    - **Property 19: Logging Completeness**
+    - **Property 20: Metrics Accuracy**
+    - **Validates: Requirements Monitoring**
+
+- [ ] 18. Checkpoint final - Sistema completo com novas funcionalidades
+  - Verificar se todos os testes passam
+  - Testar todos os fluxos principais do sistema
+  - Validar sistema de login e autenticação
+  - Testar isolamento de dados multi-tenant
+  - Verificar funcionamento da observabilidade
+  - Validar se todos os requisitos foram implementados
+  - Perguntar ao usuário se há ajustes necessários
   - Verificar se todos os testes passam
   - Testar todos os fluxos principais do sistema
   - Validar se todos os requisitos foram implementados
