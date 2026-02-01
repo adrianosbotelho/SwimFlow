@@ -10,6 +10,14 @@ export interface LoginCredentials {
   rememberMe?: boolean;
 }
 
+export interface RegisterCredentials {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  role?: 'admin' | 'professor';
+}
+
 export interface User {
   id: string;
   email: string;
@@ -53,6 +61,24 @@ class AuthService {
     
     // Store tokens and user data
     this.storeAuthData(authData, credentials.rememberMe);
+    
+    return authData;
+  }
+
+  // Register
+  async register(credentials: RegisterCredentials): Promise<AuthResponse> {
+    const response = await api.post('/api/auth/register', {
+      name: credentials.name,
+      email: credentials.email,
+      password: credentials.password,
+      confirmPassword: credentials.confirmPassword,
+      role: credentials.role || 'professor'
+    });
+
+    const authData = response.data;
+    
+    // Store tokens and user data (auto-login after registration)
+    this.storeAuthData(authData, false);
     
     return authData;
   }

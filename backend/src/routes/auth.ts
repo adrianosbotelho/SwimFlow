@@ -13,6 +13,14 @@ const loginSchema = Joi.object({
   password: Joi.string().min(6).required()
 })
 
+const registerSchema = Joi.object({
+  name: Joi.string().min(2).max(100).required(),
+  email: Joi.string().email().required(),
+  password: Joi.string().min(6).required(),
+  confirmPassword: Joi.string().valid(Joi.ref('password')).required(),
+  role: Joi.string().valid('admin', 'professor').default('professor')
+})
+
 const refreshTokenSchema = Joi.object({
   refreshToken: Joi.string().required()
 })
@@ -96,6 +104,93 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({
       code: 'INTERNAL_ERROR',
       message: 'Login failed',
+      timestamp: new Date().toISOString()
+    })
+  }
+})
+
+// Register endpoint
+router.post('/register', async (req: Request, res: Response): Promise<void> => {
+  try {
+    // Validate input
+    const { error, value } = registerSchema.validate(req.body)
+    if (error) {
+      res.status(400).json({
+        code: 'VALIDATION_ERROR',
+        message: 'Invalid input data',
+        details: error.details.map(d => d.message),
+        timestamp: new Date().toISOString()
+      })
+      return
+    }
+
+    const { name, email, password, role } = value
+
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() }
+    })
+
+    if (existingUser) {
+      res.status(409).json({
+        code: 'USER_EXISTS',
+        message: 'User with this email already exists',
+        timestamp: new Date().toISOString()
+      })
+      return
+    }
+
+    // Hash password
+    const saltRounds = 12
+    const passwordHash = await bcrypt.hash(password, saltRounds)
+
+    // Create user
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email: email.toLowerCase(),
+        passwordHash,
+        role
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        profileImage: true,
+        createdAt: true
+      }
+    })
+
+    // Generate tokens
+    const tokenPayload = {
+      userId: user.id,
+      email: user.email,
+      role: user.role
+    }
+
+    const { accessToken, refreshToken } = AuthService.generateTokenPair(tokenPayload)
+
+    // Return user data and tokens
+    res.status(201).json({
+      message: 'User registered successfully',
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        profileImage: user.profileImage
+      },
+      accessToken,
+      refreshToken,
+      timestamp: new Date().toISOString()
+    })
+
+  } catch (error) {
+    console.error('Registration error:', error)
+    res.status(500).json({
+      code: 'INTERNAL_ERROR',
+      message: 'Registration failed',
       timestamp: new Date().toISOString()
     })
   }

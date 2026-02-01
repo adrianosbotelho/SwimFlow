@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LoginForm } from './LoginForm';
+import { RegisterForm } from './RegisterForm';
 import { ForgotPasswordForm } from './ForgotPasswordForm';
 import { ResetPasswordForm } from './ResetPasswordForm';
 
@@ -8,7 +9,7 @@ interface AuthContainerProps {
   onLoginSuccess: () => void;
 }
 
-type AuthView = 'login' | 'forgot-password' | 'reset-password' | 'reset-success';
+type AuthView = 'login' | 'register' | 'forgot-password' | 'reset-password' | 'reset-success';
 
 export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) => {
   const [currentView, setCurrentView] = useState<AuthView>('login');
@@ -31,6 +32,10 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
     setCurrentView('forgot-password');
   };
 
+  const handleRegister = () => {
+    setCurrentView('register');
+  };
+
   const handleBackToLogin = () => {
     setCurrentView('login');
     setResetToken('');
@@ -47,6 +52,15 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
           <LoginForm
             onLoginSuccess={onLoginSuccess}
             onForgotPassword={handleForgotPassword}
+            onRegister={handleRegister}
+          />
+        );
+      
+      case 'register':
+        return (
+          <RegisterForm
+            onRegisterSuccess={onLoginSuccess}
+            onBackToLogin={handleBackToLogin}
           />
         );
       
