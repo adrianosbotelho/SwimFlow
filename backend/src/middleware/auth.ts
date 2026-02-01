@@ -22,8 +22,10 @@ export interface JWTPayload {
 export class AuthService {
   private static readonly ACCESS_TOKEN_SECRET = process.env.JWT_ACCESS_SECRET || 'access-secret-key'
   private static readonly REFRESH_TOKEN_SECRET = process.env.JWT_REFRESH_SECRET || 'refresh-secret-key'
+  private static readonly RESET_TOKEN_SECRET = process.env.JWT_RESET_SECRET || 'reset-secret-key'
   private static readonly ACCESS_TOKEN_EXPIRES_IN = '15m'
   private static readonly REFRESH_TOKEN_EXPIRES_IN = '7d'
+  private static readonly RESET_TOKEN_EXPIRES_IN = '1h'
 
   static generateAccessToken(payload: Omit<JWTPayload, 'type'>): string {
     return jwt.sign(
@@ -41,12 +43,24 @@ export class AuthService {
     )
   }
 
+  static generateResetToken(userId: string): string {
+    return jwt.sign(
+      { userId, type: 'reset' },
+      this.RESET_TOKEN_SECRET,
+      { expiresIn: this.RESET_TOKEN_EXPIRES_IN }
+    )
+  }
+
   static verifyAccessToken(token: string): JWTPayload {
     return jwt.verify(token, this.ACCESS_TOKEN_SECRET) as JWTPayload
   }
 
   static verifyRefreshToken(token: string): JWTPayload {
     return jwt.verify(token, this.REFRESH_TOKEN_SECRET) as JWTPayload
+  }
+
+  static verifyResetToken(token: string): { userId: string; type: string } {
+    return jwt.verify(token, this.RESET_TOKEN_SECRET) as { userId: string; type: string }
   }
 
   static generateTokenPair(payload: Omit<JWTPayload, 'type'>) {

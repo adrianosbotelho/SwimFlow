@@ -254,4 +254,198 @@ router.get('/me', authenticateToken, async (req: AuthenticatedRequest, res: Resp
   }
 })
 
+// Validation schemas for password recovery
+const forgotPasswordSchema = Joi.object({
+  email: Joi.string().email().required()
+})
+
+const resetPasswordSchema = Joi.object({
+  token: Joi.string().required(),
+  newPassword: Joi.string().min(6).required(),
+  confirmPassword: Joi.string().valid(Joi.ref('newPassword')).required()
+})
+
+// Forgot password endpoint
+router.post('/forgot-password', async (req: Request, res: Response): Promise<void> => {
+  try {
+    // Validate input
+    const { error, value } = forgotPasswordSchema.validate(req.body)
+    if (error) {
+      res.status(400).json({
+        code: 'VALIDATION_ERROR',
+        message: 'Invalid input data',
+        details: error.details.map(d => d.message),
+        timestamp: new Date().toISOString()
+      })
+      return
+    }
+
+    const { email } = value
+
+    // Find user by email
+    const user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+      select: { id: true, email: true, name: true }
+    })
+
+    // Always return success to prevent email enumeration
+    if (!user) {
+      res.json({
+        message: 'If an account with that email exists, a password reset link has been sent.',
+        timestamp: new Date().toISOString()
+      })
+      return
+    }
+
+    // Generate reset token (valid for 1 hour)
+    const resetToken = AuthService.generateResetToken(user.id)
+    
+    // In a real application, you would send an email here
+    // For now, we'll just log the token (in development only)
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Password reset token for ${user.email}: ${resetToken}`)
+      console.log(`Reset URL: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`)
+    }
+
+    res.json({
+      message: 'If an account with that email exists, a password reset link has been sent.',
+      timestamp: new Date().toISOString()
+    })
+
+  } catch (error) {
+    console.error('Forgot password error:', error)
+    res.status(500).json({
+      code: 'INTERNAL_ERROR',
+      message: 'Failed to process password reset request',
+      timestamp: new Date().toISOString()
+    })
+  }
+})
+
+// Verify reset token endpoint
+router.get('/verify-reset-token/:token', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { token } = req.params
+
+    if (!token) {
+      res.status(400).json({
+        code: 'VALIDATION_ERROR',
+        message: 'Reset token is required',
+        timestamp: new Date().toISOString()
+      })
+      return
+    }
+
+    // Verify reset token
+    const decoded = AuthService.verifyResetToken(token)
+    
+    // Get user email for display
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: { email: true }
+    })
+
+    if (!user) {
+      res.status(400).json({
+        valid: false,
+        message: 'Invalid or expired reset token',
+        timestamp: new Date().toISOString()
+      })
+      return
+    }
+
+    res.json({
+      valid: true,
+      email: user.email,
+      timestamp: new Date().toISOString()
+    })
+
+  } catch (error) {
+    if (error instanceof Error && (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError')) {
+      res.status(400).json({
+        valid: false,
+        message: 'Invalid or expired reset token',
+        timestamp: new Date().toISOString()
+      })
+      return
+    }
+
+    console.error('Verify reset token error:', error)
+    res.status(500).json({
+      code: 'INTERNAL_ERROR',
+      message: 'Failed to verify reset token',
+      timestamp: new Date().toISOString()
+    })
+  }
+})
+
+// Reset password endpoint
+router.post('/reset-password', async (req: Request, res: Response): Promise<void> => {
+  try {
+    // Validate input
+    const { error, value } = resetPasswordSchema.validate(req.body)
+    if (error) {
+      res.status(400).json({
+        code: 'VALIDATION_ERROR',
+        message: 'Invalid input data',
+        details: error.details.map(d => d.message),
+        timestamp: new Date().toISOString()
+      })
+      return
+    }
+
+    const { token, newPassword } = value
+
+    // Verify reset token
+    const decoded = AuthService.verifyResetToken(token)
+    
+    // Find user
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: { id: true, email: true }
+    })
+
+    if (!user) {
+      res.status(400).json({
+        code: 'INVALID_TOKEN',
+        message: 'Invalid or expired reset token',
+        timestamp: new Date().toISOString()
+      })
+      return
+    }
+
+    // Hash new password
+    const saltRounds = 12
+    const passwordHash = await bcrypt.hash(newPassword, saltRounds)
+
+    // Update user password
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash }
+    })
+
+    res.json({
+      message: 'Password has been reset successfully',
+      timestamp: new Date().toISOString()
+    })
+
+  } catch (error) {
+    if (error instanceof Error && (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError')) {
+      res.status(400).json({
+        code: 'INVALID_TOKEN',
+        message: 'Invalid or expired reset token',
+        timestamp: new Date().toISOString()
+      })
+      return
+    }
+
+    console.error('Reset password error:', error)
+    res.status(500).json({
+      code: 'INTERNAL_ERROR',
+      message: 'Failed to reset password',
+      timestamp: new Date().toISOString()
+    })
+  }
+})
+
 export default router

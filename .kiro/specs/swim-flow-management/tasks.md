@@ -264,7 +264,7 @@ Este plano implementa o SwimFlow como um sistema web moderno usando React com Ty
     - **Validates: Requirements 9.4**
 
 - [ ] 15. Sistema de Login e Interface de Autenticação
-  - [ ] 15.1 Implementar tela de login
+  - [x] 15.1 Implementar tela de login
     - Criar LoginForm component com validação
     - Implementar recuperação de senha
     - Adicionar autenticação social (Google/Facebook)

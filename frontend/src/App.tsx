@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import Dashboard from './components/Dashboard'
-import DevLogin from './components/DevLogin'
+import { AuthContainer } from './components/AuthContainer'
 import { ThemeProvider } from './contexts/ThemeContext'
+import authService from './services/authService'
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -9,8 +10,8 @@ function App() {
 
   useEffect(() => {
     // Check if user is already logged in
-    const token = localStorage.getItem('token')
-    if (token) {
+    const isAuthenticated = authService.isAuthenticated()
+    if (isAuthenticated) {
       setIsLoggedIn(true)
     }
     setIsLoading(false)
@@ -36,7 +37,7 @@ function App() {
   if (!isLoggedIn) {
     return (
       <ThemeProvider>
-        <DevLogin onLogin={handleLogin} />
+        <AuthContainer onLoginSuccess={handleLogin} />
       </ThemeProvider>
     )
   }
