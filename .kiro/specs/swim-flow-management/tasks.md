@@ -223,13 +223,13 @@ Este plano implementa o SwimFlow como um sistema web moderno usando React com Ty
     - _Requirements: 8.1_
 
 - [ ] 12. Tratamento de erros e feedback
-  - [ ] 12.1 Implementar sistema de notificações
+  - [x] 12.1 Implementar sistema de notificações
     - Criar NotificationCenter component
     - Implementar toast notifications para feedback
     - Adicionar estados de loading e error
     - _Requirements: 9.2, 9.3_
 
-  - [ ] 12.2 Implementar tratamento de erros global
+  - [x] 12.2 Implementar tratamento de erros global
     - Criar ErrorBoundary components
     - Implementar logging de erros
     - Adicionar fallbacks para componentes quebrados

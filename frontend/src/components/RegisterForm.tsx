@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import authService, { RegisterCredentials } from '../services/authService';
+import { useNotifications } from '../contexts/NotificationContext';
 
 interface RegisterFormProps {
   onRegisterSuccess: () => void;
@@ -16,6 +17,7 @@ interface FormErrors {
 }
 
 export const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSuccess, onBackToLogin }) => {
+  const { success, error: showError } = useNotifications();
   const [formData, setFormData] = useState<RegisterCredentials>({
     name: '',
     email: '',
@@ -82,15 +84,19 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSuccess, o
 
     try {
       await authService.register(formData);
+      success('Conta criada com sucesso!', 'Bem-vindo ao SwimFlow! Você já está logado.');
       onRegisterSuccess();
     } catch (error: any) {
       console.error('Registration error:', error);
       
       if (error.response?.status === 409) {
+        showError('Email já cadastrado', 'Já existe uma conta com este email. Tente fazer login.');
         setErrors({ general: 'Já existe uma conta com este email' });
       } else if (error.response?.data?.message) {
+        showError('Erro no cadastro', error.response.data.message);
         setErrors({ general: error.response.data.message });
       } else {
+        showError('Erro no cadastro', 'Não foi possível criar a conta. Tente novamente.');
         setErrors({ general: 'Erro ao criar conta. Tente novamente.' });
       }
     } finally {

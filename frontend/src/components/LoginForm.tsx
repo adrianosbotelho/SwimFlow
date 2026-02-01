@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import authService, { LoginCredentials } from '../services/authService';
+import { useNotifications } from '../contexts/NotificationContext';
 
 interface LoginFormProps {
   onLoginSuccess: () => void;
@@ -15,6 +16,7 @@ interface FormErrors {
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess, onForgotPassword, onRegister }) => {
+  const { success, error: showError } = useNotifications();
   const [formData, setFormData] = useState<LoginCredentials>({
     email: '',
     password: '',
@@ -63,15 +65,19 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess, onForgotPa
 
     try {
       await authService.login(formData);
+      success('Login realizado com sucesso!', `Bem-vindo de volta!`);
       onLoginSuccess();
     } catch (error: any) {
       console.error('Login error:', error);
       
       if (error.response?.status === 401) {
+        showError('Credenciais inválidas', 'Email ou senha incorretos. Tente novamente.');
         setErrors({ general: 'Email ou senha incorretos' });
       } else if (error.response?.data?.message) {
+        showError('Erro no login', error.response.data.message);
         setErrors({ general: error.response.data.message });
       } else {
+        showError('Erro no login', 'Não foi possível fazer login. Tente novamente.');
         setErrors({ general: 'Erro ao fazer login. Tente novamente.' });
       }
     } finally {
