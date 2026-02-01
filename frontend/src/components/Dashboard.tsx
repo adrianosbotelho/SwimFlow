@@ -9,6 +9,7 @@ import { ProfessorsPage } from '../pages/ProfessorsPage';
 import { ThemeToggle } from './ThemeToggle';
 import authService, { User } from '../services/authService';
 import { ProfilePage } from './ProfilePage';
+import { UserProfileHighlight } from './UserProfileHighlight';
 
 type PageType = 'dashboard' | 'students' | 'classes' | 'pools' | 'trainings' | 'evaluations' | 'professors' | 'profile';
 
@@ -253,6 +254,13 @@ interface DashboardHomeProps {
 }
 
 const DashboardHome: React.FC<DashboardHomeProps> = ({ onNavigate }) => {
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const currentUser = authService.getUser();
+    setUser(currentUser);
+  }, []);
+
   return (
     <div className="container mx-auto px-6 py-12">
       {/* Modern Header */}
@@ -286,6 +294,12 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ onNavigate }) => {
           Gerencie alunos, turmas, treinos e acompanhe a evolução técnica com tecnologia moderna.
         </motion.p>
       </div>
+
+      {/* User Profile Highlight Section */}
+      <UserProfileHighlight 
+        onNavigateToProfile={() => onNavigate('profile')}
+        onQuickAction={() => onNavigate(user?.role === 'admin' ? 'professors' : 'students')}
+      />
 
       {/* Enhanced Quick Stats */}
       <motion.div
