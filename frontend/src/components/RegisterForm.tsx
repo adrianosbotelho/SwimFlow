@@ -4,7 +4,7 @@ import authService, { RegisterCredentials } from '../services/authService';
 import { useNotifications } from '../contexts/NotificationContext';
 
 interface RegisterFormProps {
-  onRegisterSuccess: () => void;
+  onRegisterSuccess: (email: string) => void;
   onBackToLogin: () => void;
 }
 
@@ -84,14 +84,20 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSuccess, o
 
     try {
       await authService.register(formData);
-      success('Conta criada com sucesso!', 'Bem-vindo ao SwimFlow! Você já está logado.');
-      onRegisterSuccess();
+      success('Conta criada com sucesso!', 'Enviamos um email de confirmação. Verifique sua caixa de entrada.');
+      onRegisterSuccess(formData.email);
     } catch (error: any) {
       console.error('Registration error:', error);
       
       if (error.response?.status === 409) {
-        showError('Email já cadastrado', 'Já existe uma conta com este email. Tente fazer login.');
-        setErrors({ general: 'Já existe uma conta com este email' });
+        const message = error.response?.data?.message;
+        if (message === 'Account uses Google login') {
+          showError('Use o Google', 'Este email já está vinculado ao login Google.');
+          setErrors({ general: 'Este email já usa login Google.' });
+        } else {
+          showError('Email já cadastrado', 'Já existe uma conta com este email. Tente fazer login.');
+          setErrors({ general: 'Já existe uma conta com este email' });
+        }
       } else if (error.response?.data?.message) {
         showError('Erro no cadastro', error.response.data.message);
         setErrors({ general: error.response.data.message });

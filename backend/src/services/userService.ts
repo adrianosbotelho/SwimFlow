@@ -105,7 +105,9 @@ export class UserService {
         phone: value.phone,
         birthDate: value.birthDate ? new Date(value.birthDate) : null,
         address: value.address,
-        profileImage: value.profileImage
+        profileImage: value.profileImage,
+        authProvider: 'local',
+        emailVerified: true
       },
       select: {
         id: true,

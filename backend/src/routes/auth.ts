@@ -3,6 +3,9 @@ import bcrypt from 'bcrypt'
 import Joi from 'joi'
 import { PrismaClient } from '@prisma/client'
 import { AuthService, authenticateToken, AuthenticatedRequest } from '../middleware/auth'
+import crypto from 'crypto'
+import { OAuth2Client } from 'google-auth-library'
+import { EmailService } from '../services/emailService'
 
 const router = Router()
 const prisma = new PrismaClient()
@@ -23,6 +26,38 @@ const registerSchema = Joi.object({
 const refreshTokenSchema = Joi.object({
   refreshToken: Joi.string().required()
 })
+
+const googleLoginSchema = Joi.object({
+  credential: Joi.string().required()
+})
+
+const resendVerificationSchema = Joi.object({
+  email: Joi.string().email().required()
+})
+
+const verifyEmailSchema = Joi.object({
+  token: Joi.string().required()
+})
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
+
+const createVerificationToken = () => {
+  const token = crypto.randomBytes(32).toString('hex')
+  const expires = new Date(Date.now() + 24 * 60 * 60 * 1000)
+  return { token, expires }
+}
+
+const ensureVerificationToken = async (userId: string) => {
+  const { token, expires } = createVerificationToken()
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      emailVerificationToken: token,
+      emailVerificationExpires: expires
+    }
+  })
+  return { token, expires }
+}
 
 // Login endpoint
 router.post('/login', async (req: Request, res: Response): Promise<void> => {
@@ -50,7 +85,8 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
         passwordHash: true,
         name: true,
         role: true,
-        profileImage: true
+        profileImage: true,
+        emailVerified: true
       }
     })
 
@@ -64,11 +100,36 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
     }
 
     // Verify password
+    if (!user.passwordHash) {
+      res.status(400).json({
+        code: 'PASSWORD_LOGIN_NOT_AVAILABLE',
+        message: 'Use Google login for this account',
+        timestamp: new Date().toISOString()
+      })
+      return
+    }
+
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash)
     if (!isPasswordValid) {
       res.status(401).json({
         code: 'UNAUTHORIZED',
         message: 'Invalid email or password',
+        timestamp: new Date().toISOString()
+      })
+      return
+    }
+
+    if (!user.emailVerified) {
+      const { token } = await ensureVerificationToken(user.id)
+      await EmailService.sendVerificationEmail({
+        email: user.email,
+        name: user.name,
+        token
+      })
+
+      res.status(403).json({
+        code: 'EMAIL_NOT_VERIFIED',
+        message: 'Email verification required. Check your inbox.',
         timestamp: new Date().toISOString()
       })
       return
@@ -91,7 +152,8 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
         email: user.email,
         name: user.name,
         role: user.role,
-        profileImage: user.profileImage
+        profileImage: user.profileImage,
+        emailVerified: user.emailVerified
       },
       accessToken,
       refreshToken,
@@ -136,7 +198,7 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
     if (existingUser) {
       res.status(409).json({
         code: 'USER_EXISTS',
-        message: 'User with this email already exists',
+        message: existingUser.authProvider === 'google' ? 'Account uses Google login' : 'User with this email already exists',
         timestamp: new Date().toISOString()
       })
       return
@@ -146,13 +208,19 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
     const saltRounds = 12
     const passwordHash = await bcrypt.hash(password, saltRounds)
 
+    const verification = createVerificationToken()
+
     // Create user
     const user = await prisma.user.create({
       data: {
         name,
         email: email.toLowerCase(),
         passwordHash,
-        role
+        role,
+        authProvider: 'local',
+        emailVerified: false,
+        emailVerificationToken: verification.token,
+        emailVerificationExpires: verification.expires
       },
       select: {
         id: true,
@@ -160,31 +228,27 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
         name: true,
         role: true,
         profileImage: true,
-        createdAt: true
+        createdAt: true,
+        emailVerified: true
       }
     })
 
-    // Generate tokens
-    const tokenPayload = {
-      userId: user.id,
+    await EmailService.sendVerificationEmail({
       email: user.email,
-      role: user.role
-    }
+      name: user.name,
+      token: verification.token
+    })
 
-    const { accessToken, refreshToken } = AuthService.generateTokenPair(tokenPayload)
-
-    // Return user data and tokens
     res.status(201).json({
-      message: 'User registered successfully',
+      message: 'Verification email sent. Please confirm your email to continue.',
       user: {
         id: user.id,
         email: user.email,
         name: user.name,
         role: user.role,
-        profileImage: user.profileImage
+        profileImage: user.profileImage,
+        emailVerified: user.emailVerified
       },
-      accessToken,
-      refreshToken,
       timestamp: new Date().toISOString()
     })
 
@@ -229,7 +293,7 @@ router.post('/refresh', async (req: Request, res: Response): Promise<void> => {
     // Verify user still exists
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
-      select: { id: true, email: true, role: true, name: true, profileImage: true }
+      select: { id: true, email: true, role: true, name: true, profileImage: true, emailVerified: true }
     })
 
     if (!user) {
@@ -257,7 +321,8 @@ router.post('/refresh', async (req: Request, res: Response): Promise<void> => {
         email: user.email,
         name: user.name,
         role: user.role,
-        profileImage: user.profileImage
+        profileImage: user.profileImage,
+        emailVerified: user.emailVerified
       },
       accessToken,
       refreshToken: newRefreshToken,
@@ -302,6 +367,208 @@ router.post('/logout', authenticateToken, async (req: AuthenticatedRequest, res:
   }
 })
 
+// Verify email endpoint
+router.get('/verify-email', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { error, value } = verifyEmailSchema.validate(req.query)
+    if (error) {
+      res.status(400).json({
+        code: 'VALIDATION_ERROR',
+        message: 'Verification token is required',
+        timestamp: new Date().toISOString()
+      })
+      return
+    }
+
+    const { token } = value
+    const user = await prisma.user.findFirst({
+      where: {
+        emailVerificationToken: token,
+        emailVerificationExpires: { gt: new Date() }
+      }
+    })
+
+    if (!user) {
+      res.status(400).json({
+        code: 'INVALID_TOKEN',
+        message: 'Invalid or expired verification token',
+        timestamp: new Date().toISOString()
+      })
+      return
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerified: true,
+        emailVerificationToken: null,
+        emailVerificationExpires: null
+      }
+    })
+
+    res.json({
+      message: 'Email verified successfully',
+      timestamp: new Date().toISOString()
+    })
+  } catch (error) {
+    console.error('Verify email error:', error)
+    res.status(500).json({
+      code: 'INTERNAL_ERROR',
+      message: 'Failed to verify email',
+      timestamp: new Date().toISOString()
+    })
+  }
+})
+
+// Resend verification email
+router.post('/resend-verification', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { error, value } = resendVerificationSchema.validate(req.body)
+    if (error) {
+      res.status(400).json({
+        code: 'VALIDATION_ERROR',
+        message: 'Invalid input data',
+        timestamp: new Date().toISOString()
+      })
+      return
+    }
+
+    const { email } = value
+    const user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+      select: { id: true, email: true, name: true, emailVerified: true }
+    })
+
+    if (user && !user.emailVerified) {
+      const { token } = await ensureVerificationToken(user.id)
+      await EmailService.sendVerificationEmail({
+        email: user.email,
+        name: user.name,
+        token
+      })
+    }
+
+    res.json({
+      message: 'If an account exists, a verification email has been sent.',
+      timestamp: new Date().toISOString()
+    })
+  } catch (error) {
+    console.error('Resend verification error:', error)
+    res.status(500).json({
+      code: 'INTERNAL_ERROR',
+      message: 'Failed to resend verification email',
+      timestamp: new Date().toISOString()
+    })
+  }
+})
+
+// Google login endpoint
+router.post('/google', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { error, value } = googleLoginSchema.validate(req.body)
+    if (error) {
+      res.status(400).json({
+        code: 'VALIDATION_ERROR',
+        message: 'Invalid input data',
+        timestamp: new Date().toISOString()
+      })
+      return
+    }
+
+    if (!process.env.GOOGLE_CLIENT_ID) {
+      res.status(500).json({
+        code: 'CONFIG_ERROR',
+        message: 'Google login is not configured',
+        timestamp: new Date().toISOString()
+      })
+      return
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: value.credential,
+      audience: process.env.GOOGLE_CLIENT_ID
+    })
+
+    const payload = ticket.getPayload()
+    if (!payload || !payload.email) {
+      res.status(400).json({
+        code: 'INVALID_GOOGLE_TOKEN',
+        message: 'Invalid Google token',
+        timestamp: new Date().toISOString()
+      })
+      return
+    }
+
+    const email = payload.email.toLowerCase()
+    const googleId = payload.sub
+    const name = payload.name || email.split('@')[0]
+    const profileImage = payload.picture || null
+    const emailVerified = payload.email_verified ?? true
+
+    let user = await prisma.user.findFirst({
+      where: {
+        OR: [{ googleId }, { email }]
+      }
+    })
+
+    if (!user) {
+      const role = email === 'adrianosbotelho@gmail.com' ? 'admin' : 'professor'
+      user = await prisma.user.create({
+        data: {
+          name,
+          email,
+          passwordHash: null,
+          role,
+          profileImage,
+          authProvider: 'google',
+          googleId,
+          emailVerified
+        }
+      })
+    } else {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          googleId: user.googleId || googleId,
+          authProvider: user.authProvider,
+          emailVerified: user.emailVerified || emailVerified,
+          profileImage: user.profileImage || profileImage
+        }
+      })
+    }
+
+    const tokenPayload = {
+      userId: user.id,
+      email: user.email,
+      role: user.role
+    }
+
+    const { accessToken, refreshToken } = AuthService.generateTokenPair(tokenPayload)
+
+    res.json({
+      message: 'Login successful',
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        profileImage: user.profileImage,
+        emailVerified: user.emailVerified
+      },
+      accessToken,
+      refreshToken,
+      timestamp: new Date().toISOString()
+    })
+  } catch (error) {
+    console.error('Google login error:', error)
+    res.status(500).json({
+      code: 'INTERNAL_ERROR',
+      message: 'Google login failed',
+      timestamp: new Date().toISOString()
+    })
+  }
+})
+
 // Get current user endpoint
 router.get('/me', authenticateToken, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
@@ -322,6 +589,7 @@ router.get('/me', authenticateToken, async (req: AuthenticatedRequest, res: Resp
         name: true,
         role: true,
         profileImage: true,
+        emailVerified: true,
         createdAt: true,
         updatedAt: true
       }
@@ -592,6 +860,15 @@ router.post('/change-password', authenticateToken, async (req: AuthenticatedRequ
     }
 
     // Verify current password
+    if (!user.passwordHash) {
+      res.status(400).json({
+        code: 'PASSWORD_LOGIN_NOT_AVAILABLE',
+        message: 'Use Google login for this account',
+        timestamp: new Date().toISOString()
+      })
+      return
+    }
+
     const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.passwordHash)
     if (!isCurrentPasswordValid) {
       res.status(400).json({
@@ -639,3 +916,11 @@ router.post('/change-password', authenticateToken, async (req: AuthenticatedRequ
 })
 
 export default router
+    if (!user.emailVerified) {
+      res.status(403).json({
+        code: 'EMAIL_NOT_VERIFIED',
+        message: 'Email verification required',
+        timestamp: new Date().toISOString()
+      })
+      return
+    }

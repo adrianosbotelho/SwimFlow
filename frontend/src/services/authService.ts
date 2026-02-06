@@ -23,13 +23,14 @@ export interface User {
   name: string;
   role: 'admin' | 'professor';
   profileImage?: string;
+  emailVerified?: boolean;
 }
 
 export interface AuthResponse {
   message: string;
   user: User;
-  accessToken: string;
-  refreshToken: string;
+  accessToken?: string;
+  refreshToken?: string;
   timestamp: string;
 }
 
@@ -75,8 +76,9 @@ class AuthService {
 
     const authData = response.data;
     
-    // Store tokens and user data (auto-login after registration)
-    this.storeAuthData(authData, false);
+    if (authData.accessToken && authData.refreshToken) {
+      this.storeAuthData(authData, false);
+    }
     
     return authData;
   }
@@ -115,7 +117,9 @@ class AuthService {
     const rememberMe = this.getRememberMe();
     
     // Update stored tokens
-    this.storeAuthData(authData, rememberMe);
+    if (authData.accessToken && authData.refreshToken) {
+      this.storeAuthData(authData, rememberMe);
+    }
     
     return authData;
   }
@@ -137,6 +141,26 @@ class AuthService {
     this.storeUser(userData);
     
     return userData;
+  }
+
+  // Google login
+  async googleLogin(credential: string): Promise<AuthResponse> {
+    const response = await api.post('/api/auth/google', { credential });
+    const authData = response.data;
+    this.storeAuthData(authData, true);
+    return authData;
+  }
+
+  // Resend verification email
+  async resendVerification(email: string): Promise<{ message: string }> {
+    const response = await api.post('/api/auth/resend-verification', { email });
+    return response.data;
+  }
+
+  // Verify email token
+  async verifyEmail(token: string): Promise<{ message: string }> {
+    const response = await api.get(`/api/auth/verify-email?token=${token}`);
+    return response.data;
   }
 
   // Forgot password
@@ -161,6 +185,10 @@ class AuthService {
   private storeAuthData(authData: AuthResponse, rememberMe: boolean = false): void {
     const storage = rememberMe ? localStorage : sessionStorage;
     
+    if (!authData.accessToken || !authData.refreshToken) {
+      return;
+    }
+
     storage.setItem(this.ACCESS_TOKEN_KEY, authData.accessToken);
     storage.setItem(this.REFRESH_TOKEN_KEY, authData.refreshToken);
     storage.setItem(this.USER_KEY, JSON.stringify(authData.user));

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import authService, { LoginCredentials } from '../services/authService';
+import { GoogleLogin } from '@react-oauth/google';
 import { useNotifications } from '../contexts/NotificationContext';
 
 interface LoginFormProps {
@@ -17,6 +18,7 @@ interface FormErrors {
 
 export const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess, onForgotPassword, onRegister }) => {
   const { success, error: showError } = useNotifications();
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
   const [formData, setFormData] = useState<LoginCredentials>({
     email: '',
     password: '',
@@ -26,12 +28,14 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess, onForgotPa
   const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showVerificationPrompt, setShowVerificationPrompt] = useState(false);
 
   // Clear errors when user starts typing
   useEffect(() => {
     if (errors.general) {
       setErrors(prev => ({ ...prev, general: undefined }));
     }
+    setShowVerificationPrompt(false);
   }, [formData.email, formData.password]);
 
   const validateForm = (): boolean => {
@@ -70,7 +74,14 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess, onForgotPa
     } catch (error: any) {
       console.error('Login error:', error);
       
-      if (error.response?.status === 401) {
+      if (error.response?.status === 403 && error.response?.data?.code === 'EMAIL_NOT_VERIFIED') {
+        showError('Confirmação pendente', 'Confirme seu email para acessar. Reenviamos o link se necessário.');
+        setErrors({ general: 'Email não verificado. Confirme para continuar.' });
+        setShowVerificationPrompt(true);
+      } else if (error.response?.status === 400 && error.response?.data?.code === 'PASSWORD_LOGIN_NOT_AVAILABLE') {
+        showError('Use o Google', 'Esta conta usa login Google.');
+        setErrors({ general: 'Esta conta usa login Google.' });
+      } else if (error.response?.status === 401) {
         showError('Credenciais inválidas', 'Email ou senha incorretos. Tente novamente.');
         setErrors({ general: 'Email ou senha incorretos' });
       } else if (error.response?.data?.message) {
@@ -82,6 +93,26 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess, onForgotPa
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credential: string) => {
+    try {
+      await authService.googleLogin(credential);
+      success('Login realizado com sucesso!', 'Bem-vindo ao SwimFlow.');
+      onLoginSuccess();
+    } catch (error: any) {
+      console.error('Google login error:', error);
+      showError('Erro no login Google', 'Não foi possível autenticar com o Google.');
+    }
+  };
+
+  const handleResendVerification = async () => {
+    try {
+      await authService.resendVerification(formData.email);
+      success('Email reenviado', 'Verifique sua caixa de entrada.');
+    } catch (error: any) {
+      showError('Erro ao reenviar', 'Não foi possível reenviar o email.');
     }
   };
 
@@ -280,6 +311,28 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess, onForgotPa
             )}
           </AnimatePresence>
 
+          {googleClientId && (
+            <div className="space-y-3">
+              <div className="flex justify-center">
+                <GoogleLogin
+                  onSuccess={(credentialResponse) => {
+                    if (credentialResponse.credential) {
+                      handleGoogleSuccess(credentialResponse.credential);
+                    }
+                  }}
+                  onError={() => {
+                    showError('Erro no login Google', 'Não foi possível autenticar com o Google.');
+                  }}
+                />
+              </div>
+              <div className="flex items-center space-x-3 text-xs text-gray-400">
+                <div className="flex-1 h-px bg-gray-200" />
+                <span>ou</span>
+                <div className="flex-1 h-px bg-gray-200" />
+              </div>
+            </div>
+          )}
+
           {/* Submit Button */}
           <div>
             <motion.button
@@ -306,6 +359,18 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess, onForgotPa
                 </span>
               )}
             </motion.button>
+
+            {showVerificationPrompt && (
+              <div className="mt-3 text-center">
+                <button
+                  type="button"
+                  onClick={handleResendVerification}
+                  className="text-sm text-ocean-600 hover:text-ocean-500 font-medium transition-colors"
+                >
+                  Reenviar email de confirmação
+                </button>
+              </div>
+            )}
 
             {/* Register Link */}
             <div className="text-center">

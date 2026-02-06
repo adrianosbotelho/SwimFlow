@@ -103,13 +103,22 @@ export const authenticateToken = async (
     // Verify user still exists and is active
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
-      select: { id: true, email: true, role: true, name: true }
+      select: { id: true, email: true, role: true, name: true, emailVerified: true }
     })
 
     if (!user) {
       res.status(401).json({
         code: 'UNAUTHORIZED',
         message: 'User not found',
+        timestamp: new Date().toISOString()
+      })
+      return
+    }
+
+    if (!user.emailVerified) {
+      res.status(403).json({
+        code: 'EMAIL_NOT_VERIFIED',
+        message: 'Email verification required',
         timestamp: new Date().toISOString()
       })
       return

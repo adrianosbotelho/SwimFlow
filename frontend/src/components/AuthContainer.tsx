@@ -4,22 +4,34 @@ import { LoginForm } from './LoginForm';
 import { RegisterForm } from './RegisterForm';
 import { ForgotPasswordForm } from './ForgotPasswordForm';
 import { ResetPasswordForm } from './ResetPasswordForm';
+import { VerifyEmailPage } from './VerifyEmailPage';
+import { VerifyEmailSent } from './VerifyEmailSent';
 
 interface AuthContainerProps {
   onLoginSuccess: () => void;
 }
 
-type AuthView = 'login' | 'register' | 'forgot-password' | 'reset-password' | 'reset-success';
+type AuthView = 'login' | 'register' | 'forgot-password' | 'reset-password' | 'reset-success' | 'verify-email' | 'verify-email-sent';
 
 export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) => {
   const [currentView, setCurrentView] = useState<AuthView>('login');
   const [resetToken, setResetToken] = useState<string>('');
+  const [verifyToken, setVerifyToken] = useState<string>('');
+  const [verifyEmail, setVerifyEmail] = useState<string>('');
 
-  // Check for reset token in URL on component mount
+  // Check for reset token or verify token in URL on component mount
   React.useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
+    const isVerifyEmail = window.location.pathname === '/verify-email';
     
+    if (token && isVerifyEmail) {
+      setVerifyToken(token);
+      setCurrentView('verify-email');
+      window.history.replaceState({}, document.title, '/');
+      return;
+    }
+
     if (token) {
       setResetToken(token);
       setCurrentView('reset-password');
@@ -39,10 +51,16 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
   const handleBackToLogin = () => {
     setCurrentView('login');
     setResetToken('');
+    setVerifyToken('');
   };
 
   const handleResetSuccess = () => {
     setCurrentView('reset-success');
+  };
+
+  const handleRegisterSuccess = (email: string) => {
+    setVerifyEmail(email);
+    setCurrentView('verify-email-sent');
   };
 
   const renderCurrentView = () => {
@@ -59,7 +77,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
       case 'register':
         return (
           <RegisterForm
-            onRegisterSuccess={onLoginSuccess}
+            onRegisterSuccess={handleRegisterSuccess}
             onBackToLogin={handleBackToLogin}
           />
         );
@@ -130,6 +148,14 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onLoginSuccess }) 
               </div>
             </motion.div>
           </div>
+        );
+      case 'verify-email':
+        return (
+          <VerifyEmailPage token={verifyToken} onBackToLogin={handleBackToLogin} />
+        );
+      case 'verify-email-sent':
+        return (
+          <VerifyEmailSent email={verifyEmail} onBackToLogin={handleBackToLogin} />
         );
       
       default:

@@ -31,6 +31,8 @@ async function main() {
       name: 'Administrador SwimFlow',
       role: 'admin',
       profileImage: null,
+      authProvider: 'local',
+      emailVerified: true,
     },
   })
 
@@ -41,6 +43,8 @@ async function main() {
       name: 'Carlos Silva',
       role: 'professor',
       profileImage: null,
+      authProvider: 'local',
+      emailVerified: true,
     },
   })
 
@@ -51,6 +55,8 @@ async function main() {
       name: 'Ana Santos',
       role: 'professor',
       profileImage: null,
+      authProvider: 'local',
+      emailVerified: true,
     },
   })
 
