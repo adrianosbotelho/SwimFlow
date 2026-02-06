@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import authService, { User } from '../services/authService';
-
-interface ProfilePageProps {
-  onBack: () => void;
-}
 
 interface ChangePasswordForm {
   currentPassword: string;
@@ -19,9 +16,12 @@ interface FormErrors {
   general?: string;
 }
 
-export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
+export const ProfilePage: React.FC = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [user, setUser] = useState<User | null>(null);
-  const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
+  const initialTab = searchParams.get('tab') === 'password' ? 'password' : 'profile';
+  const [activeTab, setActiveTab] = useState<'profile' | 'password'>(initialTab);
   const [passwordForm, setPasswordForm] = useState<ChangePasswordForm>({
     currentPassword: '',
     newPassword: '',
@@ -141,7 +141,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
           <div className="flex items-center justify-between h-20">
             <div className="flex items-center space-x-6">
               <button
-                onClick={onBack}
+                onClick={() => navigate('/')}
                 className="flex items-center space-x-3 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors group"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
