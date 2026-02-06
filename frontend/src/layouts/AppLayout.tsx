@@ -16,8 +16,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ onLogout }) => {
         <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
         <div className="flex-1 min-h-screen lg:ml-72">
           <NavigationHeader onToggleSidebar={() => setIsSidebarOpen(true)} onLogout={onLogout} />
-          <main className="px-6 py-8">
-            <div className="max-w-7xl mx-auto">
+          <main className="px-6 py-8 flex justify-center">
+            <div className="w-full max-w-7xl">
               <Outlet />
             </div>
           </main>

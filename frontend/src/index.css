@@ -84,7 +84,7 @@
   
   /* Enhanced Card Variants */
   .card-gradient {
-    @apply border;
+    @apply border rounded-2xl;
     background: linear-gradient(145deg, rgba(223, 246, 255, 0.9), rgba(246, 243, 234, 0.8));
     border-color: rgba(58, 123, 213, 0.18);
     box-shadow: var(--sf-shadow);

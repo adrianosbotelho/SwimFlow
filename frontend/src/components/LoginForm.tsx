@@ -311,9 +311,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess, onForgotPa
             )}
           </AnimatePresence>
 
-          {googleClientId && (
-            <div className="space-y-3">
-              <div className="flex justify-center">
+          <div className="space-y-3">
+            <div className="flex justify-center">
+              {googleClientId ? (
                 <GoogleLogin
                   onSuccess={(credentialResponse) => {
                     if (credentialResponse.credential) {
@@ -324,14 +324,33 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess, onForgotPa
                     showError('Erro no login Google', 'Não foi possível autenticar com o Google.');
                   }}
                 />
-              </div>
-              <div className="flex items-center space-x-3 text-xs text-gray-400">
-                <div className="flex-1 h-px bg-gray-200" />
-                <span>ou</span>
-                <div className="flex-1 h-px bg-gray-200" />
-              </div>
+              ) : (
+                <button
+                  type="button"
+                  disabled
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-gray-200 rounded-lg text-sm font-medium text-gray-500 bg-gray-50 cursor-not-allowed"
+                >
+                  <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
+                    <path
+                      fill="currentColor"
+                      d="M21.35 11.1h-9.18v2.98h5.29c-.23 1.48-1.72 4.34-5.29 4.34-3.18 0-5.77-2.63-5.77-5.87s2.59-5.87 5.77-5.87c1.81 0 3.03.77 3.72 1.44l2.53-2.44C16.98 4.12 15.07 3 12.17 3 6.99 3 2.82 7.22 2.82 12.55s4.17 9.55 9.35 9.55c5.4 0 8.98-3.79 8.98-9.12 0-.61-.06-1.08-.17-1.88z"
+                    />
+                  </svg>
+                  Continuar com Google
+                </button>
+              )}
             </div>
-          )}
+            {!googleClientId && (
+              <p className="text-xs text-gray-500 text-center">
+                Configure `VITE_GOOGLE_CLIENT_ID` para habilitar o login Google.
+              </p>
+            )}
+            <div className="flex items-center space-x-3 text-xs text-gray-400">
+              <div className="flex-1 h-px bg-gray-200" />
+              <span>ou</span>
+              <div className="flex-1 h-px bg-gray-200" />
+            </div>
+          </div>
 
           {/* Submit Button */}
           <div>

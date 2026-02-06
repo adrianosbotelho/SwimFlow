@@ -17,7 +17,7 @@ export const DashboardPage: React.FC = () => {
   const dashboardCards = navigationItems.filter(item => item.id !== 'dashboard' && item.showInSidebar);
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-12 max-w-6xl mx-auto">
       <div className="text-center">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
