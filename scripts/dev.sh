@@ -104,9 +104,24 @@ check_dependencies() {
         exit 1
     fi
 
-    # Docker daemon precisa estar ativo (Docker Desktop rodando no macOS).
+    # Docker daemon precisa estar ativo. No macOS isso normalmente significa Docker Desktop aberto.
     if ! docker info >/dev/null 2>&1; then
-        error "Docker daemon nao esta rodando. Inicie o Docker Desktop e tente novamente."
+        if [ "$(uname -s 2>/dev/null)" = "Darwin" ] && command_exists open; then
+            warn "Docker daemon nao esta rodando; tentando iniciar o Docker Desktop..."
+            open -ga Docker >/dev/null 2>&1 || true
+
+            # Aguarda o daemon ficar pronto (timeout ~2min).
+            for _ in {1..60}; do
+                if docker info >/dev/null 2>&1; then
+                    break
+                fi
+                sleep 2
+            done
+        fi
+    fi
+    if ! docker info >/dev/null 2>&1; then
+        error "Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?"
+        echo "Dica: no macOS, abra o Docker Desktop e aguarde ele ficar pronto."
         exit 1
     fi
     
