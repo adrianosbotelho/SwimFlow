@@ -4,6 +4,8 @@ import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
 import dotenv from 'dotenv'
 import { productionConfig } from './config/production'
+import { auditLogger } from './middleware/auditLog'
+import { validateRequest } from './middleware/requestValidation'
 
 // Load environment variables
 dotenv.config()
@@ -13,7 +15,24 @@ const PORT = process.env.PORT || 3001
 const isProduction = process.env.NODE_ENV === 'production'
 
 // Security middleware
-app.use(helmet())
+app.disable('x-powered-by')
+
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", 'data:', 'blob:'],
+      connectSrc: ["'self'", process.env.FRONTEND_URL || 'http://localhost:3000'],
+      fontSrc: ["'self'", 'data:'],
+      objectSrc: ["'none'"],
+      baseUri: ["'self'"],
+      frameAncestors: ["'none'"]
+    }
+  },
+  crossOriginResourcePolicy: { policy: 'cross-origin' }
+}))
 
 // CORS configuration
 const corsOptions = isProduction ? productionConfig.cors : {
@@ -30,9 +49,20 @@ const limiter = rateLimit({
 })
 app.use('/api', limiter)
 
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: 'Too many authentication attempts, please try again later.'
+})
+app.use('/api/auth', authLimiter)
+
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true }))
+
+// Basic request validation and audit logging
+app.use('/api', validateRequest)
+app.use('/api', auditLogger)
 
 // Static file serving for uploaded images
 app.use('/uploads', express.static('uploads'))
