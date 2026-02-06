@@ -65,7 +65,7 @@ app.use('/api', validateRequest)
 app.use('/api', auditLogger)
 
 // Static file serving for uploaded images
-app.use('/uploads', express.static('uploads'))
+app.use('/uploads', express.static('uploads', { maxAge: '7d', immutable: true }))
 
 // Health check endpoint
 app.get('/health', async (req, res) => {

@@ -1,7 +1,10 @@
 import { PrismaClient, Class, ClassSchedule } from '@prisma/client'
 import Joi from 'joi'
+import { cacheGet, cacheSet, cacheDelete } from '../utils/cache'
 
 const prisma = new PrismaClient()
+const CLASS_STATS_CACHE_KEY = 'stats:classes'
+const STATS_CACHE_TTL_MS = 60_000
 
 // Validation schemas
 export const createClassSchema = Joi.object({
@@ -157,6 +160,8 @@ export class ClassService {
         throw new Error('Class with this name already exists')
       }
       throw error
+    } finally {
+      cacheDelete(CLASS_STATS_CACHE_KEY)
     }
   }
 
@@ -248,6 +253,8 @@ export class ClassService {
         throw new Error('Class with this name already exists')
       }
       throw error
+    } finally {
+      cacheDelete(CLASS_STATS_CACHE_KEY)
     }
   }
 
@@ -413,6 +420,8 @@ export class ClassService {
         throw new Error('Class not found')
       }
       throw new Error(`Failed to delete class: ${error.message}`)
+    } finally {
+      cacheDelete(CLASS_STATS_CACHE_KEY)
     }
   }
 
@@ -460,6 +469,8 @@ export class ClassService {
         throw new Error('Student is already enrolled in this class')
       }
       throw error
+    } finally {
+      cacheDelete(CLASS_STATS_CACHE_KEY)
     }
   }
 
@@ -478,6 +489,8 @@ export class ClassService {
         throw new Error('Student is not enrolled in this class')
       }
       throw new Error(`Failed to remove student from class: ${error.message}`)
+    } finally {
+      cacheDelete(CLASS_STATS_CACHE_KEY)
     }
   }
 
@@ -487,6 +500,14 @@ export class ClassService {
     averageStudentsPerClass: number
     byProfessor: Record<string, number>
   }> {
+    const cached = cacheGet<{
+      total: number
+      totalStudents: number
+      averageStudentsPerClass: number
+      byProfessor: Record<string, number>
+    }>(CLASS_STATS_CACHE_KEY)
+    if (cached) return cached
+
     try {
       const [total, classes] = await Promise.all([
         prisma.class.count(),
@@ -523,12 +544,14 @@ export class ClassService {
         return acc
       }, {} as Record<string, number>)
 
-      return {
+      const result = {
         total,
         totalStudents,
         averageStudentsPerClass,
         byProfessor
       }
+      cacheSet(CLASS_STATS_CACHE_KEY, result, STATS_CACHE_TTL_MS)
+      return result
     } catch (error: any) {
       throw new Error(`Failed to get class stats: ${error.message}`)
     }

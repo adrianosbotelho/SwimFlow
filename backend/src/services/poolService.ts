@@ -1,7 +1,10 @@
 import { PrismaClient, Pool } from '@prisma/client'
 import Joi from 'joi'
+import { cacheGet, cacheSet, cacheDelete } from '../utils/cache'
 
 const prisma = new PrismaClient()
+const POOL_STATS_CACHE_KEY = 'stats:pools'
+const STATS_CACHE_TTL_MS = 60_000
 
 // Validation schemas
 export const createPoolSchema = Joi.object({
@@ -87,6 +90,8 @@ export class PoolService {
         throw new Error('Pool with this name already exists')
       }
       throw new Error(`Failed to create pool: ${error.message}`)
+    } finally {
+      cacheDelete(POOL_STATS_CACHE_KEY)
     }
   }
 
@@ -118,6 +123,8 @@ export class PoolService {
         throw new Error('Pool with this name already exists')
       }
       throw new Error(`Failed to update pool: ${error.message}`)
+    } finally {
+      cacheDelete(POOL_STATS_CACHE_KEY)
     }
   }
 
@@ -242,6 +249,8 @@ export class PoolService {
         throw new Error('Pool not found')
       }
       throw error
+    } finally {
+      cacheDelete(POOL_STATS_CACHE_KEY)
     }
   }
 
@@ -251,6 +260,14 @@ export class PoolService {
     averageCapacity: number
     withClasses: number
   }> {
+    const cached = cacheGet<{
+      total: number
+      totalCapacity: number
+      averageCapacity: number
+      withClasses: number
+    }>(POOL_STATS_CACHE_KEY)
+    if (cached) return cached
+
     try {
       const [total, pools, withClasses] = await Promise.all([
         prisma.pool.count(),
@@ -271,12 +288,14 @@ export class PoolService {
       const totalCapacity = pools.reduce((sum, pool) => sum + pool.capacity, 0)
       const averageCapacity = total > 0 ? Math.round(totalCapacity / total) : 0
 
-      return {
+      const result = {
         total,
         totalCapacity,
         averageCapacity,
         withClasses
       }
+      cacheSet(POOL_STATS_CACHE_KEY, result, STATS_CACHE_TTL_MS)
+      return result
     } catch (error: any) {
       throw new Error(`Failed to get pool stats: ${error.message}`)
     }

@@ -1,7 +1,10 @@
 import { PrismaClient, Student, Level, LevelHistory } from '@prisma/client'
 import Joi from 'joi'
+import { cacheGet, cacheSet, cacheDelete } from '../utils/cache'
 
 const prisma = new PrismaClient()
+const STUDENT_STATS_CACHE_KEY = 'stats:students'
+const STATS_CACHE_TTL_MS = 60_000
 
 // Validation schemas
 export const createStudentSchema = Joi.object({
@@ -131,6 +134,8 @@ export class StudentService {
         throw new Error('Student with this email already exists')
       }
       throw new Error(`Failed to create student: ${error.message}`)
+    } finally {
+      cacheDelete(STUDENT_STATS_CACHE_KEY)
     }
   }
 
@@ -184,6 +189,8 @@ export class StudentService {
         throw new Error('Student with this email already exists')
       }
       throw new Error(`Failed to update student: ${error.message}`)
+    } finally {
+      cacheDelete(STUDENT_STATS_CACHE_KEY)
     }
   }
 
@@ -315,6 +322,8 @@ export class StudentService {
         throw new Error('Student not found')
       }
       throw new Error(`Failed to delete student: ${error.message}`)
+    } finally {
+      cacheDelete(STUDENT_STATS_CACHE_KEY)
     }
   }
 
@@ -383,6 +392,8 @@ export class StudentService {
         throw new Error('Student not found')
       }
       throw new Error(`Failed to change student level: ${error.message}`)
+    } finally {
+      cacheDelete(STUDENT_STATS_CACHE_KEY)
     }
   }
 
@@ -464,6 +475,13 @@ export class StudentService {
     byLevel: Record<Level, number>
     recentlyAdded: number
   }> {
+    const cached = cacheGet<{
+      total: number
+      byLevel: Record<Level, number>
+      recentlyAdded: number
+    }>(STUDENT_STATS_CACHE_KEY)
+    if (cached) return cached
+
     try {
       const [total, byLevel, recentlyAdded] = await Promise.all([
         prisma.student.count(),
@@ -495,11 +513,13 @@ export class StudentService {
         }
       })
 
-      return {
+      const result = {
         total,
         byLevel: levelStats,
         recentlyAdded
       }
+      cacheSet(STUDENT_STATS_CACHE_KEY, result, STATS_CACHE_TTL_MS)
+      return result
     } catch (error: any) {
       throw new Error(`Failed to get student stats: ${error.message}`)
     }
