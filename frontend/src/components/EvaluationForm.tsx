@@ -106,7 +106,7 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
   };
 
   return (
-    <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6">
+    <div className="max-w-4xl mx-auto card">
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">
           {initialData ? 'Editar Avaliação' : 'Nova Avaliação'}
@@ -130,7 +130,7 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
               type="date"
               value={formData.date}
               onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+              className="input-modern"
               required
             />
           </div>
@@ -150,7 +150,7 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
                   isApproved: evaluationType === 'REGULAR' ? null : prev.isApproved
                 }));
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+              className="input-modern"
             >
               {EVALUATION_TYPES.map(type => (
                 <option key={type.value} value={type.value}>
@@ -166,8 +166,8 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
 
         {/* Level Progression Fields */}
         {formData.evaluationType === 'LEVEL_PROGRESSION' && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h3 className="text-lg font-semibold text-blue-900 mb-4">Avaliação de Progressão de Nível</h3>
+          <div className="card-gradient">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Avaliação de Progressão de Nível</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
@@ -183,7 +183,7 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
                 <select
                   value={formData.targetLevel || ''}
                   onChange={(e) => setFormData(prev => ({ ...prev, targetLevel: e.target.value as Level }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                  className="input-modern"
                   required
                 >
                   <option value="">Selecione o nível alvo</option>
@@ -212,7 +212,7 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
                       isApproved: value === 'pending' ? null : value === 'approved' 
                     }));
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                  className="input-modern"
                 >
                   <option value="pending">Pendente</option>
                   <option value="approved">Aprovado</option>
@@ -247,7 +247,7 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
               <textarea
                 value={formData.approvalNotes || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, approvalNotes: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                className="input-modern"
                 rows={3}
                 placeholder="Justificativa para aprovação/reprovação, pontos a melhorar, recomendações..."
               />
@@ -264,7 +264,7 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
               if (!strokeEval) return null;
 
               return (
-                <div key={strokeType.value} className="border border-gray-200 rounded-lg p-4">
+                <div key={strokeType.value} className="card">
                   <div className="flex items-center space-x-3 mb-4">
                     <div 
                       className="w-4 h-4 rounded-full"
@@ -325,7 +325,7 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
                         min="0"
                         value={strokeEval.timeSeconds || ''}
                         onChange={(e) => updateStrokeEvaluation(strokeType.value, 'timeSeconds', e.target.value ? parseFloat(e.target.value) : undefined)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                        className="input-modern"
                         placeholder="Ex: 30.50"
                       />
                     </div>
@@ -339,7 +339,7 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
                     <textarea
                       value={strokeEval.notes || ''}
                       onChange={(e) => updateStrokeEvaluation(strokeType.value, 'notes', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                      className="input-modern"
                       rows={2}
                       placeholder="Observações específicas sobre este nado..."
                     />
@@ -358,25 +358,25 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
           <textarea
             value={formData.generalNotes || ''}
             onChange={(e) => setFormData(prev => ({ ...prev, generalNotes: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+            className="input-modern"
             rows={3}
             placeholder="Observações gerais sobre a avaliação, progresso do aluno, recomendações..."
           />
         </div>
 
         {/* Action Buttons */}
-        <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+        <div className="flex justify-end space-x-4 pt-6 border-t border-white/40 dark:border-slate-700/60">
           <button
             type="button"
             onClick={onCancel}
-            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            className="btn-secondary"
             disabled={isLoading}
           >
             Cancelar
           </button>
           <button
             type="submit"
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={isLoading}
           >
             {isLoading ? 'Salvando...' : (initialData ? 'Atualizar' : 'Salvar Avaliação')}

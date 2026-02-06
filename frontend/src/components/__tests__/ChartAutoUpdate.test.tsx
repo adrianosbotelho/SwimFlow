@@ -25,22 +25,25 @@ describe('Chart Auto Update Integration', () => {
     expect(chartCacheService.get({ studentId, metric: 'overall' })).toBeNull();
   });
 
-  it('should handle cache invalidation listeners', (done) => {
+  it('should handle cache invalidation listeners', async () => {
     const studentId = 'student-123';
     let listenerCalled = false;
+    chartCacheService.set({ studentId, metric: 'overall' }, { test: 'data' });
     
-    // Add listener
-    const unsubscribe = chartCacheService.addInvalidationListener((key) => {
-      if (key.includes(studentId)) {
-        listenerCalled = true;
-        unsubscribe();
-        expect(listenerCalled).toBe(true);
-        done();
-      }
+    const listenerPromise = new Promise<void>((resolve) => {
+      const unsubscribe = chartCacheService.addInvalidationListener((key) => {
+        if (key.includes(studentId)) {
+          listenerCalled = true;
+          unsubscribe();
+          expect(listenerCalled).toBe(true);
+          resolve();
+        }
+      });
     });
     
     // Trigger invalidation
     chartCacheService.invalidateStudent(studentId);
+    await listenerPromise;
   });
 
   it('should maintain separate cache entries for different students', () => {

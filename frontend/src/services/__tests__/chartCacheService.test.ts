@@ -25,7 +25,7 @@ describe('ChartCacheService', () => {
       expect(retrieved).toBeNull();
     });
 
-    it('should handle TTL expiration', (done) => {
+    it('should handle TTL expiration', async () => {
       const testData = { test: 'data' };
       const cacheKey = { studentId: 'student-1', metric: 'overall' };
       const shortTTL = 50; // 50ms
@@ -36,10 +36,8 @@ describe('ChartCacheService', () => {
       expect(chartCacheService.get(cacheKey)).toEqual(testData);
 
       // Should be expired after TTL
-      setTimeout(() => {
-        expect(chartCacheService.get(cacheKey)).toBeNull();
-        done();
-      }, shortTTL + 10);
+      await new Promise(resolve => setTimeout(resolve, shortTTL + 10));
+      expect(chartCacheService.get(cacheKey)).toBeNull();
     });
   });
 
@@ -77,19 +75,22 @@ describe('ChartCacheService', () => {
   });
 
   describe('event listeners', () => {
-    it('should notify listeners on cache invalidation', (done) => {
+    it('should notify listeners on cache invalidation', async () => {
       const testData = { test: 'data' };
       const cacheKey = { studentId: 'student-1', metric: 'overall' };
 
       chartCacheService.set(cacheKey, testData);
 
-      const unsubscribe = chartCacheService.addInvalidationListener((key) => {
-        expect(key).toContain('student-1');
-        unsubscribe();
-        done();
+      const listenerPromise = new Promise<void>((resolve) => {
+        const unsubscribe = chartCacheService.addInvalidationListener((key) => {
+          expect(key).toContain('student-1');
+          unsubscribe();
+          resolve();
+        });
       });
 
       chartCacheService.invalidateStudent('student-1');
+      await listenerPromise;
     });
 
     it('should allow unsubscribing from listeners', () => {
@@ -119,19 +120,17 @@ describe('ChartCacheService', () => {
   });
 
   describe('cleanup', () => {
-    it('should remove expired entries during cleanup', (done) => {
+    it('should remove expired entries during cleanup', async () => {
       const testData = { test: 'data' };
       const cacheKey = { studentId: 'student-1', metric: 'overall' };
       const shortTTL = 50; // 50ms
 
       chartCacheService.set(cacheKey, testData, shortTTL);
 
-      setTimeout(() => {
-        chartCacheService.cleanup();
-        const stats = chartCacheService.getStats();
-        expect(stats.size).toBe(0);
-        done();
-      }, shortTTL + 10);
+      await new Promise(resolve => setTimeout(resolve, shortTTL + 10));
+      chartCacheService.cleanup();
+      const stats = chartCacheService.getStats();
+      expect(stats.size).toBe(0);
     });
   });
 });

@@ -77,7 +77,7 @@ export const AutoUpdatingEvolutionChart: React.FC<AutoUpdatingEvolutionChartProp
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-xl border border-gray-200 p-6"
+        className="card"
       >
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-4">
@@ -87,7 +87,7 @@ export const AutoUpdatingEvolutionChart: React.FC<AutoUpdatingEvolutionChartProp
               <select
                 value={selectedStroke || ''}
                 onChange={(e) => setSelectedStroke(e.target.value as StrokeType || undefined)}
-                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-ocean-500 focus:border-ocean-500"
+                className="input-modern text-sm py-2"
               >
                 <option value="">Todos</option>
                 {strokeTypes.map(stroke => (
@@ -104,7 +104,7 @@ export const AutoUpdatingEvolutionChart: React.FC<AutoUpdatingEvolutionChartProp
               <select
                 value={selectedMetric}
                 onChange={(e) => setSelectedMetric(e.target.value as any)}
-                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-ocean-500 focus:border-ocean-500"
+                className="input-modern text-sm py-2"
               >
                 {metrics.map(metric => (
                   <option key={metric.value} value={metric.value}>
@@ -120,7 +120,7 @@ export const AutoUpdatingEvolutionChart: React.FC<AutoUpdatingEvolutionChartProp
               <select
                 value={selectedTimeRange}
                 onChange={(e) => setSelectedTimeRange(e.target.value as any)}
-                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-ocean-500 focus:border-ocean-500"
+                className="input-modern text-sm py-2"
               >
                 {timeRanges.map(range => (
                   <option key={range.value} value={range.value}>
@@ -138,7 +138,7 @@ export const AutoUpdatingEvolutionChart: React.FC<AutoUpdatingEvolutionChartProp
                 type="checkbox"
                 checked={autoRefresh}
                 onChange={(e) => setAutoRefresh(e.target.checked)}
-                className="rounded border-gray-300 text-ocean-600 focus:ring-ocean-500"
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
               <span className="text-gray-700">Atualização automática</span>
             </label>
@@ -171,11 +171,11 @@ export const AutoUpdatingEvolutionChart: React.FC<AutoUpdatingEvolutionChartProp
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="mt-4 pt-4 border-t border-gray-200"
+              className="mt-4 pt-4 border-t border-white/40 dark:border-slate-700/60"
             >
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-ocean-600">
+                  <div className="text-2xl font-bold text-blue-600">
                     {summary.overallProgress > 0 ? '+' : ''}{summary.overallProgress.toFixed(1)}%
                   </div>
                   <div className="text-sm text-gray-600">Progresso Geral</div>
@@ -201,7 +201,7 @@ export const AutoUpdatingEvolutionChart: React.FC<AutoUpdatingEvolutionChartProp
                 </div>
                 
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">
+                  <div className="text-2xl font-bold text-rose-600">
                     {summary.daysToNextLevel ? `${summary.daysToNextLevel}d` : 'N/A'}
                   </div>
                   <div className="text-sm text-gray-600">Próximo Nível</div>
@@ -230,9 +230,9 @@ export const AutoUpdatingEvolutionChart: React.FC<AutoUpdatingEvolutionChartProp
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="bg-gradient-to-r from-ocean-50 to-teal-50 rounded-xl border border-ocean-200 p-6"
+            className="card-gradient"
           >
-            <h4 className="text-lg font-semibold text-ocean-900 mb-3 flex items-center">
+            <h4 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
               </svg>
@@ -245,9 +245,9 @@ export const AutoUpdatingEvolutionChart: React.FC<AutoUpdatingEvolutionChartProp
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="flex items-start space-x-2 p-3 bg-white rounded-lg border border-ocean-100"
+                  className="flex items-start space-x-2 p-3 bg-white/70 dark:bg-slate-900/70 rounded-lg border border-white/40 dark:border-slate-700/60"
                 >
-                  <div className="w-2 h-2 bg-ocean-500 rounded-full mt-2 flex-shrink-0" />
+                  <div className="w-2 h-2 bg-teal-500 rounded-full mt-2 flex-shrink-0" />
                   <span className="text-sm text-gray-700">{recommendation}</span>
                 </motion.div>
               ))}
@@ -268,7 +268,7 @@ export const AutoUpdatingEvolutionChart: React.FC<AutoUpdatingEvolutionChartProp
             : (lastUpdated?.toLocaleString('pt-BR') || 'N/A')
           }
           {autoRefresh && (
-            <span className="ml-2 text-ocean-600">
+            <span className="ml-2 text-blue-600">
               • Atualização automática ativa
             </span>
           )}
