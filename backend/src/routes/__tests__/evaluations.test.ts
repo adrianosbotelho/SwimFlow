@@ -1,4 +1,5 @@
 import request from 'supertest';
+import type { Server } from 'http';
 import express from 'express';
 
 // Mock the evaluation service
@@ -29,6 +30,16 @@ const toJson = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
 const app = express();
 app.use(express.json());
 app.use('/api/evaluations', evaluationRoutes);
+
+let server: Server;
+
+beforeAll((done) => {
+  server = app.listen(0, '127.0.0.1', done);
+});
+
+afterAll((done) => {
+  server.close(done);
+});
 
 describe('Evaluation Routes', () => {
   beforeEach(() => {
@@ -78,7 +89,7 @@ describe('Evaluation Routes', () => {
 
       mockEvaluationService.createEvaluation.mockResolvedValue(createdEvaluation as any);
 
-      const response = await request(app)
+      const response = await request(server)
         .post('/api/evaluations')
         .send(evaluationData)
         .expect(201);
@@ -101,7 +112,7 @@ describe('Evaluation Routes', () => {
         new Error('Validation error: Student ID is required')
       );
 
-      await request(app)
+      await request(server)
         .post('/api/evaluations')
         .send({})
         .expect(400);
@@ -127,7 +138,7 @@ describe('Evaluation Routes', () => {
 
       mockEvaluationService.listEvaluations.mockResolvedValue(mockEvaluations as any);
 
-      const response = await request(app)
+      const response = await request(server)
         .get('/api/evaluations?studentId=student-1')
         .expect(200);
 
@@ -168,7 +179,7 @@ describe('Evaluation Routes', () => {
 
       mockEvaluationService.getEvaluation.mockResolvedValue(mockEvaluation as any);
 
-      const response = await request(app)
+      const response = await request(server)
         .get('/api/evaluations/eval-1')
         .expect(200);
 
@@ -181,7 +192,7 @@ describe('Evaluation Routes', () => {
     it('should return 404 for non-existent evaluation', async () => {
       mockEvaluationService.getEvaluation.mockResolvedValue(null);
 
-      await request(app)
+      await request(server)
         .get('/api/evaluations/non-existent')
         .expect(404);
     });
@@ -206,7 +217,7 @@ describe('Evaluation Routes', () => {
 
       mockEvaluationService.getEvolutionData.mockResolvedValue(mockEvolutionData as any);
 
-      const response = await request(app)
+      const response = await request(server)
         .get('/api/evaluations/student/student-1/evolution')
         .expect(200);
 
@@ -239,7 +250,7 @@ describe('Evaluation Routes', () => {
 
       mockEvaluationService.updateEvaluation.mockResolvedValue(updatedEvaluation as any);
 
-      const response = await request(app)
+      const response = await request(server)
         .put('/api/evaluations/eval-1')
         .send(updateData)
         .expect(200);
@@ -258,7 +269,7 @@ describe('Evaluation Routes', () => {
     it('should delete evaluation successfully', async () => {
       mockEvaluationService.deleteEvaluation.mockResolvedValue();
 
-      const response = await request(app)
+      const response = await request(server)
         .delete('/api/evaluations/eval-1')
         .expect(200);
 

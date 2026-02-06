@@ -1,4 +1,5 @@
 import request from 'supertest'
+import type { Server } from 'http'
 import express from 'express'
 import cors from 'cors'
 
@@ -53,6 +54,16 @@ app.use(cors())
 app.use(express.json())
 app.use('/api/students', studentRoutes)
 
+let server: Server
+
+beforeAll((done) => {
+  server = app.listen(0, '127.0.0.1', done)
+})
+
+afterAll((done) => {
+  server.close(done)
+})
+
 describe('Student Routes', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -85,7 +96,7 @@ describe('Student Routes', () => {
 
       mockStudentService.listStudents.mockResolvedValue(mockResult)
 
-      const response = await request(app)
+      const response = await request(server)
         .get('/api/students')
         .expect(200)
 
@@ -112,7 +123,7 @@ describe('Student Routes', () => {
 
       mockStudentService.listStudents.mockResolvedValue(mockResult)
 
-      const response = await request(app)
+      const response = await request(server)
         .get('/api/students')
         .query({ search: 'João', level: 'intermediario', page: 1, limit: 10 })
         .expect(200)
@@ -145,7 +156,7 @@ describe('Student Routes', () => {
 
       mockStudentService.getStudent.mockResolvedValue(mockStudent)
 
-      const response = await request(app)
+      const response = await request(server)
         .get('/api/students/1')
         .expect(200)
 
@@ -159,7 +170,7 @@ describe('Student Routes', () => {
     it('should return 404 when student not found', async () => {
       mockStudentService.getStudent.mockRejectedValue(new Error('Student not found'))
 
-      const response = await request(app)
+      const response = await request(server)
         .get('/api/students/nonexistent')
         .expect(404)
 
@@ -199,7 +210,7 @@ describe('Student Routes', () => {
 
       mockStudentService.createStudent.mockResolvedValue(createdStudent)
 
-      const response = await request(app)
+      const response = await request(server)
         .post('/api/students')
         .send(studentData)
         .expect(201)
@@ -218,7 +229,7 @@ describe('Student Routes', () => {
     it('should return 400 for validation errors', async () => {
       mockStudentService.createStudent.mockRejectedValue(new Error('Validation error: Name is required'))
 
-      const response = await request(app)
+      const response = await request(server)
         .post('/api/students')
         .send({ name: '' })
         .expect(400)
@@ -254,7 +265,7 @@ describe('Student Routes', () => {
 
       mockStudentService.updateStudent.mockResolvedValue(updatedStudent)
 
-      const response = await request(app)
+      const response = await request(server)
         .put('/api/students/1')
         .send(updateData)
         .expect(200)
@@ -288,7 +299,7 @@ describe('Student Routes', () => {
       mockStudentService.getStudent.mockResolvedValue(mockStudent)
       mockStudentService.deleteStudent.mockResolvedValue()
 
-      const response = await request(app)
+      const response = await request(server)
         .delete('/api/students/1')
         .expect(200)
 
@@ -314,7 +325,7 @@ describe('Student Routes', () => {
 
       mockStudentService.getStudentStats.mockResolvedValue(mockStats)
 
-      const response = await request(app)
+      const response = await request(server)
         .get('/api/students/stats')
         .expect(200)
 

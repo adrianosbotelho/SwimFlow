@@ -1,4 +1,5 @@
 import request from 'supertest'
+import type { Server } from 'http'
 import express from 'express'
 import cors from 'cors'
 
@@ -43,6 +44,16 @@ app.use(cors())
 app.use(express.json())
 app.use('/api/auth', authRoutes)
 
+let server: Server
+
+beforeAll((done) => {
+  server = app.listen(0, '127.0.0.1', done)
+})
+
+afterAll((done) => {
+  server.close(done)
+})
+
 describe('Auth Routes', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -61,7 +72,7 @@ describe('Auth Routes', () => {
       emailVerified: false,
     })
 
-    const response = await request(app)
+    const response = await request(server)
       .post('/api/auth/register')
       .send({
         name: 'User Test',
@@ -95,7 +106,7 @@ describe('Auth Routes', () => {
       emailVerified: false,
     })
 
-    const response = await request(app)
+    const response = await request(server)
       .post('/api/auth/login')
       .send({
         email: 'user@swimflow.com',
@@ -117,7 +128,7 @@ describe('Auth Routes', () => {
       emailVerified: true,
     })
 
-    const response = await request(app)
+    const response = await request(server)
       .get('/api/auth/verify-email?token=test-token')
       .expect(200)
 
@@ -145,7 +156,7 @@ describe('Auth Routes', () => {
       emailVerified: true,
     })
 
-    const response = await request(app)
+    const response = await request(server)
       .post('/api/auth/google')
       .send({ credential: 'google-token' })
       .expect(200)
