@@ -916,11 +916,3 @@ router.post('/change-password', authenticateToken, async (req: AuthenticatedRequ
 })
 
 export default router
-    if (!user.emailVerified) {
-      res.status(403).json({
-        code: 'EMAIL_NOT_VERIFIED',
-        message: 'Email verification required',
-        timestamp: new Date().toISOString()
-      })
-      return
-    }

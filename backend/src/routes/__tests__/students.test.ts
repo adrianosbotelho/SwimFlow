@@ -1,8 +1,6 @@
 import request from 'supertest'
 import express from 'express'
 import cors from 'cors'
-import studentRoutes from '../students'
-import type { Level } from '@prisma/client'
 
 // Mock the StudentService
 jest.mock('../../services/studentService', () => ({
@@ -25,6 +23,13 @@ jest.mock('../../middleware/auth', () => ({
   }
 }))
 
+jest.mock('../../middleware/devAuth', () => ({
+  devAuthenticateToken: (req: any, res: any, next: any) => {
+    req.user = { id: '1', email: 'test@example.com', role: 'professor' }
+    next()
+  }
+}))
+
 // Mock upload middleware
 jest.mock('../../middleware/upload', () => ({
   uploadProfileImage: {
@@ -35,9 +40,12 @@ jest.mock('../../middleware/upload', () => ({
   getImageUrl: jest.fn((filename: string) => `/uploads/profile-images/${filename}`)
 }))
 
-import { StudentService } from '../../services/studentService'
-
+const { StudentService } = require('../../services/studentService')
 const mockStudentService = StudentService as jest.Mocked<typeof StudentService>
+
+const studentRoutes = require('../students').default
+
+const toJson = <T,>(value: T): T => JSON.parse(JSON.stringify(value))
 
 // Create test app
 const app = express()
@@ -83,7 +91,7 @@ describe('Student Routes', () => {
 
       expect(response.body).toEqual({
         success: true,
-        data: mockResult
+        data: toJson(mockResult)
       })
       expect(mockStudentService.listStudents).toHaveBeenCalledWith({
         search: undefined,
@@ -104,8 +112,9 @@ describe('Student Routes', () => {
 
       mockStudentService.listStudents.mockResolvedValue(mockResult)
 
-      await request(app)
-        .get('/api/students?search=João&level=intermediario&page=1&limit=10')
+      const response = await request(app)
+        .get('/api/students')
+        .query({ search: 'João', level: 'intermediario', page: 1, limit: 10 })
         .expect(200)
 
       expect(mockStudentService.listStudents).toHaveBeenCalledWith({
@@ -142,7 +151,7 @@ describe('Student Routes', () => {
 
       expect(response.body).toEqual({
         success: true,
-        data: mockStudent
+        data: toJson(mockStudent)
       })
       expect(mockStudentService.getStudent).toHaveBeenCalledWith('1')
     })
@@ -179,7 +188,7 @@ describe('Student Routes', () => {
         email: studentData.email,
         phone: studentData.phone,
         birthDate: new Date(studentData.birthDate),
-        level: 'intermediario' as Level,
+        level: 'intermediario' as const,
         objectives: studentData.objectives,
         medicalNotes: studentData.medicalNotes,
         profileImage: null,
@@ -197,13 +206,13 @@ describe('Student Routes', () => {
 
       expect(response.body).toEqual({
         success: true,
-        data: createdStudent,
+        data: toJson(createdStudent),
         message: 'Student created successfully'
       })
       expect(mockStudentService.createStudent).toHaveBeenCalledWith({
         ...studentData,
         birthDate: new Date(studentData.birthDate)
-      })
+      }, '1')
     })
 
     it('should return 400 for validation errors', async () => {
@@ -252,10 +261,10 @@ describe('Student Routes', () => {
 
       expect(response.body).toEqual({
         success: true,
-        data: updatedStudent,
+        data: toJson(updatedStudent),
         message: 'Student updated successfully'
       })
-      expect(mockStudentService.updateStudent).toHaveBeenCalledWith('1', updateData)
+      expect(mockStudentService.updateStudent).toHaveBeenCalledWith('1', updateData, '1')
     })
   })
 

@@ -1,11 +1,8 @@
 import request from 'supertest';
 import express from 'express';
-import evaluationRoutes from '../evaluations';
-import evaluationService from '../../services/evaluationService';
 
 // Mock the evaluation service
 jest.mock('../../services/evaluationService');
-const mockEvaluationService = evaluationService as jest.Mocked<typeof evaluationService>;
 
 // Mock auth middleware
 jest.mock('../../middleware/auth', () => ({
@@ -14,6 +11,20 @@ jest.mock('../../middleware/auth', () => ({
     next();
   }
 }));
+
+jest.mock('../../middleware/devAuth', () => ({
+  devAuthenticateToken: (req: any, res: any, next: any) => {
+    req.user = { id: 'professor-1', role: 'professor' };
+    next();
+  }
+}));
+
+const evaluationService = require('../../services/evaluationService').default;
+const mockEvaluationService = evaluationService as jest.Mocked<typeof evaluationService>;
+
+const evaluationRoutes = require('../evaluations').default;
+
+const toJson = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
 
 const app = express();
 app.use(express.json());
@@ -122,11 +133,16 @@ describe('Evaluation Routes', () => {
 
       expect(response.body).toEqual({
         success: true,
-        data: mockEvaluations,
+        data: toJson(mockEvaluations),
         count: 1
       });
 
-      expect(mockEvaluationService.listEvaluations).toHaveBeenCalledWith('student-1', undefined);
+      expect(mockEvaluationService.listEvaluations).toHaveBeenCalledWith(
+        'student-1',
+        undefined,
+        undefined,
+        undefined
+      );
     });
   });
 
@@ -158,7 +174,7 @@ describe('Evaluation Routes', () => {
 
       expect(response.body).toEqual({
         success: true,
-        data: mockEvaluation
+        data: toJson(mockEvaluation)
       });
     });
 
@@ -196,7 +212,7 @@ describe('Evaluation Routes', () => {
 
       expect(response.body).toEqual({
         success: true,
-        data: mockEvolutionData
+        data: toJson(mockEvolutionData)
       });
 
       expect(mockEvaluationService.getEvolutionData).toHaveBeenCalledWith('student-1', undefined);
@@ -230,7 +246,7 @@ describe('Evaluation Routes', () => {
 
       expect(response.body).toEqual({
         success: true,
-        data: updatedEvaluation,
+        data: toJson(updatedEvaluation),
         message: 'Evaluation updated successfully'
       });
 

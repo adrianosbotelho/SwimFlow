@@ -1,22 +1,21 @@
-import evolutionService from '../evolutionService';
-import { PrismaClient } from '@prisma/client';
+const mockPrisma = {
+  strokeEvaluation: {
+    findMany: jest.fn(),
+    count: jest.fn(),
+    groupBy: jest.fn(),
+  },
+  student: {
+    findUnique: jest.fn(),
+    count: jest.fn(),
+  },
+};
 
 // Mock Prisma
 jest.mock('@prisma/client', () => ({
-  PrismaClient: jest.fn().mockImplementation(() => ({
-    strokeEvaluation: {
-      findMany: jest.fn(),
-      count: jest.fn(),
-      groupBy: jest.fn(),
-    },
-    student: {
-      findUnique: jest.fn(),
-      count: jest.fn(),
-    },
-  })),
+  PrismaClient: jest.fn().mockImplementation(() => mockPrisma),
 }));
 
-const mockPrisma = new PrismaClient() as jest.Mocked<PrismaClient>;
+import evolutionService from '../evolutionService';
 
 describe('EvolutionService', () => {
   beforeEach(() => {
