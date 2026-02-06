@@ -28,7 +28,7 @@ export const DashboardPage: React.FC = () => {
             <span className="text-7xl animate-bounce-subtle">🌊</span>
             <div className="absolute inset-0 bg-blue-400/30 rounded-full blur-2xl animate-glow" />
           </div>
-          <h1 className="text-6xl font-bold bg-gradient-to-r from-blue-600 via-teal-600 to-green-500 dark:from-blue-400 dark:via-teal-400 dark:to-green-400 bg-clip-text text-transparent">
+          <h1 className="text-6xl font-bold text-gradient-primary">
             SwimFlow
           </h1>
         </motion.div>

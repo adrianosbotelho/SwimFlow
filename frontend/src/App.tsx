@@ -46,7 +46,7 @@ function App() {
       <ErrorBoundary onError={handleError}>
         <ThemeProvider>
           <NotificationProvider>
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 flex items-center justify-center transition-colors duration-300">
+            <div className="min-h-screen flex items-center justify-center transition-colors duration-300">
               <div className="flex flex-col items-center space-y-4">
                 <div className="loading-spinner w-12 h-12"></div>
                 <p className="text-gray-600 dark:text-gray-400 font-medium">Carregando SwimFlow...</p>
