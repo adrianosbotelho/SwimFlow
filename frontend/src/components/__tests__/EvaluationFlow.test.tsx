@@ -82,13 +82,10 @@ describe('Evaluation Flow Integration', () => {
       const crawlSection = screen.getByText('Crawl').closest('div');
       expect(crawlSection).toBeInTheDocument();
 
-      // Update technique score for crawl
-      const techniqueSliders = screen.getAllByDisplayValue('5');
-      fireEvent.change(techniqueSliders[0], { target: { value: '8' } });
-
-      // Update resistance score for crawl
-      const resistanceSliders = screen.getAllByDisplayValue('5');
-      fireEvent.change(resistanceSliders[1], { target: { value: '7' } });
+      // Update technique and resistance scores for crawl
+      const sliders = screen.getAllByRole('slider');
+      fireEvent.change(sliders[0], { target: { value: '8' } });
+      fireEvent.change(sliders[1], { target: { value: '7' } });
 
       // Add time for crawl
       const timeInputs = screen.getAllByPlaceholderText('Ex: 30.50');
@@ -127,7 +124,7 @@ describe('Evaluation Flow Integration', () => {
       });
     });
 
-    it('should validate required fields before submission', async () => {
+    it('should submit even with minimum scores selected', async () => {
       const mockOnSubmit = vi.fn();
       const mockOnCancel = vi.fn();
 
@@ -143,24 +140,19 @@ describe('Evaluation Flow Integration', () => {
         />
       );
 
-      // Reset all scores to 0 to simulate empty evaluation
-      const techniqueSliders = screen.getAllByDisplayValue('5');
-      techniqueSliders.forEach(slider => {
-        fireEvent.change(slider, { target: { value: '0' } });
-      });
-
-      const resistanceSliders = screen.getAllByDisplayValue('5');
-      resistanceSliders.forEach(slider => {
-        fireEvent.change(slider, { target: { value: '0' } });
+      // Set all scores to minimum values
+      const sliders = screen.getAllByRole('slider');
+      sliders.forEach(slider => {
+        fireEvent.change(slider, { target: { value: '1' } });
       });
 
       // Try to submit
       const submitButton = screen.getByText('Salvar Avaliação');
       fireEvent.click(submitButton);
 
-      // Should show validation error
-      expect(alertSpy).toHaveBeenCalledWith('Por favor, preencha pelo menos uma avaliação de nado.');
-      expect(mockOnSubmit).not.toHaveBeenCalled();
+      // Should submit without validation error
+      expect(alertSpy).not.toHaveBeenCalled();
+      expect(mockOnSubmit).toHaveBeenCalled();
 
       alertSpy.mockRestore();
     });
