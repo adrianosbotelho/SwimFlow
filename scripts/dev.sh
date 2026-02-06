@@ -5,6 +5,11 @@
 
 set -e
 
+# Prefer Homebrew Node 22 LTS if installed (avoids Prisma issues on non-LTS Node).
+if [ -x "/opt/homebrew/opt/node@22/bin/node" ]; then
+    export PATH="/opt/homebrew/opt/node@22/bin:$PATH"
+fi
+
 # Cores para output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -34,6 +39,31 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
+# Ensures deps are compatible with the current Node version.
+# When switching Node versions (e.g. from non-LTS to LTS), native addons may need rebuild.
+ensure_deps() {
+    local dir="$1"
+    local label="$2"
+    local current_node stamp_file previous_node
+
+    current_node="$(node -v 2>/dev/null || true)"
+    stamp_file="$dir/node_modules/.node-version"
+
+    if [ ! -d "$dir/node_modules" ]; then
+        log "Instalando dependências do $label..."
+        (cd "$dir" && npm install)
+        printf '%s\n' "$current_node" > "$stamp_file" 2>/dev/null || true
+        return
+    fi
+
+    previous_node="$(cat "$stamp_file" 2>/dev/null || true)"
+    if [ -z "$previous_node" ] || [ "$previous_node" != "$current_node" ]; then
+        log "Rebuild de dependências do $label (Node $current_node)..."
+        (cd "$dir" && npm rebuild)
+        printf '%s\n' "$current_node" > "$stamp_file" 2>/dev/null || true
+    fi
+}
+
 # Função para verificar dependências
 check_dependencies() {
     log "Verificando dependências..."
@@ -59,6 +89,24 @@ check_dependencies() {
     if [ ${#missing_deps[@]} -ne 0 ]; then
         error "Dependências faltando: ${missing_deps[*]}"
         echo "Por favor, instale as dependências antes de continuar."
+        exit 1
+    fi
+
+    # Prisma (e a toolchain do projeto) tende a suportar apenas versoes LTS do Node.
+    # Falhar cedo evita erros opacos como "Schema engine error".
+    local node_version node_major
+    node_version="$(node -v 2>/dev/null || true)"
+    node_major="${node_version#v}"
+    node_major="${node_major%%.*}"
+    if [[ -n "$node_major" && "$node_major" -ge 23 ]]; then
+        error "Node.js $node_version nao e suportado para este ambiente de dev."
+        echo "Troque para Node.js 20 LTS (recomendado) ou 22 LTS e rode novamente."
+        exit 1
+    fi
+
+    # Docker daemon precisa estar ativo (Docker Desktop rodando no macOS).
+    if ! docker info >/dev/null 2>&1; then
+        error "Docker daemon nao esta rodando. Inicie o Docker Desktop e tente novamente."
         exit 1
     fi
     
@@ -95,23 +143,9 @@ check_ports() {
 install_dependencies() {
     log "Instalando dependências..."
     
-    # Root dependencies
-    if [ ! -d "node_modules" ]; then
-        log "Instalando dependências do projeto raiz..."
-        npm install
-    fi
-    
-    # Backend dependencies
-    if [ ! -d "backend/node_modules" ]; then
-        log "Instalando dependências do backend..."
-        cd backend && npm install && cd ..
-    fi
-    
-    # Frontend dependencies
-    if [ ! -d "frontend/node_modules" ]; then
-        log "Instalando dependências do frontend..."
-        cd frontend && npm install && cd ..
-    fi
+    ensure_deps "." "projeto raiz"
+    ensure_deps "backend" "backend"
+    ensure_deps "frontend" "frontend"
     
     log "Dependências instaladas ✓"
 }
@@ -125,11 +159,18 @@ setup_database() {
         if [ -f "backend/.env.example" ]; then
             log "Copiando .env.example para .env..."
             cp backend/.env.example backend/.env
-            warn "Por favor, configure as variáveis de ambiente em backend/.env"
+            warn "Por favor, configure as variáveis de ambiente em backend/.env (DATABASE_URL precisa bater com docker-compose.dev.yml)"
         else
             error "Arquivo .env.example não encontrado!"
             exit 1
         fi
+    fi
+
+    # Se o DATABASE_URL esta com placeholder, ajusta para os defaults do docker-compose.dev.yml
+    if grep -q 'postgresql://username:password@localhost:5432/swimflow_db' backend/.env 2>/dev/null; then
+        warn "DATABASE_URL em backend/.env esta com placeholder; ajustando para swimflow_user/swimflow_pass."
+        sed -i.bak 's|postgresql://username:password@localhost:5432/swimflow_db|postgresql://swimflow_user:swimflow_pass@localhost:5432/swimflow_db|g' backend/.env
+        rm -f backend/.env.bak
     fi
     
     # Iniciar banco de dados com Docker
@@ -142,11 +183,11 @@ setup_database() {
     
     # Executar migrations
     log "Executando migrations..."
-    cd backend && npx prisma migrate dev --name init && cd ..
+    (cd backend && npx prisma migrate dev --name init)
     
     # Executar seed
     log "Populando banco com dados de desenvolvimento..."
-    cd backend && npx prisma db seed && cd ..
+    (cd backend && npx prisma db seed)
     
     log "Banco de dados configurado ✓"
 }
@@ -164,7 +205,7 @@ start_services() {
     
     # Gerar cliente Prisma
     log "Gerando cliente Prisma..."
-    cd backend && npx prisma generate && cd ..
+    (cd backend && npx prisma generate)
     
     # Iniciar frontend e backend em paralelo
     log "Iniciando frontend e backend..."

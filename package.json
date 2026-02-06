@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Sistema web moderno para gestão de alunos de natação",
   "main": "index.js",
+  "engines": {
+    "node": ">=22 <23"
+  },
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend && npm run dev",
