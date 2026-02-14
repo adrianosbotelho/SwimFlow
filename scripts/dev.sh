@@ -5,6 +5,10 @@
 
 set -e
 
+# Garanta paths consistentes mesmo se executado fora da raiz do projeto.
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT_DIR"
+
 # Cores para output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -34,6 +38,19 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
+# Default (sobrescrito por init_compose_cmd/check_dependencies)
+COMPOSE_CMD=(docker-compose)
+
+init_compose_cmd() {
+    if command_exists docker-compose; then
+        COMPOSE_CMD=(docker-compose)
+    elif docker compose version >/dev/null 2>&1; then
+        COMPOSE_CMD=(docker compose)
+    else
+        COMPOSE_CMD=()
+    fi
+}
+
 # Função para verificar dependências
 check_dependencies() {
     log "Verificando dependências..."
@@ -52,7 +69,8 @@ check_dependencies() {
         missing_deps+=("Docker")
     fi
     
-    if ! command_exists docker-compose; then
+    init_compose_cmd
+    if [ ${#COMPOSE_CMD[@]} -eq 0 ]; then
         missing_deps+=("Docker Compose")
     fi
     
@@ -80,6 +98,12 @@ check_ports() {
     
     if [ ${#busy_ports[@]} -ne 0 ]; then
         warn "Portas ocupadas: ${busy_ports[*]}"
+        # Em execuções não-interativas (ex: automações/CI), não bloqueie pedindo input.
+        if [ ! -t 0 ]; then
+            warn "Execução não-interativa; mantendo processos existentes."
+            return 0
+        fi
+
         echo "Deseja parar os processos nessas portas? (y/n)"
         read -r response
         if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
@@ -88,6 +112,20 @@ check_ports() {
                 lsof -ti:$port | xargs kill -9 2>/dev/null || true
             done
         fi
+    fi
+}
+
+# Ajusta DATABASE_URL local se estiver com placeholder.
+ensure_backend_env() {
+    local backend_env="backend/.env"
+    if [ ! -f "$backend_env" ]; then
+        return 0
+    fi
+
+    if grep -q '^DATABASE_URL="postgresql://username:password@' "$backend_env" 2>/dev/null; then
+        warn "DATABASE_URL em backend/.env está com placeholder; ajustando para docker-compose.dev.yml"
+        # Mantem aspas e formato do arquivo.
+        sed -i '' 's#^DATABASE_URL=.*#DATABASE_URL=\"postgresql://swimflow_user:swimflow_pass@localhost:5432/swimflow_db?schema=public\"#' "$backend_env"
     fi
 }
 
@@ -132,17 +170,25 @@ setup_database() {
         fi
     fi
     
+    ensure_backend_env
+    
     # Iniciar banco de dados com Docker
     log "Iniciando banco de dados PostgreSQL..."
-    docker-compose -f docker-compose.dev.yml up -d postgres
+    "${COMPOSE_CMD[@]}" -f docker-compose.dev.yml up -d postgres
     
     # Aguardar o banco estar pronto
     log "Aguardando banco de dados ficar pronto..."
     sleep 10
+
+    # Garantir extensoes usadas pelas migrations/defaults
+    log "Garantindo extensões do Postgres..."
+    "${COMPOSE_CMD[@]}" -f docker-compose.dev.yml exec -T postgres \
+        psql -U swimflow_user -d swimflow_db -v ON_ERROR_STOP=1 \
+        -c 'CREATE EXTENSION IF NOT EXISTS "pgcrypto"; CREATE EXTENSION IF NOT EXISTS "uuid-ossp";' >/dev/null
     
     # Executar migrations
     log "Executando migrations..."
-    cd backend && npx prisma migrate dev --name init && cd ..
+    cd backend && npx prisma migrate deploy && cd ..
     
     # Executar seed
     log "Populando banco com dados de desenvolvimento..."
@@ -156,9 +202,9 @@ start_services() {
     log "Iniciando serviços de desenvolvimento..."
     
     # Verificar se o banco está rodando
-    if ! docker-compose -f docker-compose.dev.yml ps postgres | grep -q "Up"; then
+    if ! "${COMPOSE_CMD[@]}" -f docker-compose.dev.yml ps postgres | grep -q "Up"; then
         log "Iniciando banco de dados..."
-        docker-compose -f docker-compose.dev.yml up -d postgres
+        "${COMPOSE_CMD[@]}" -f docker-compose.dev.yml up -d postgres
         sleep 5
     fi
     
@@ -180,7 +226,7 @@ stop_services() {
     pkill -f "tsx" 2>/dev/null || true
     
     # Parar Docker containers
-    docker-compose -f docker-compose.dev.yml down
+    "${COMPOSE_CMD[@]}" -f docker-compose.dev.yml down
     
     log "Serviços parados ✓"
 }
@@ -199,7 +245,7 @@ clean_environment() {
     rm -rf backend/dist frontend/dist
     
     # Remover volumes Docker
-    docker-compose -f docker-compose.dev.yml down -v
+    "${COMPOSE_CMD[@]}" -f docker-compose.dev.yml down -v
     
     log "Ambiente limpo ✓"
 }
@@ -209,7 +255,7 @@ show_status() {
     info "=== Status dos Serviços ==="
     
     # Status do banco
-    if docker-compose -f docker-compose.dev.yml ps postgres | grep -q "Up"; then
+    if "${COMPOSE_CMD[@]}" -f docker-compose.dev.yml ps postgres | grep -q "Up"; then
         echo -e "${GREEN}✓ PostgreSQL: Rodando${NC}"
     else
         echo -e "${RED}✗ PostgreSQL: Parado${NC}"
@@ -238,11 +284,12 @@ show_status() {
 # Função para mostrar logs
 show_logs() {
     log "Mostrando logs dos serviços..."
-    docker-compose -f docker-compose.dev.yml logs -f
+    "${COMPOSE_CMD[@]}" -f docker-compose.dev.yml logs -f
 }
 
 # Função principal
 main() {
+    init_compose_cmd
     case "${1:-start}" in
         "start")
             log "🚀 Iniciando ambiente de desenvolvimento SwimFlow..."
