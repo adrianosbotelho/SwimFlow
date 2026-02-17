@@ -209,43 +209,29 @@ ensure_database() {
     log "Iniciando banco de dados PostgreSQL..."
     docker-compose -f docker-compose.dev.yml up -d postgres redis
     
-    # Aguardar o banco estar pronto
+    # Aguardar o banco estar pronto (healthcheck/pg_isready)
     log "Aguardando banco de dados ficar pronto..."
-    local max_wait=60
-    local waited=0
-    until docker exec swimflow-postgres pg_isready -U swimflow_user -d swimflow_db >/dev/null 2>&1; do
-        sleep 2
-        waited=$((waited + 2))
-        if [ "$waited" -ge "$max_wait" ]; then
-            error "Timeout aguardando PostgreSQL (porta ${POSTGRES_PORT})"
-            docker-compose -f docker-compose.dev.yml logs postgres || true
+    local attempts=0
+    until docker-compose -f docker-compose.dev.yml exec -T postgres pg_isready -U swimflow_user -d swimflow_db >/dev/null 2>&1; do
+        attempts=$((attempts + 1))
+        if [ "$attempts" -ge 30 ]; then
+            error "Banco de dados não ficou pronto a tempo (60s)."
+            docker-compose -f docker-compose.dev.yml logs --tail=200 postgres || true
             exit 1
         fi
+        sleep 2
     done
     
     # Executar migrations
     log "Executando migrations..."
+    # Use migrate deploy to avoid generating new migrations during dev startup.
     (cd backend && npx prisma migrate deploy)
-
-    log "Banco de dados pronto ✓"
-}
-
-seed_database() {
-    if [ "${RUN_SEED:-}" != "1" ]; then
-        info "Seed ignorado (defina RUN_SEED=1 para rodar)"
-        return 0
-    fi
-
-    if [ "${SEED_WIPE:-}" != "1" ]; then
-        error "Seed nao autorizado sem SEED_WIPE=1"
-        echo "Para rodar seed destrutivo (apaga dados), use: RUN_SEED=1 SEED_WIPE=1 make dev-setup"
-        return 1
-    fi
-
-    warn "Rodando seed destrutivo (isso vai APAGAR dados existentes)"
+    
+    # Executar seed
     log "Populando banco com dados de desenvolvimento..."
     (cd backend && npx prisma db seed)
-    log "Seed concluído ✓"
+    
+    log "Banco de dados configurado ✓"
 }
 
 # Função para iniciar os serviços
@@ -261,7 +247,7 @@ start_services() {
     
     # Gerar cliente Prisma
     log "Gerando cliente Prisma..."
-    cd backend && npx prisma generate && cd ..
+    (cd backend && npx prisma generate)
     
     # Iniciar frontend e backend em paralelo
     log "Iniciando frontend e backend..."
