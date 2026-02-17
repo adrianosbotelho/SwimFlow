@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "users" ALTER COLUMN "email_verification_expires" SET DATA TYPE TIMESTAMP(3);

@@ -136,17 +136,27 @@ setup_database() {
     log "Iniciando banco de dados PostgreSQL..."
     docker-compose -f docker-compose.dev.yml up -d postgres
     
-    # Aguardar o banco estar pronto
+    # Aguardar o banco estar pronto (healthcheck/pg_isready)
     log "Aguardando banco de dados ficar pronto..."
-    sleep 10
+    local attempts=0
+    until docker-compose -f docker-compose.dev.yml exec -T postgres pg_isready -U swimflow_user -d swimflow_db >/dev/null 2>&1; do
+        attempts=$((attempts + 1))
+        if [ "$attempts" -ge 30 ]; then
+            error "Banco de dados não ficou pronto a tempo (60s)."
+            docker-compose -f docker-compose.dev.yml logs --tail=200 postgres || true
+            exit 1
+        fi
+        sleep 2
+    done
     
     # Executar migrations
     log "Executando migrations..."
-    cd backend && npx prisma migrate dev --name init && cd ..
+    # Use migrate deploy to avoid generating new migrations during dev startup.
+    (cd backend && npx prisma migrate deploy)
     
     # Executar seed
     log "Populando banco com dados de desenvolvimento..."
-    cd backend && npx prisma db seed && cd ..
+    (cd backend && npx prisma db seed)
     
     log "Banco de dados configurado ✓"
 }
@@ -164,7 +174,7 @@ start_services() {
     
     # Gerar cliente Prisma
     log "Gerando cliente Prisma..."
-    cd backend && npx prisma generate && cd ..
+    (cd backend && npx prisma generate)
     
     # Iniciar frontend e backend em paralelo
     log "Iniciando frontend e backend..."
