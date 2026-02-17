@@ -109,6 +109,8 @@ uploads/
 *.db
 *.sqlite
 *.sqlite3
+backup_*.sql
+backups/
 
 # Prisma
 prisma/dev.db*

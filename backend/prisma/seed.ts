@@ -6,6 +6,13 @@ const prisma = new PrismaClient()
 async function main() {
   console.log('🌱 Iniciando seed do banco de dados...')
 
+  // Safety: this seed wipes tables. Require explicit opt-in.
+  if (process.env.SEED_WIPE !== '1') {
+    console.error('❌ Seed abortado para evitar perda de dados.')
+    console.error('Defina SEED_WIPE=1 para permitir limpar tabelas e repopular dados de dev.')
+    process.exit(1)
+  }
+
   // Limpar dados existentes (em ordem devido às foreign keys)
   await prisma.strokeEvaluation.deleteMany()
   await prisma.evaluation.deleteMany()
