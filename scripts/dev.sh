@@ -236,7 +236,13 @@ seed_database() {
         return 0
     fi
 
-    warn "Rodando seed (isso pode APAGAR dados existentes)"
+    if [ "${SEED_WIPE:-}" != "1" ]; then
+        error "Seed nao autorizado sem SEED_WIPE=1"
+        echo "Para rodar seed destrutivo (apaga dados), use: RUN_SEED=1 SEED_WIPE=1 make dev-setup"
+        return 1
+    fi
+
+    warn "Rodando seed destrutivo (isso vai APAGAR dados existentes)"
     log "Populando banco com dados de desenvolvimento..."
     (cd backend && npx prisma db seed)
     log "Seed concluído ✓"
