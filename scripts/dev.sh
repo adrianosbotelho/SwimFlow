@@ -189,9 +189,9 @@ install_dependencies() {
     log "Dependências instaladas ✓"
 }
 
-# Função para setup do banco de dados
-setup_database() {
-    log "Configurando banco de dados..."
+# Função para garantir que o banco está de pé e migrado (não destrutivo)
+ensure_database() {
+    log "Garantindo banco de dados (PostgreSQL) ..."
     
     # Verificar se o arquivo .env existe
     if [ ! -f "backend/.env" ]; then
@@ -226,12 +226,20 @@ setup_database() {
     # Executar migrations
     log "Executando migrations..."
     (cd backend && npx prisma migrate deploy)
-    
-    # Executar seed
+
+    log "Banco de dados pronto ✓"
+}
+
+seed_database() {
+    if [ "${RUN_SEED:-}" != "1" ]; then
+        info "Seed ignorado (defina RUN_SEED=1 para rodar)"
+        return 0
+    fi
+
+    warn "Rodando seed (isso pode APAGAR dados existentes)"
     log "Populando banco com dados de desenvolvimento..."
     (cd backend && npx prisma db seed)
-    
-    log "Banco de dados configurado ✓"
+    log "Seed concluído ✓"
 }
 
 # Função para iniciar os serviços
@@ -333,7 +341,7 @@ main() {
             configure_database_env
             check_ports
             install_dependencies
-            setup_database
+            ensure_database
             start_services
             ;;
         "stop")
@@ -358,7 +366,8 @@ main() {
             check_dependencies
             configure_database_env
             install_dependencies
-            setup_database
+            ensure_database
+            seed_database
             log "✅ Setup completo! Execute './scripts/dev.sh start' para iniciar."
             ;;
         "help"|"-h"|"--help")
