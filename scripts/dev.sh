@@ -4,6 +4,11 @@
 # Este script automatiza o setup e execução do ambiente de desenvolvimento
 
 set -e
+set -o pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$REPO_ROOT"
 
 # Cores para output
 RED='\033[0;31m'
@@ -34,6 +39,76 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
+is_port_listening() {
+    local port="$1"
+    lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1
+}
+
+find_free_port() {
+    local start_port="$1"
+    local port="$start_port"
+
+    while [ "$port" -lt 65535 ]; do
+        if ! is_port_listening "$port"; then
+            echo "$port"
+            return 0
+        fi
+        port=$((port + 1))
+    done
+
+    return 1
+}
+
+detect_swimflow_postgres_host_port() {
+    if ! docker inspect swimflow-postgres >/dev/null 2>&1; then
+        return 1
+    fi
+
+    local host_port
+    host_port="$(
+        docker inspect -f '{{(index (index .HostConfig.PortBindings "5432/tcp") 0).HostPort}}' swimflow-postgres 2>/dev/null || true
+    )"
+
+    if [[ "$host_port" =~ ^[0-9]+$ ]]; then
+        echo "$host_port"
+        return 0
+    fi
+
+    return 1
+}
+
+configure_database_env() {
+    local selected_port=""
+
+    if [ -n "${POSTGRES_PORT:-}" ]; then
+        selected_port="$POSTGRES_PORT"
+    else
+        local existing_port=""
+        existing_port="$(detect_swimflow_postgres_host_port || true)"
+        if [ -n "$existing_port" ]; then
+            if docker ps --format '{{.Names}}' | grep -qx "swimflow-postgres"; then
+                selected_port="$existing_port"
+            else
+                if ! is_port_listening "$existing_port"; then
+                    selected_port="$existing_port"
+                else
+                    selected_port="$(find_free_port 5433)"
+                fi
+            fi
+        else
+            if ! is_port_listening 5432; then
+                selected_port="5432"
+            else
+                selected_port="$(find_free_port 5433)"
+            fi
+        fi
+    fi
+
+    export POSTGRES_PORT="$selected_port"
+    export DATABASE_URL="postgresql://swimflow_user:swimflow_pass@127.0.0.1:${POSTGRES_PORT}/swimflow_db?schema=public"
+    info "PostgreSQL host port: ${POSTGRES_PORT}"
+}
+
 # Função para verificar dependências
 check_dependencies() {
     log "Verificando dependências..."
@@ -55,6 +130,10 @@ check_dependencies() {
     if ! command_exists docker-compose; then
         missing_deps+=("Docker Compose")
     fi
+
+    if ! command_exists lsof; then
+        missing_deps+=("lsof")
+    fi
     
     if [ ${#missing_deps[@]} -ne 0 ]; then
         error "Dependências faltando: ${missing_deps[*]}"
@@ -67,9 +146,9 @@ check_dependencies() {
 
 # Função para verificar se as portas estão disponíveis
 check_ports() {
-    log "Verificando portas disponíveis..."
+    log "Verificando portas das aplicações..."
     
-    local ports=(3000 3001 5432)
+    local ports=(3000 3001)
     local busy_ports=()
     
     for port in "${ports[@]}"; do
@@ -79,15 +158,9 @@ check_ports() {
     done
     
     if [ ${#busy_ports[@]} -ne 0 ]; then
-        warn "Portas ocupadas: ${busy_ports[*]}"
-        echo "Deseja parar os processos nessas portas? (y/n)"
-        read -r response
-        if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
-            for port in "${busy_ports[@]}"; do
-                log "Parando processo na porta $port..."
-                lsof -ti:$port | xargs kill -9 2>/dev/null || true
-            done
-        fi
+        error "Portas ocupadas: ${busy_ports[*]}"
+        echo "Feche o que estiver usando essas portas e tente novamente."
+        exit 1
     fi
 }
 
@@ -134,19 +207,29 @@ setup_database() {
     
     # Iniciar banco de dados com Docker
     log "Iniciando banco de dados PostgreSQL..."
-    docker-compose -f docker-compose.dev.yml up -d postgres
+    docker-compose -f docker-compose.dev.yml up -d postgres redis
     
     # Aguardar o banco estar pronto
     log "Aguardando banco de dados ficar pronto..."
-    sleep 10
+    local max_wait=60
+    local waited=0
+    until docker exec swimflow-postgres pg_isready -U swimflow_user -d swimflow_db >/dev/null 2>&1; do
+        sleep 2
+        waited=$((waited + 2))
+        if [ "$waited" -ge "$max_wait" ]; then
+            error "Timeout aguardando PostgreSQL (porta ${POSTGRES_PORT})"
+            docker-compose -f docker-compose.dev.yml logs postgres || true
+            exit 1
+        fi
+    done
     
     # Executar migrations
     log "Executando migrations..."
-    cd backend && npx prisma migrate dev --name init && cd ..
+    (cd backend && npx prisma migrate deploy)
     
     # Executar seed
     log "Populando banco com dados de desenvolvimento..."
-    cd backend && npx prisma db seed && cd ..
+    (cd backend && npx prisma db seed)
     
     log "Banco de dados configurado ✓"
 }
@@ -247,6 +330,7 @@ main() {
         "start")
             log "🚀 Iniciando ambiente de desenvolvimento SwimFlow..."
             check_dependencies
+            configure_database_env
             check_ports
             install_dependencies
             setup_database
@@ -272,6 +356,7 @@ main() {
         "setup")
             log "🔧 Configurando ambiente pela primeira vez..."
             check_dependencies
+            configure_database_env
             install_dependencies
             setup_database
             log "✅ Setup completo! Execute './scripts/dev.sh start' para iniciar."
