@@ -80,6 +80,10 @@ detect_swimflow_postgres_host_port() {
 configure_database_env() {
     local selected_port=""
 
+    export POSTGRES_USER="${POSTGRES_USER:-swimflow_user}"
+    export POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-swimflow_pass}"
+    export POSTGRES_DB="${POSTGRES_DB:-swimflow_dev}"
+
     if [ -n "${POSTGRES_PORT:-}" ]; then
         selected_port="$POSTGRES_PORT"
     else
@@ -105,8 +109,37 @@ configure_database_env() {
     fi
 
     export POSTGRES_PORT="$selected_port"
-    export DATABASE_URL="postgresql://swimflow_user:swimflow_pass@127.0.0.1:${POSTGRES_PORT}/swimflow_db?schema=public"
+    # Respect a user-provided DATABASE_URL, but default to the isolated dev DB.
+    if [ -z "${DATABASE_URL:-}" ]; then
+        export DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT}/${POSTGRES_DB}?schema=public"
+    fi
     info "PostgreSQL host port: ${POSTGRES_PORT}"
+    info "PostgreSQL database: ${POSTGRES_DB}"
+}
+
+backup_database() {
+    mkdir -p backups
+    local ts
+    ts="$(date +%Y%m%d_%H%M%S)"
+    local file="backups/${POSTGRES_DB}_${ts}.sql"
+
+    log "Fazendo backup do banco (${POSTGRES_DB}) em ${file} ..."
+    docker-compose -f docker-compose.dev.yml up -d postgres >/dev/null
+    docker-compose -f docker-compose.dev.yml exec -T postgres pg_dump -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" --no-owner --no-privileges > "${file}"
+    log "Backup concluido ✓"
+}
+
+ensure_database_exists() {
+    docker-compose -f docker-compose.dev.yml up -d postgres redis >/dev/null
+
+    # Create POSTGRES_DB if the volume already existed and init scripts didn't run.
+    if docker-compose -f docker-compose.dev.yml exec -T postgres psql -U "${POSTGRES_USER}" -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='${POSTGRES_DB}';" | grep -q 1; then
+        return 0
+    fi
+
+    warn "Banco ${POSTGRES_DB} nao existe; criando..."
+    docker-compose -f docker-compose.dev.yml exec -T postgres psql -U "${POSTGRES_USER}" -d postgres -c "CREATE DATABASE \"${POSTGRES_DB}\";" >/dev/null
+    log "Banco ${POSTGRES_DB} criado ✓"
 }
 
 # Função para verificar dependências
@@ -207,13 +240,13 @@ ensure_database() {
     
     # Iniciar banco de dados com Docker
     log "Iniciando banco de dados PostgreSQL..."
-    docker-compose -f docker-compose.dev.yml up -d postgres redis
+    ensure_database_exists
     
     # Aguardar o banco estar pronto
     log "Aguardando banco de dados ficar pronto..."
     local max_wait=60
     local waited=0
-    until docker exec swimflow-postgres pg_isready -U swimflow_user -d swimflow_db >/dev/null 2>&1; do
+    until docker-compose -f docker-compose.dev.yml exec -T postgres pg_isready -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" >/dev/null 2>&1; do
         sleep 2
         waited=$((waited + 2))
         if [ "$waited" -ge "$max_wait" ]; then
@@ -238,8 +271,20 @@ seed_database() {
 
     if [ "${SEED_WIPE:-}" != "1" ]; then
         error "Seed nao autorizado sem SEED_WIPE=1"
-        echo "Para rodar seed destrutivo (apaga dados), use: RUN_SEED=1 SEED_WIPE=1 make dev-setup"
+        echo "Para rodar seed destrutivo (apaga dados), use:"
+        echo "  RUN_SEED=1 SEED_WIPE=1 SEED_CONFIRM=WIPE_${POSTGRES_DB} make dev-seed"
         return 1
+    fi
+
+    local expected_confirm="WIPE_${POSTGRES_DB}"
+    if [ "${SEED_CONFIRM:-}" != "${expected_confirm}" ]; then
+        error "Confirmacao invalida para seed"
+        echo "Defina SEED_CONFIRM=${expected_confirm} para continuar."
+        return 1
+    fi
+
+    if [ "${SKIP_BACKUP:-}" != "1" ]; then
+        backup_database
     fi
 
     warn "Rodando seed destrutivo (isso vai APAGAR dados existentes)"
@@ -295,8 +340,8 @@ clean_environment() {
     # Remover builds
     rm -rf backend/dist frontend/dist
     
-    # Remover volumes Docker
-    docker-compose -f docker-compose.dev.yml down -v
+    # Do NOT remove volumes here (data safety). Use `dev-nuke` for that.
+    docker-compose -f docker-compose.dev.yml down
     
     log "Ambiente limpo ✓"
 }
@@ -338,6 +383,23 @@ show_logs() {
     docker-compose -f docker-compose.dev.yml logs -f
 }
 
+nuke_environment() {
+    if [ "${NUKE:-}" != "1" ] || [ "${NUKE_CONFIRM:-}" != "SWIMFLOW" ]; then
+        error "Operacao destrutiva bloqueada"
+        echo "Para apagar containers + VOLUMES (perda total), rode:"
+        echo "  NUKE=1 NUKE_CONFIRM=SWIMFLOW make dev-nuke"
+        return 1
+    fi
+
+    if [ "${SKIP_BACKUP:-}" != "1" ]; then
+        backup_database || true
+    fi
+
+    warn "Apagando containers e volumes (isso remove dados do Postgres)"
+    docker-compose -f docker-compose.dev.yml down -v
+    log "Nuke concluido ✓"
+}
+
 # Função principal
 main() {
     case "${1:-start}" in
@@ -349,6 +411,22 @@ main() {
             install_dependencies
             ensure_database
             start_services
+            ;;
+        "backup")
+            check_dependencies
+            configure_database_env
+            backup_database
+            ;;
+        "seed")
+            check_dependencies
+            configure_database_env
+            ensure_database
+            seed_database
+            ;;
+        "nuke")
+            check_dependencies
+            configure_database_env
+            nuke_environment
             ;;
         "stop")
             stop_services
@@ -383,6 +461,9 @@ main() {
             echo ""
             echo "Comandos disponíveis:"
             echo "  start    - Inicia o ambiente de desenvolvimento (padrão)"
+            echo "  backup   - Faz backup do banco (pg_dump)"
+            echo "  seed     - Roda seed (exige RUN_SEED=1 SEED_WIPE=1 SEED_CONFIRM=WIPE_<DB>)"
+            echo "  nuke     - Apaga containers + volumes (exige NUKE=1 NUKE_CONFIRM=SWIMFLOW)"
             echo "  stop     - Para todos os serviços"
             echo "  restart  - Reinicia todos os serviços"
             echo "  clean    - Limpa o ambiente (remove node_modules, builds, etc.)"

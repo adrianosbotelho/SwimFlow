@@ -58,6 +58,15 @@ dev-frontend: ## Inicia apenas o frontend
 dev-setup: ## Configuração inicial do ambiente de desenvolvimento
 	@./scripts/dev.sh setup
 
+dev-backup: ## Faz backup do banco (pg_dump)
+	@./scripts/dev.sh backup
+
+dev-seed: ## Roda seed DESTRUTIVO (exige confirmação)
+	@RUN_SEED=1 SEED_WIPE=1 SEED_CONFIRM=WIPE_$${POSTGRES_DB:-swimflow_dev} ./scripts/dev.sh seed
+
+dev-nuke: ## Apaga containers + volumes (perda total; exige confirmação)
+	@./scripts/dev.sh nuke
+
 dev-stop: ## Para o ambiente de desenvolvimento
 	@./scripts/dev.sh stop
 

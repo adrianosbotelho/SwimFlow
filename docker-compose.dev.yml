@@ -5,16 +5,17 @@ services:
     image: postgres:15-alpine
     container_name: swimflow-postgres
     environment:
-      POSTGRES_DB: swimflow_db
-      POSTGRES_USER: swimflow_user
-      POSTGRES_PASSWORD: swimflow_pass
+      # Keep dev isolated from any "real" DB you might have locally.
+      POSTGRES_DB: ${POSTGRES_DB:-swimflow_dev}
+      POSTGRES_USER: ${POSTGRES_USER:-swimflow_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-swimflow_pass}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/prisma/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U swimflow_user -d swimflow_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-swimflow_user} -d ${POSTGRES_DB:-swimflow_dev}"]
       interval: 10s
       timeout: 5s
       retries: 5

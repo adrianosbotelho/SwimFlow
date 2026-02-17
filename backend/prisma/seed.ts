@@ -13,6 +13,36 @@ async function main() {
     process.exit(1)
   }
 
+  const databaseUrl = process.env.DATABASE_URL
+  if (!databaseUrl) {
+    console.error('❌ DATABASE_URL nao definido; seed abortado.')
+    process.exit(1)
+  }
+
+  let dbName = ''
+  try {
+    const url = new URL(databaseUrl)
+    dbName = (url.pathname || '').replace(/^\//, '')
+  } catch {
+    console.error('❌ DATABASE_URL invalido; seed abortado.')
+    process.exit(1)
+  }
+
+  // Require confirmation bound to the target DB name.
+  const expectedConfirm = `WIPE_${dbName}`
+  if (process.env.SEED_CONFIRM !== expectedConfirm) {
+    console.error('❌ Seed abortado: confirmacao faltando ou invalida.')
+    console.error(`Defina SEED_CONFIRM=${expectedConfirm} para continuar.`)
+    process.exit(1)
+  }
+
+  // Extra safety: only allow wiping the default dev DB unless explicitly overridden.
+  if (dbName !== 'swimflow_dev' && process.env.SEED_ALLOW_NON_DEV !== '1') {
+    console.error(`❌ Seed abortado: DB alvo (${dbName}) nao parece ser dev.`)
+    console.error('Use SEED_ALLOW_NON_DEV=1 apenas se voce tem certeza absoluta.')
+    process.exit(1)
+  }
+
   // Limpar dados existentes (em ordem devido às foreign keys)
   await prisma.strokeEvaluation.deleteMany()
   await prisma.evaluation.deleteMany()
